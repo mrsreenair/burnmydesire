@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
+import '../data/ai_coach.dart';
 import '../data/user_prefs.dart';
 import '../providers/db_providers.dart';
 import '../providers/pro_provider.dart';
@@ -29,6 +30,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _busy = false;
   bool _aiOn = true;
 
+  /// null while we ask the platform whether Apple Intelligence is usable.
+  bool? _aiReady;
+
   @override
   void initState() {
     super.initState();
@@ -37,6 +41,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     });
     aiCoachEnabled().then((on) {
       if (mounted) setState(() => _aiOn = on);
+    });
+    AiCoach().isAvailable().then((ready) {
+      if (mounted) setState(() => _aiReady = ready);
     });
   }
 
@@ -195,6 +202,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           'anywhere.',
                       value: _aiOn,
                       onChanged: _toggleAi,
+                    ),
+                    _Row(
+                      icon: _aiReady == true
+                          ? Icons.check_circle_outline
+                          : Icons.help_outline,
+                      title: 'On-device model',
+                      subtitle: switch (_aiReady) {
+                        null => 'Checking…',
+                        true => 'Ready — your burns get personal messages',
+                        false =>
+                          'Not available on this phone. Turn on Apple '
+                              'Intelligence in iOS Settings (and let the '
+                              'model finish downloading). Until then you '
+                              'get the built-in encouragements.',
+                      },
                     ),
                   ],
                 ),
