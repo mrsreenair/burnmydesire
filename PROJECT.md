@@ -125,7 +125,8 @@ Urge hits → open app (or share item into it)
 - **Write-and-burn** (F9): write the thought/craving on on-screen paper, rendered to an image, burned with the same shader. Emotion burns skip the shock card (no price), keep resistance counts ("resisted texting them 7×").
 - **Reflection step** (F10): before the shock card — "investment in your growth, or an impulse?" A growth answer softens the framing; the app never tells people to buy.
 - **Motivation messages** (F11): curated per-category encouragement after emotional burns instead of money math.
-- **AI roadmap:** curated content now → Apple on-device Foundation Models for personalized encouragement (privacy-true) → optional opt-in cloud AI coach much later. No emotional content leaves the device without explicit consent.
+- **AI roadmap:** curated content (shipped) → **Apple on-device Foundation Models (shipped 2026-08-08)** → optional opt-in cloud AI coach much later. No emotional content leaves the device without explicit consent.
+  - Implementation: `FoundationModelsChannel.swift` (MethodChannel `burnmydesire/ai`, guarded by `#available(iOS 26)` + `canImport`) + `lib/data/ai_coach.dart`. After an emotional burn, the written thought + goals + streak go to the on-device model, which writes a personal encouragement; the curated line shows instantly and the AI line cross-fades in when ready. Guardrailed instructions (≤2 sentences, no clinical/financial advice, no AI self-reference, no shaming); output sanity-checked (non-empty, ≤240 chars) with silent fallback to curated messages on any failure, older iOS, or non-Apple-Intelligence devices. Settings → Privacy has an "AI encouragement" toggle (default on).
 
 Every item record carries a `category` from day one:
 

@@ -50,6 +50,7 @@ class _WriteScreenState extends State<WriteScreen> {
             imageBytes: bytes,
             priceCents: 0,
             category: 'emotion',
+            thoughtText: _controller.text.trim(),
           ),
         ),
       ),

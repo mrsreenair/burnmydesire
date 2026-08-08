@@ -29,6 +29,7 @@ const burnGoals = <(String, String, String)>[
 ];
 
 const _kGoalsKey = 'burn_goals';
+const _kAiCoachKey = 'ai_coach_enabled';
 
 Future<void> saveBurnGoals(List<String> ids) async =>
     (await SharedPreferences.getInstance()).setStringList(_kGoalsKey, ids);
@@ -36,6 +37,14 @@ Future<void> saveBurnGoals(List<String> ids) async =>
 Future<List<String>> savedBurnGoals() async =>
     (await SharedPreferences.getInstance()).getStringList(_kGoalsKey) ??
     const [];
+
+/// On-device AI encouragement (Apple Intelligence). On by default; the
+/// model runs entirely on the phone either way.
+Future<bool> aiCoachEnabled() async =>
+    (await SharedPreferences.getInstance()).getBool(_kAiCoachKey) ?? true;
+
+Future<void> setAiCoachEnabled(bool on) async =>
+    (await SharedPreferences.getInstance()).setBool(_kAiCoachKey, on);
 
 /// Spending temptations offered during setup: (label, emoji).
 const spendCategories = <(String, String)>[

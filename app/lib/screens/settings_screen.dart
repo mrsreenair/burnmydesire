@@ -27,6 +27,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String _name = '';
   bool _busy = false;
+  bool _aiOn = true;
 
   @override
   void initState() {
@@ -34,6 +35,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     profileName().then((n) {
       if (mounted) setState(() => _name = n);
     });
+    aiCoachEnabled().then((on) {
+      if (mounted) setState(() => _aiOn = on);
+    });
+  }
+
+  Future<void> _toggleAi(bool on) async {
+    setState(() => _aiOn = on);
+    await setAiCoachEnabled(on);
   }
 
   Future<void> _editName() async {
@@ -177,6 +186,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       icon: Icons.phone_iphone,
                       title: 'Everything stays on this phone',
                       subtitle: 'No account, no server, no uploads — ever',
+                    ),
+                    _SwitchRow(
+                      icon: Icons.auto_awesome_outlined,
+                      title: 'AI encouragement',
+                      subtitle: 'Personal messages from Apple\'s on-device '
+                          'model. Runs on your phone — nothing is sent '
+                          'anywhere.',
+                      value: _aiOn,
+                      onChanged: _toggleAi,
                     ),
                   ],
                 ),
@@ -328,6 +346,54 @@ class _Group extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// A settings row with a trailing switch, matching _Row's layout.
+class _SwitchRow extends StatelessWidget {
+  const _SwitchRow({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.onChanged,
+    this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(icon, size: 22, color: AppColors.textMid),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style:
+                        theme.textTheme.titleSmall?.copyWith(fontSize: 15.5)),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 3),
+                  Text(subtitle!, style: theme.textTheme.bodySmall),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Switch(value: value, onChanged: onChanged),
+        ],
+      ),
     );
   }
 }

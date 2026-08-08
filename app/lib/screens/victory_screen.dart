@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config.dart';
+import '../data/ai_coach.dart';
+import '../data/user_prefs.dart';
 import '../models/burn_target.dart';
 import '../providers/db_providers.dart';
 import '../theme/app_colors.dart';
@@ -26,6 +28,10 @@ class VictoryScreen extends ConsumerStatefulWidget {
 }
 
 class _VictoryScreenState extends ConsumerState<VictoryScreen> {
+  /// AI-personalized encouragement, faded in over the curated one when
+  /// the on-device model responds in time.
+  String? _aiMessage;
+
   /// Whether this burn ends the desire forever: the user asked for it, or
   /// the streak reached the final-burn count.
   bool get _isFinal =>
@@ -37,6 +43,26 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
     super.initState();
     _persistBurn();
     _celebrate();
+    if (widget.target.isEmotion && !_isFinal) _loadAiMessage();
+  }
+
+  /// Fire-and-forget: the curated message shows instantly; if Apple's
+  /// on-device model answers, its personal line takes over. Silence on
+  /// any failure — the celebration never waits for AI.
+  Future<void> _loadAiMessage() async {
+    if (!await aiCoachEnabled()) return;
+    final goalIds = await savedBurnGoals();
+    final labels = [
+      for (final (id, label, _) in burnGoals)
+        if (goalIds.contains(id)) label,
+    ];
+    final message = await AiCoach().encouragement(
+      isEmotion: true,
+      burnNumber: widget.target.burnNumber,
+      goalLabels: labels,
+      thought: widget.target.thoughtText,
+    );
+    if (mounted && message != null) setState(() => _aiMessage = message);
   }
 
   /// A double beat under the confetti — the physical half of the reward.
@@ -126,7 +152,10 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
                             child: _isFinal
                                 ? _FinalResult(target: target, price: price)
                                 : target.isEmotion
-                                    ? _ThoughtResult(target: target)
+                                    ? _ThoughtResult(
+                                        target: target,
+                                        aiMessage: _aiMessage,
+                                      )
                                     : _MoneyResult(
                                         target: target,
                                         price: price,
@@ -300,15 +329,22 @@ class _FinalResult extends StatelessWidget {
 }
 
 /// Thoughts have no price — the headline is the closure, the body is the
-/// encouragement.
+/// encouragement. The curated line shows instantly; when the on-device
+/// AI answers, its personal line cross-fades in.
 class _ThoughtResult extends StatelessWidget {
-  const _ThoughtResult({required this.target});
+  const _ThoughtResult({required this.target, this.aiMessage});
 
   final BurnTarget target;
+  final String? aiMessage;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final message = aiMessage ??
+        motivationMessage(
+          resistanceCount: target.burnNumber,
+          seed: target.itemId ?? target.imageBytes.length,
+        );
     return Column(
       children: [
         Text(
@@ -317,14 +353,15 @@ class _ThoughtResult extends StatelessWidget {
           style: theme.textTheme.headlineMedium,
         ),
         const SizedBox(height: 14),
-        Text(
-          motivationMessage(
-            resistanceCount: target.burnNumber,
-            seed: target.itemId ?? target.imageBytes.length,
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 450),
+          child: Text(
+            message,
+            key: ValueKey(message),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleMedium
+                ?.copyWith(color: AppColors.textMid),
           ),
-          textAlign: TextAlign.center,
-          style:
-              theme.textTheme.titleMedium?.copyWith(color: AppColors.textMid),
         ),
       ],
     );

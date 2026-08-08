@@ -15,6 +15,7 @@ class BurnTarget {
     this.category = 'purchase',
     this.burnNumber = 1,
     this.letGoForever = false,
+    this.thoughtText,
   });
 
   final int? itemId;
@@ -33,6 +34,10 @@ class BurnTarget {
   /// The user chose to end this desire now (long-press on home) rather
   /// than waiting for the automatic final burn.
   final bool letGoForever;
+
+  /// What was written on the burned page (fresh emotion burns only). Fed
+  /// to the on-device AI coach; never persisted, never leaves the device.
+  final String? thoughtText;
 
   bool get isEmotion => category == 'emotion';
 }
