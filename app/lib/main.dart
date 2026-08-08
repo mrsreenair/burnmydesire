@@ -10,6 +10,7 @@ import 'providers/db_providers.dart';
 import 'screens/home_screen.dart';
 import 'screens/lock_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,12 +44,7 @@ class BurnMyDesireApp extends StatelessWidget {
     return MaterialApp(
       title: 'Burn My Desire',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorSchemeSeed: Colors.deepOrange,
-        scaffoldBackgroundColor: const Color(0xFF141416),
-      ),
+      theme: buildAppTheme(),
       home: showOnboarding
           ? const OnboardingScreen()
           : locked

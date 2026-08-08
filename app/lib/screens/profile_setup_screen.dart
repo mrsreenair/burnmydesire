@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../data/user_prefs.dart';
+import '../theme/app_colors.dart';
+import '../theme/motion.dart';
+import '../widgets/ember_ui.dart';
+import '../widgets/paper_backdrop.dart';
 import '../widgets/pin_pad.dart';
 import 'goal_selection_screen.dart';
 
@@ -51,7 +55,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       await savePin(_entry);
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const GoalSelectionScreen()),
+        emberRoute(const GoalSelectionScreen()),
       );
     } else {
       setState(() {
@@ -72,52 +76,78 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child:
-              _stage == _Stage.name ? _buildName(theme) : _buildPin(theme),
+      resizeToAvoidBottomInset: true,
+      body: PaperBackdrop(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: AnimatedSwitcher(
+              duration: Motion.base,
+              switchInCurve: Motion.easeOut,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween(
+                    begin: const Offset(0, 0.02),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              ),
+              child: KeyedSubtree(
+                key: ValueKey(_stage == _Stage.name),
+                child: _stage == _Stage.name
+                    ? _buildName(theme)
+                    : _buildPin(theme),
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 
+  /// Canopi-style form: the question sits low, right above the field and
+  /// the keyboard — one thought, one thumb-reach.
   Widget _buildName(ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const Spacer(),
-        Text('👋', textAlign: TextAlign.center, style: const TextStyle(fontSize: 64)),
-        const SizedBox(height: 24),
-        Text('What should we call you?',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.headlineMedium
-                ?.copyWith(fontWeight: FontWeight.w800)),
+        Reveal(
+          child: Text('What should\nwe call you?',
+              style: theme.textTheme.headlineMedium),
+        ),
         const SizedBox(height: 8),
-        Text('Just for greetings. Nothing leaves your phone.',
-            textAlign: TextAlign.center,
+        Reveal(
+          delay: const Duration(milliseconds: 80),
+          child: Text('Just for greetings. Nothing leaves your phone.',
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(color: AppColors.textMid)),
+        ),
+        const SizedBox(height: 20),
+        Reveal(
+          delay: const Duration(milliseconds: 140),
+          child: TextField(
+            controller: _nameController,
+            textCapitalization: TextCapitalization.words,
+            autofocus: true,
             style: theme.textTheme.titleMedium
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-        const SizedBox(height: 32),
-        TextField(
-          controller: _nameController,
-          textAlign: TextAlign.center,
-          textCapitalization: TextCapitalization.words,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Your name',
-            border: OutlineInputBorder(),
+                ?.copyWith(color: AppColors.ink),
+            decoration: const InputDecoration(hintText: 'Your name'),
+            onSubmitted: (_) => setState(() => _stage = _Stage.createPin),
           ),
-          onSubmitted: (_) => setState(() => _stage = _Stage.createPin),
         ),
-        const Spacer(),
-        FilledButton(
-          style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              minimumSize: const Size.fromHeight(56)),
-          onPressed: () => setState(() => _stage = _Stage.createPin),
-          child: const Text('Continue'),
+        const SizedBox(height: 16),
+        Reveal(
+          delay: const Duration(milliseconds: 200),
+          child: EmberButton(
+            label: 'Continue',
+            onPressed: () => setState(() => _stage = _Stage.createPin),
+          ),
         ),
+        const SizedBox(height: 8),
       ],
     );
   }
@@ -128,12 +158,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const Spacer(),
-        const Text('🔒', textAlign: TextAlign.center, style: TextStyle(fontSize: 64)),
+        const Text('🔒',
+            textAlign: TextAlign.center, style: TextStyle(fontSize: 56)),
         const SizedBox(height: 24),
         Text(creating ? 'Create your PIN' : 'Confirm your PIN',
             textAlign: TextAlign.center,
-            style: theme.textTheme.headlineMedium
-                ?.copyWith(fontWeight: FontWeight.w800)),
+            style: theme.textTheme.headlineMedium),
         const SizedBox(height: 8),
         Text(
             _pinError ??
@@ -142,7 +172,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             style: theme.textTheme.titleMedium?.copyWith(
                 color: _pinError != null
                     ? theme.colorScheme.error
-                    : theme.colorScheme.onSurfaceVariant)),
+                    : AppColors.textMid)),
         const SizedBox(height: 32),
         PinDots(filled: _entry.length, error: _pinError != null),
         const Spacer(),

@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../data/database.dart';
 import '../models/burn_target.dart';
 import '../providers/db_providers.dart';
 import '../providers/pro_provider.dart';
+import '../theme/app_colors.dart';
+import '../theme/motion.dart';
 import '../utils/format_utils.dart';
 import '../utils/math_utils.dart';
+import '../widgets/ember_ui.dart';
+import '../widgets/paper_backdrop.dart';
+import '../widgets/tilt_card.dart';
 import 'burn_screen.dart';
 import 'capture_screen.dart';
 import 'dashboard_screen.dart';
@@ -36,11 +42,9 @@ class HomeScreen extends ConsumerWidget {
     );
     // Thoughts have no price: skip the shock card, go straight to the fire.
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => target.isEmotion
-            ? BurnScreen(target: target)
-            : ShockScreen(target: target),
-      ),
+      target.isEmotion
+          ? fireRoute(BurnScreen(target: target))
+          : emberRoute(ShockScreen(target: target)),
     );
   }
 
@@ -48,43 +52,56 @@ class HomeScreen extends ConsumerWidget {
     showModalBottomSheet<void>(
       context: context,
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            ListTile(
-              leading: const Text('🛍️', style: TextStyle(fontSize: 28)),
-              title: const Text('Burn a purchase'),
-              subtitle: const Text('Photo + price — see the real damage'),
-              onTap: () {
-                Navigator.of(sheetContext).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => ref.read(canAddItemProvider)
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.textLow,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text('What\'s pulling at you?',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(sheetContext).textTheme.headlineSmall),
+              const SizedBox(height: 20),
+              _SheetChoice(
+                emoji: '🛍️',
+                title: 'Burn a purchase',
+                subtitle: 'Photo + price — see the real damage',
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  Navigator.of(context).push(
+                    emberRoute(ref.read(canAddItemProvider)
                         ? const CaptureScreen()
-                        : const PaywallScreen(),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Text('✍️', style: TextStyle(fontSize: 28)),
-              title: const Text('Burn a thought'),
-              subtitle:
-                  const Text('Write the craving or feeling — burn the paper'),
-              onTap: () {
-                Navigator.of(sheetContext).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => ref.read(canAddItemProvider)
+                        : const PaywallScreen()),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              _SheetChoice(
+                emoji: '✍️',
+                title: 'Burn a thought',
+                subtitle: 'Write the craving or feeling — burn the paper',
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  Navigator.of(context).push(
+                    emberRoute(ref.read(canAddItemProvider)
                         ? const WriteScreen()
-                        : const PaywallScreen(),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
+                        : const PaywallScreen()),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -94,106 +111,364 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(itemsProvider).value ?? const <Item>[];
     final protected = ref.watch(protectedCentsProvider);
-    final store = ref.watch(imageStoreProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Burn My Desire'),
-        actions: [
-          IconButton(
-            tooltip: 'Dashboard',
-            icon: const Icon(Icons.insights_outlined),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const DashboardScreen()),
-            ),
+      body: PaperBackdrop(
+        child: SafeArea(
+          child: Stack(
+            children: [
+              ListView(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
+                children: [
+                  // Canopi-style editorial header: date up top, big black
+                  // title, quiet utility icons on the right.
+                  Reveal(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                DateFormat('EEE d MMM')
+                                    .format(DateTime.now()),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.textMid,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 4),
+                              Text('Desires',
+                                  style: theme.textTheme.displaySmall),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Dashboard',
+                          icon: const Icon(Icons.insights_outlined),
+                          onPressed: () => Navigator.of(context)
+                              .push(emberRoute(const DashboardScreen())),
+                        ),
+                        IconButton(
+                          tooltip: 'Go Pro',
+                          icon: const Icon(
+                              Icons.workspace_premium_outlined,
+                              color: AppColors.accent),
+                          onPressed: () => Navigator.of(context)
+                              .push(emberRoute(const PaywallScreen())),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (protected > 0) ...[
+                    const SizedBox(height: 20),
+                    Reveal(
+                      delay: const Duration(milliseconds: 60),
+                      child: _WealthHero(protected: protected),
+                    ),
+                  ],
+                  const SizedBox(height: 28),
+                  if (items.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 60),
+                      child: Reveal(
+                        delay: Duration(milliseconds: 120),
+                        child: _EmptyState(),
+                      ),
+                    )
+                  else
+                    for (final (i, item) in items.indexed)
+                      Reveal(
+                        delay: Duration(milliseconds: 120 + 60 * i),
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 28),
+                          child: _ItemCollage(
+                            item: item,
+                            tiltSeed: i,
+                            onTap: () => _reBurn(context, ref, item),
+                          ),
+                        ),
+                      ),
+                ],
+              ),
+              // Orange fire FAB, Canopi-style circle, pinned bottom-right.
+              if (items.isNotEmpty)
+                Positioned(
+                  right: 24,
+                  bottom: 24,
+                  child: Reveal(
+                    delay: const Duration(milliseconds: 200),
+                    child: _FireFab(
+                        onPressed: () => _chooseBurnType(context, ref)),
+                  ),
+                ),
+              if (items.isEmpty)
+                Positioned(
+                  left: 24,
+                  right: 24,
+                  bottom: 24,
+                  child: Reveal(
+                    delay: const Duration(milliseconds: 260),
+                    child: EmberButton(
+                      label: 'Burn something',
+                      icon: Icons.local_fire_department,
+                      kind: PillKind.fire,
+                      onPressed: () => _chooseBurnType(context, ref),
+                    ),
+                  ),
+                ),
+            ],
           ),
-          IconButton(
-            tooltip: 'Go Pro',
-            icon: const Icon(Icons.workspace_premium_outlined),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const PaywallScreen()),
-            ),
-          ),
-        ],
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (protected > 0) ...[
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
+    );
+  }
+}
+
+/// Protected wealth as quiet editorial text — money is a state, not a
+/// billboard. Green number, gray projection line.
+class _WealthHero extends StatelessWidget {
+  const _WealthHero({required this.protected});
+
+  final int protected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        ShaderMask(
+          shaderCallback: (b) => AppColors.wealthGradient.createShader(b),
+          blendMode: BlendMode.srcIn,
+          child: CountUpText(
+            protected,
+            formatter: formatEuros,
+            style: theme.textTheme.headlineMedium,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 3),
+          child: Text(
+            'protected · '
+            '${formatEuros(futureValueCents(protected, years: kDefaultHorizonYears))} '
+            'in ${kDefaultHorizonYears}y',
+            style: theme.textTheme.bodyMedium
+                ?.copyWith(color: AppColors.textMid),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One temptation as a Canopi collection row: resistance label, then a
+/// small collage — photo card + a note card, gently tilted.
+class _ItemCollage extends ConsumerWidget {
+  const _ItemCollage({
+    required this.item,
+    required this.tiltSeed,
+    required this.onTap,
+  });
+
+  final Item item;
+  final int tiltSeed;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final store = ref.watch(imageStoreProvider);
+    final theme = Theme.of(context);
+    final isThought = item.category == 'emotion';
+    // Alternate tilt direction row by row so the page feels hand-laid.
+    final dir = tiltSeed.isEven ? 1.0 : -1.0;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Resisted ${item.resistanceCount}×',
+            style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.accent, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            isThought
+                ? 'A thought you let go'
+                : formatEuros(item.priceCents),
+            style: theme.textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              // The photo (or thought) as a tilted polaroid.
+              TiltCard(
+                tiltDegrees: -2.0 * dir,
+                child: Image.file(
+                  store.file(item.imageFile),
+                  width: 96,
+                  height: 110,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => Container(
+                    width: 96,
+                    height: 110,
+                    color: AppColors.field,
+                    child: const Icon(Icons.image_outlined,
+                        color: AppColors.textLow),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 18),
+              // A sticky-note card carrying the re-burn nudge.
+              TiltCard(
+                tiltDegrees: 1.6 * dir,
+                color: isThought ? AppColors.sticky : AppColors.paperHigh,
+                padding: const EdgeInsets.all(14),
+                child: SizedBox(
+                  width: 130,
+                  height: 82,
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('${formatEuros(protected)} protected',
-                          style: theme.textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 4),
+                      const Text('🔥', style: TextStyle(fontSize: 20)),
+                      const SizedBox(height: 6),
                       Text(
-                        'worth ${formatEuros(futureValueCents(protected, years: kDefaultHorizonYears))} '
-                        'in $kDefaultHorizonYears years',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant),
+                        'Craving it again?\nTap to burn it.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: isThought
+                              ? AppColors.stickyInk
+                              : AppColors.textMid,
+                          height: 1.35,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
             ],
-            Expanded(
-              child: items.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text('🔥', style: TextStyle(fontSize: 56)),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Craving something you\nshouldn\'t buy?',
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.titleLarge,
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.separated(
-                      itemCount: items.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 8),
-                      itemBuilder: (context, i) {
-                        final item = items[i];
-                        return ListTile(
-                          tileColor: theme.colorScheme.surfaceContainerHigh,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          leading: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.file(store.file(item.imageFile),
-                                width: 48, height: 48, fit: BoxFit.cover),
-                          ),
-                          title: Text(item.category == 'emotion'
-                              ? 'A thought you let go'
-                              : formatEuros(item.priceCents)),
-                          subtitle:
-                              Text('resisted ${item.resistanceCount}×'),
-                          trailing: const Text('🔥'),
-                          onTap: () => _reBurn(context, ref, item),
-                        );
-                      },
-                    ),
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 18)),
-              onPressed: () => _chooseBurnType(context, ref),
-              icon: const Icon(Icons.local_fire_department),
-              label: const Text('I need to burn…'),
-            ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      children: [
+        const CardFan(cards: [
+          Text('🛍️', style: TextStyle(fontSize: 26)),
+          Text('🔥', style: TextStyle(fontSize: 26)),
+          Text('✍️', style: TextStyle(fontSize: 26)),
+        ]),
+        const SizedBox(height: 24),
+        Text(
+          'Craving something you shouldn\'t?\nBring it here before it owns you.',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.titleMedium
+              ?.copyWith(color: AppColors.textMid),
+        ),
+      ],
+    );
+  }
+}
+
+class _FireFab extends StatelessWidget {
+  const _FireFab({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      shape: const CircleBorder(),
+      color: AppColors.accent,
+      elevation: 0,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onPressed,
+        child: Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: AppColors.emberGlow(opacity: 0.3, blur: 20),
+          ),
+          child: const Icon(Icons.local_fire_department,
+              color: Colors.white, size: 28),
+        ),
+      ),
+    );
+  }
+}
+
+class _SheetChoice extends StatelessWidget {
+  const _SheetChoice({
+    required this.emoji,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final String emoji;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: AppColors.paperHigh,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: AppColors.cardShadow(opacity: 0.06),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(emoji, style: const TextStyle(fontSize: 26)),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.ink)),
+                    const SizedBox(height: 2),
+                    Text(subtitle, style: theme.textTheme.bodySmall),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.textLow),
+            ],
+          ),
         ),
       ),
     );

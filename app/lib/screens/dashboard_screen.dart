@@ -6,7 +6,10 @@ import '../data/database.dart';
 import '../data/user_prefs.dart';
 import '../providers/db_providers.dart';
 import '../providers/pro_provider.dart';
+import '../theme/app_colors.dart';
+import '../theme/motion.dart';
 import '../utils/format_utils.dart';
+import '../widgets/ember_ui.dart';
 import '../utils/math_utils.dart';
 import 'paywall_screen.dart';
 
@@ -67,7 +70,7 @@ class _LockedView extends StatelessWidget {
               ),
               onPressed: () => Navigator.of(
                 context,
-              ).push(MaterialPageRoute(builder: (_) => const PaywallScreen())),
+              ).push(emberRoute(const PaywallScreen())),
               child: const Text('Go Pro'),
             ),
           ],
@@ -129,12 +132,14 @@ class _Dashboard extends ConsumerWidget {
                 children: [
                   Text('Wealth protected', style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
-                  Text(
-                    formatEuros(protected),
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.displayMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: theme.colorScheme.primary,
+                  ShaderMask(
+                    shaderCallback: (b) =>
+                        AppColors.wealthGradient.createShader(b),
+                    blendMode: BlendMode.srcIn,
+                    child: CountUpText(
+                      protected,
+                      formatter: formatEuros,
+                      style: theme.textTheme.displayMedium,
                     ),
                   ),
                   if (fund != null && projected != null) ...[
@@ -253,7 +258,7 @@ class _StatTile extends StatelessWidget {
                 value,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: theme.colorScheme.primary,
+                  color: AppColors.accent,
                 ),
               ),
               const SizedBox(height: 4),

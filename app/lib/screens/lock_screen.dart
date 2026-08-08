@@ -3,6 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 
 import '../data/user_prefs.dart';
+import '../theme/app_colors.dart';
+import '../theme/motion.dart';
+import '../widgets/paper_backdrop.dart';
+import '../widgets/ember_ui.dart';
 import '../widgets/pin_pad.dart';
 import 'home_screen.dart';
 
@@ -58,7 +62,7 @@ class _LockScreenState extends State<LockScreen> {
   void _unlock() {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
+      emberRoute(const HomeScreen()),
     );
   }
 
@@ -91,27 +95,36 @@ class _LockScreenState extends State<LockScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
+      body: PaperBackdrop(
+        child: SafeArea(
+          child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(),
-              const Text('🔥',
-                  textAlign: TextAlign.center, style: TextStyle(fontSize: 64)),
+              const Reveal(
+                child: Breathe(
+                  child: Text('🔥',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 64)),
+                ),
+              ),
               const SizedBox(height: 24),
-              Text(_name.isEmpty ? 'Welcome back' : 'Welcome back, $_name',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.headlineMedium
-                      ?.copyWith(fontWeight: FontWeight.w800)),
+              Reveal(
+                delay: const Duration(milliseconds: 80),
+                child: Text(
+                    _name.isEmpty ? 'Welcome back' : 'Welcome back, $_name',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineMedium),
+              ),
               const SizedBox(height: 8),
               Text(_error ? 'Wrong PIN — try again' : 'Enter your PIN',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.titleMedium?.copyWith(
                       color: _error
                           ? theme.colorScheme.error
-                          : theme.colorScheme.onSurfaceVariant)),
+                          : AppColors.textMid)),
               const SizedBox(height: 32),
               PinDots(filled: _entry.length, error: _error),
               const Spacer(),
@@ -128,6 +141,7 @@ class _LockScreenState extends State<LockScreen> {
                     : null,
               ),
             ],
+          ),
           ),
         ),
       ),

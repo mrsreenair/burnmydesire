@@ -5,8 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/burn_target.dart';
+import '../theme/app_colors.dart';
+import '../theme/motion.dart';
 import '../utils/format_utils.dart';
 import '../utils/math_utils.dart';
+import '../widgets/ember_ui.dart';
 import 'shock_screen.dart';
 
 class CaptureScreen extends StatefulWidget {
@@ -81,8 +84,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
       plan: plan,
     );
     Navigator.of(context).push(
-      MaterialPageRoute(
-          builder: (_) => ShockScreen(target: target, forGrowth: growth)),
+      emberRoute(ShockScreen(target: target, forGrowth: growth)),
     );
   }
 
@@ -106,20 +108,38 @@ class _CaptureScreenState extends State<CaptureScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AspectRatio(
-              aspectRatio: 4 / 3,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHigh,
-                  borderRadius: BorderRadius.circular(16),
+            Reveal(
+              child: AspectRatio(
+                aspectRatio: 4 / 3,
+                child: AnimatedContainer(
+                  duration: Motion.base,
+                  decoration: BoxDecoration(
+                    color: AppColors.paperHigh,
+                    borderRadius: BorderRadius.circular(24),
+                    border: _bytes == null
+                        ? Border.all(
+                            color: AppColors.ink.withValues(alpha: 0.08))
+                        : Border.all(
+                            color:
+                                AppColors.accent.withValues(alpha: 0.6)),
+                    boxShadow: AppColors.cardShadow(
+                        opacity: _bytes == null ? 0.06 : 0.12),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: _bytes == null
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.add_photo_alternate_outlined,
+                                size: 40, color: AppColors.textLow),
+                            const SizedBox(height: 8),
+                            Text('Add a photo of it',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                    color: AppColors.textMid)),
+                          ],
+                        )
+                      : Image.memory(_bytes!, fit: BoxFit.cover),
                 ),
-                clipBehavior: Clip.antiAlias,
-                child: _bytes == null
-                    ? Center(
-                        child: Text('Add a photo of it',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant)))
-                    : Image.memory(_bytes!, fit: BoxFit.cover),
               ),
             ),
             const SizedBox(height: 12),
@@ -191,11 +211,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
               ),
             ],
             const SizedBox(height: 24),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 18)),
+            EmberButton(
+              label: 'Show me the damage',
+              icon: Icons.bolt,
               onPressed: ready ? _continue : null,
-              child: const Text('Show me the damage'),
             ),
           ],
         ),

@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/burn_target.dart';
 import '../providers/db_providers.dart';
+import '../theme/app_colors.dart';
+import '../theme/motion.dart';
 import '../utils/format_utils.dart';
 import '../utils/math_utils.dart';
 import '../utils/motivation.dart';
+import '../widgets/paper_backdrop.dart';
+import '../widgets/ember_ui.dart';
 
 class VictoryScreen extends ConsumerStatefulWidget {
   const VictoryScreen({super.key, required this.target});
@@ -50,68 +54,138 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
         futureValueCents(price, years: kDefaultHorizonYears);
 
     final String headline;
-    final String message;
     final String? footnote;
     if (target.isEmotion) {
       headline = target.burnNumber > 1 ? 'Burned it again' : 'Thought burned';
-      message = motivationMessage(
-        resistanceCount: target.burnNumber,
-        seed: target.itemId ?? target.imageBytes.length,
-      );
       footnote = null;
     } else {
       headline = 'Desire destroyed';
-      message = target.itemId != null
-          ? 'You resisted it again.\n${formatEuros(price)} stays protected.'
-          : 'You just protected ${formatEuros(price)}.\n'
-              'Invested, that\'s ${formatEuros(future)} '
-              'in $kDefaultHorizonYears years.';
       footnote = 'Put it to work: a low-cost ETF at your broker beats a '
           'gadget in a drawer.';
     }
 
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Spacer(),
-              const Text('🔥', textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 72)),
-              const SizedBox(height: 16),
-              Text(headline,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.headlineMedium
-                      ?.copyWith(fontWeight: FontWeight.w800)),
-              const SizedBox(height: 24),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleMedium,
-              ),
-              if (footnote != null) ...[
-                const SizedBox(height: 16),
-                Text(
-                  footnote,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant),
+      body: PaperBackdrop(
+        // The fire just died down — back to warm daylight.
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Spacer(),
+                const Reveal(
+                  duration: Motion.reveal,
+                  offset: 12,
+                  child: Breathe(
+                    child: Text('🔥',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 72)),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Reveal(
+                  delay: const Duration(milliseconds: 120),
+                  child: Text(headline,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.headlineMedium),
+                ),
+                const SizedBox(height: 28),
+                Reveal(
+                  delay: const Duration(milliseconds: 260),
+                  child: target.isEmotion
+                      ? Text(
+                          motivationMessage(
+                            resistanceCount: target.burnNumber,
+                            seed: target.itemId ?? target.imageBytes.length,
+                          ),
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(color: AppColors.textMid),
+                        )
+                      : _MoneyResult(
+                          target: target,
+                          price: price,
+                          future: future,
+                        ),
+                ),
+                if (footnote != null) ...[
+                  const SizedBox(height: 20),
+                  Reveal(
+                    delay: const Duration(milliseconds: 420),
+                    child: Text(
+                      footnote,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: AppColors.textLow),
+                    ),
+                  ),
+                ],
+                const Spacer(),
+                Reveal(
+                  delay: const Duration(milliseconds: 500),
+                  child: EmberButton(
+                    label: 'Done',
+                    glow: false,
+                    onPressed: () =>
+                        Navigator.of(context).popUntil((r) => r.isFirst),
+                  ),
                 ),
               ],
-              const Spacer(),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 18)),
-                onPressed: () =>
-                    Navigator.of(context).popUntil((r) => r.isFirst),
-                child: const Text('Done'),
-              ),
-            ],
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The money payoff: protected amount counts up in mint, projection below.
+class _MoneyResult extends StatelessWidget {
+  const _MoneyResult({
+    required this.target,
+    required this.price,
+    required this.future,
+  });
+
+  final BurnTarget target;
+  final int price;
+  final int future;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final reBurn = target.itemId != null;
+    return Column(
+      children: [
+        Text(
+          reBurn ? 'You resisted it again.' : 'You just protected',
+          textAlign: TextAlign.center,
+          style:
+              theme.textTheme.titleMedium?.copyWith(color: AppColors.textMid),
+        ),
+        const SizedBox(height: 8),
+        ShaderMask(
+          shaderCallback: (b) => AppColors.wealthGradient.createShader(b),
+          blendMode: BlendMode.srcIn,
+          child: CountUpText(
+            price,
+            formatter: formatEuros,
+            duration: const Duration(milliseconds: 1200),
+            style: theme.textTheme.displaySmall,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          reBurn
+              ? '${formatEuros(price)} stays protected.'
+              : 'Invested, that\'s ${formatEuros(future)} '
+                  'in $kDefaultHorizonYears years.',
+          textAlign: TextAlign.center,
+          style:
+              theme.textTheme.titleMedium?.copyWith(color: AppColors.textMid),
+        ),
+      ],
     );
   }
 }

@@ -1,37 +1,74 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import '../theme/app_colors.dart';
+import '../theme/motion.dart';
 
 const kPinLength = 4;
 
 /// Row of dots showing how many PIN digits have been entered.
-class PinDots extends StatelessWidget {
+/// Shakes horizontally when [error] flips on — a physical "no".
+class PinDots extends StatefulWidget {
   const PinDots({super.key, required this.filled, this.error = false});
 
   final int filled;
   final bool error;
 
   @override
+  State<PinDots> createState() => _PinDotsState();
+}
+
+class _PinDotsState extends State<PinDots>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _shake =
+      AnimationController(vsync: this, duration: Motion.slow);
+
+  @override
+  void didUpdateWidget(PinDots old) {
+    super.didUpdateWidget(old);
+    if (widget.error && !old.error) _shake.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _shake.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (var i = 0; i < kPinLength; i++)
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            width: 16,
-            height: 16,
-            margin: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: error
-                  ? scheme.error
-                  : i < filled
-                      ? scheme.primary
-                      : scheme.surfaceContainerHighest,
+    return AnimatedBuilder(
+      animation: _shake,
+      builder: (context, child) {
+        // Damped sine: three swings that die out.
+        final t = _shake.value;
+        final dx = math.sin(t * math.pi * 6) * 10 * (1 - t);
+        return Transform.translate(offset: Offset(dx, 0), child: child);
+      },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          for (var i = 0; i < kPinLength; i++)
+            AnimatedContainer(
+              duration: Motion.instant,
+              curve: Motion.spring,
+              width: 16,
+              height: 16,
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: widget.error
+                    ? scheme.error
+                    : i < widget.filled
+                        ? AppColors.ink
+                        : AppColors.field,
+              ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -57,12 +94,27 @@ class PinPad extends StatelessWidget {
         aspectRatio: 1.4,
         child: onTap == null
             ? Center(child: child)
-            : InkResponse(
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  onTap();
-                },
-                child: Center(child: child),
+            : Padding(
+                padding: const EdgeInsets.all(6),
+                child: Container(
+                  decoration: ShapeDecoration(
+                    shape: const StadiumBorder(),
+                    color: AppColors.paperHigh,
+                    shadows: AppColors.cardShadow(opacity: 0.06),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    shape: const StadiumBorder(),
+                    child: InkWell(
+                      customBorder: const StadiumBorder(),
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        onTap();
+                      },
+                      child: Center(child: child),
+                    ),
+                  ),
+                ),
               ),
       ),
     );
@@ -90,7 +142,12 @@ class PinPad extends StatelessWidget {
           ),
         Row(
           children: [
-            _key(context, trailing ?? const SizedBox.shrink(), null),
+            Expanded(
+              child: AspectRatio(
+                aspectRatio: 1.4,
+                child: Center(child: trailing ?? const SizedBox.shrink()),
+              ),
+            ),
             _key(context, Text('0', style: style), () => onDigit('0')),
             _key(context, const Icon(Icons.backspace_outlined), onDelete),
           ],

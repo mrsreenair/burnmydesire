@@ -13,11 +13,17 @@ class BurnableImage extends StatefulWidget {
     super.key,
     required this.image,
     required this.onBurned,
+    this.onProgress,
     this.duration = const Duration(milliseconds: 3000),
   });
 
   final ui.Image image;
   final VoidCallback onBurned;
+
+  /// Reports burn progress 0→1 every frame so the host screen can react
+  /// (glow, hint fade) without owning the animation.
+  final ValueChanged<double>? onProgress;
+
   final Duration duration;
 
   @override
@@ -39,6 +45,7 @@ class _BurnableImageState extends State<BurnableImage>
   void initState() {
     super.initState();
     _burn = AnimationController(vsync: this, duration: widget.duration)
+      ..addListener(() => widget.onProgress?.call(_burn.value))
       ..addStatusListener((status) {
         if (status == AnimationStatus.completed && !_completed) {
           _completed = true;

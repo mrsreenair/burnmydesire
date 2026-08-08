@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../models/burn_target.dart';
+import '../theme/app_colors.dart';
+import '../theme/motion.dart';
 import '../utils/thought_image.dart';
+import '../widgets/ember_ui.dart';
 import 'burn_screen.dart';
 
 /// Write the thought, craving, or feeling on paper — then burn the paper.
@@ -40,8 +43,8 @@ class _WriteScreenState extends State<WriteScreen> {
     if (!mounted) return;
     setState(() => _rendering = false);
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => BurnScreen(
+      fireRoute(
+        BurnScreen(
           target: BurnTarget(
             image: image,
             imageBytes: bytes,
@@ -63,18 +66,22 @@ class _WriteScreenState extends State<WriteScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'The thought, the craving, the feeling — put it on paper.',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            Reveal(
+              child: Text(
+                'The thought, the craving, the feeling — put it on paper.',
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(color: AppColors.textMid),
+              ),
             ),
             const SizedBox(height: 16),
             Expanded(
               child: Container(
                 padding: const EdgeInsets.all(20),
+                // The thought goes on a real sticky note.
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF6EFDF),
-                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.sticky,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: AppColors.cardShadow(),
                 ),
                 child: TextField(
                   controller: _controller,
@@ -83,28 +90,32 @@ class _WriteScreenState extends State<WriteScreen> {
                   expands: true,
                   maxLength: 500,
                   textCapitalization: TextCapitalization.sentences,
-                  style: const TextStyle(
-                    color: Color(0xFF33291C),
+                  style: TextStyle(
+                    color: AppColors.stickyInk,
                     fontSize: 20,
                     fontStyle: FontStyle.italic,
                     height: 1.6,
                   ),
                   decoration: const InputDecoration(
+                    // Raw paper: no fill, no borders — just ink on the note.
+                    filled: false,
                     border: InputBorder.none,
-                    counterStyle: TextStyle(color: Color(0x8833291C)),
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    counterStyle: TextStyle(color: Color(0x996B5D2E)),
                     hintText: 'I keep thinking about…',
-                    hintStyle: TextStyle(color: Color(0x6633291C)),
+                    hintStyle: TextStyle(color: Color(0x776B5D2E)),
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            FilledButton.icon(
-              style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 18)),
+            EmberButton(
+              label: _rendering ? 'Preparing…' : 'Burn this thought',
+              icon: Icons.local_fire_department,
+              kind: PillKind.fire,
               onPressed: _hasText && !_rendering ? _burn : null,
-              icon: const Icon(Icons.local_fire_department),
-              label: Text(_rendering ? 'Preparing…' : 'Burn this thought'),
             ),
           ],
         ),
