@@ -36,7 +36,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
     });
   }
 
-  void _continue() {
+  Future<void> _continue() async {
     final cents = parseEurosToCents(_price.text);
     final image = _image;
     final bytes = _bytes;
@@ -51,6 +51,29 @@ class _CaptureScreenState extends State<CaptureScreen> {
       }
     }
 
+    // Reflection, not advice (PROJECT.md F10): a genuine tool for growth
+    // deserves a calmer framing than a dopamine hit.
+    final growth = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('One honest question'),
+        content: const Text(
+            'Is this a real investment in your growth — a tool for your '
+            'career or skills you\'ll actually use — or is it an impulse?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('It builds my future'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('It\'s an impulse'),
+          ),
+        ],
+      ),
+    );
+    if (growth == null || !mounted) return;
+
     final target = BurnTarget(
       image: image,
       imageBytes: bytes,
@@ -58,7 +81,8 @@ class _CaptureScreenState extends State<CaptureScreen> {
       plan: plan,
     );
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ShockScreen(target: target)),
+      MaterialPageRoute(
+          builder: (_) => ShockScreen(target: target, forGrowth: growth)),
     );
   }
 

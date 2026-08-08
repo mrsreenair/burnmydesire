@@ -8,9 +8,12 @@ import '../widgets/shock_card.dart';
 import 'burn_screen.dart';
 
 class ShockScreen extends ConsumerStatefulWidget {
-  const ShockScreen({super.key, required this.target});
+  const ShockScreen({super.key, required this.target, this.forGrowth = false});
 
   final BurnTarget target;
+
+  /// User said this purchase builds their future: soften the framing.
+  final bool forGrowth;
 
   @override
   ConsumerState<ShockScreen> createState() => _ShockScreenState();
@@ -34,13 +37,34 @@ class _ShockScreenState extends ConsumerState<ShockScreen> {
             Expanded(
               child: Center(
                 child: SingleChildScrollView(
-                  child: ShockCard(
-                    target: widget.target,
-                    years: _years,
-                    onYearsChanged: (y) => setState(() => _years = y),
-                    market: market,
-                    fundIndex: _fund,
-                    onFundChanged: (f) => setState(() => _fund = f),
+                  child: Column(
+                    children: [
+                      if (widget.forGrowth) ...[
+                        Card(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHigh,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Text(
+                              '🌱  Tools that truly grow your skills can be '
+                              'worth buying. Decide with a clear head — '
+                              'here\'s what it costs either way.',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      ShockCard(
+                        target: widget.target,
+                        years: _years,
+                        onYearsChanged: (y) => setState(() => _years = y),
+                        market: market,
+                        fundIndex: _fund,
+                        onFundChanged: (f) => setState(() => _fund = f),
+                      ),
+                    ],
                   ),
                 ),
               ),

@@ -38,27 +38,36 @@ class _LockedView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('📈', textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 64)),
+            const Text(
+              '📈',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 64),
+            ),
             const SizedBox(height: 24),
-            Text('See your wealth grow',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.w800)),
+            Text(
+              'See your wealth grow',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
             const SizedBox(height: 8),
             Text(
-                'Projections, resistance streaks, and your full burn '
-                'history are part of Pro.',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              'Projections, resistance streaks, and your full burn '
+              'history are part of Pro.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: 24),
             FilledButton(
               style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 18)),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const PaywallScreen()),
+                padding: const EdgeInsets.symmetric(vertical: 18),
               ),
+              onPressed: () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const PaywallScreen())),
               child: const Text('Go Pro'),
             ),
           ],
@@ -78,6 +87,7 @@ class _Dashboard extends ConsumerWidget {
     final protected = ref.watch(protectedCentsProvider);
     final market = ref.watch(marketDataProvider).value;
     final categories = ref.watch(spendCategoriesProvider).value ?? const [];
+    final goalIds = ref.watch(burnGoalsProvider).value ?? const [];
 
     if (items.isEmpty) {
       return Center(
@@ -87,74 +97,102 @@ class _Dashboard extends ConsumerWidget {
             'Nothing burned yet.\nYour protected wealth shows up here '
             'after your first burn.',
             textAlign: TextAlign.center,
-            style: theme.textTheme.titleMedium
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       );
     }
 
-    final totalBurns =
-        items.fold<int>(0, (sum, i) => sum + i.resistanceCount);
-    final strongest = items
-        .reduce((a, b) => a.resistanceCount >= b.resistanceCount ? a : b);
+    final purchases = items.where((i) => i.category != 'emotion').length;
+    final thoughts = items.length - purchases;
+    final strongest = items.reduce(
+      (a, b) => a.resistanceCount >= b.resistanceCount ? a : b,
+    );
 
     final fund = market?.funds.first;
     final targetYear = DateTime.now().year + kDefaultHorizonYears;
-    final projected = fund?.projectedValueCents(protected, kDefaultHorizonYears);
+    final projected = fund?.projectedValueCents(
+      protected,
+      kDefaultHorizonYears,
+    );
 
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                Text('Wealth protected',
-                    style: theme.textTheme.titleMedium),
-                const SizedBox(height: 8),
-                Text(
-                  formatEuros(protected),
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.displayMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                if (fund != null && projected != null) ...[
+        if (protected > 0)
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  Text('Wealth protected', style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
                   Text(
-                    'Invested today, that could be '
-                    '${formatEuros(projected)} by $targetYear at the '
-                    '${fund.name}\'s real ${fund.yearsAvailable}-year '
-                    'average (${(fund.fullHistoryCagr * 100).toStringAsFixed(1)}%/yr).',
+                    formatEuros(protected),
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.displayMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
+                  if (fund != null && projected != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Invested today, that could be '
+                      '${formatEuros(projected)} by $targetYear at the '
+                      '${fund.name}\'s real ${fund.yearsAvailable}-year '
+                      'average (${(fund.fullHistoryCagr * 100).toStringAsFixed(1)}%/yr).',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
-        ),
         const SizedBox(height: 16),
         Row(
           children: [
-            _StatTile(label: 'Temptations', value: '${items.length}'),
+            _StatTile(label: 'Purchases resisted', value: '$purchases'),
             const SizedBox(width: 12),
-            _StatTile(label: 'Burns', value: '$totalBurns'),
+            _StatTile(label: 'Thoughts burned', value: '$thoughts'),
             const SizedBox(width: 12),
             _StatTile(
-                label: 'Best streak',
-                value: '${strongest.resistanceCount}×'),
+              label: 'Best streak',
+              value: '${strongest.resistanceCount}×',
+            ),
           ],
         ),
+        if (goalIds.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          Text(
+            'What you\'re burning',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final (id, label, emoji) in burnGoals)
+                if (goalIds.contains(id)) Chip(label: Text('$emoji $label')),
+            ],
+          ),
+        ],
         if (categories.isNotEmpty) ...[
           const SizedBox(height: 24),
-          Text('Your weak spots',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700)),
+          Text(
+            'Your spending weak spots',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -166,9 +204,12 @@ class _Dashboard extends ConsumerWidget {
           ),
         ],
         const SizedBox(height: 24),
-        Text('Burn history',
-            style: theme.textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700)),
+        Text(
+          'Burn history',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         const SizedBox(height: 12),
         for (final item in items) _ItemTile(item: item),
         const SizedBox(height: 16),
@@ -177,8 +218,9 @@ class _Dashboard extends ConsumerWidget {
           'performance doesn\'t guarantee future results. Not investment '
           'advice.',
           textAlign: TextAlign.center,
-          style: theme.textTheme.bodySmall
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -207,10 +249,13 @@ class _StatTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
             children: [
-              Text(value,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: theme.colorScheme.primary)),
+              Text(
+                value,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
               const SizedBox(height: 4),
               Text(label, style: theme.textTheme.bodySmall),
             ],
@@ -241,15 +286,24 @@ class _ItemTile extends ConsumerWidget {
             height: 48,
             fit: BoxFit.cover,
             errorBuilder: (_, _, _) => const SizedBox(
-                width: 48, height: 48, child: Icon(Icons.image_outlined)),
+              width: 48,
+              height: 48,
+              child: Icon(Icons.image_outlined),
+            ),
           ),
         ),
-        title: Text('${formatEuros(item.priceCents)} protected',
-            style: theme.textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700)),
+        title: Text(
+          item.category == 'emotion'
+              ? 'A thought you let go'
+              : '${formatEuros(item.priceCents)} protected',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         subtitle: Text(
-            'Resisted ${item.resistanceCount}× · last burn '
-            '${DateFormat.yMMMd().format(when)}'),
+          'Resisted ${item.resistanceCount}× · last burn '
+          '${DateFormat.yMMMd().format(when)}',
+        ),
       ),
     );
   }

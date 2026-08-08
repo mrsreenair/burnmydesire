@@ -41,11 +41,13 @@ class AppDatabase extends _$AppDatabase {
     required int priceCents,
     int? monthlyCents,
     int? months,
+    String category = 'purchase',
   }) {
     final now = DateTime.now();
     return into(items).insert(ItemsCompanion.insert(
       imageFile: imageFile,
       priceCents: priceCents,
+      category: Value(category),
       monthlyCents: Value(monthlyCents),
       months: Value(months),
       resistanceCount: const Value(1),

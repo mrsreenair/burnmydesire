@@ -13,6 +13,30 @@ const _kPinSaltKey = 'pin_salt';
 
 const _storage = FlutterSecureStorage();
 
+/// What the user wants to burn: (id, label, emoji). Impulse buying is the
+/// money wedge; everything else is a habit/emotion goal (PROJECT.md §4.4).
+const burnGoals = <(String, String, String)>[
+  ('impulse_buying', 'Impulse buying', '🛍️'),
+  ('breakup', 'Breakup & heartbreak', '💔'),
+  ('alcohol', 'Alcohol', '🍺'),
+  ('smoking', 'Smoking & vaping', '🚬'),
+  ('junk_food', 'Junk food', '🍔'),
+  ('social_media', 'Social media', '📱'),
+  ('porn', 'Porn & sex urges', '🔞'),
+  ('gambling', 'Gambling', '🎰'),
+  ('doomscrolling', 'Doomscrolling', '🌀'),
+  ('thoughts', 'Unwanted thoughts', '💭'),
+];
+
+const _kGoalsKey = 'burn_goals';
+
+Future<void> saveBurnGoals(List<String> ids) async =>
+    (await SharedPreferences.getInstance()).setStringList(_kGoalsKey, ids);
+
+Future<List<String>> savedBurnGoals() async =>
+    (await SharedPreferences.getInstance()).getStringList(_kGoalsKey) ??
+    const [];
+
 /// Spending temptations offered during setup: (label, emoji).
 const spendCategories = <(String, String)>[
   ('Clothes', '👗'),

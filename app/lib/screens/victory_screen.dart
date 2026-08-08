@@ -5,6 +5,7 @@ import '../models/burn_target.dart';
 import '../providers/db_providers.dart';
 import '../utils/format_utils.dart';
 import '../utils/math_utils.dart';
+import '../utils/motivation.dart';
 
 class VictoryScreen extends ConsumerStatefulWidget {
   const VictoryScreen({super.key, required this.target});
@@ -34,6 +35,7 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
         priceCents: target.priceCents,
         monthlyCents: target.plan?.monthlyCents,
         months: target.plan?.months,
+        category: target.category,
       );
     }
   }
@@ -41,10 +43,32 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final price = widget.target.priceCents;
+    final target = widget.target;
+    final price = target.priceCents;
     final fund = ref.watch(marketDataProvider).value?.funds.first;
     final future = fund?.projectedValueCents(price, kDefaultHorizonYears) ??
         futureValueCents(price, years: kDefaultHorizonYears);
+
+    final String headline;
+    final String message;
+    final String? footnote;
+    if (target.isEmotion) {
+      headline = target.burnNumber > 1 ? 'Burned it again' : 'Thought burned';
+      message = motivationMessage(
+        resistanceCount: target.burnNumber,
+        seed: target.itemId ?? target.imageBytes.length,
+      );
+      footnote = null;
+    } else {
+      headline = 'Desire destroyed';
+      message = target.itemId != null
+          ? 'You resisted it again.\n${formatEuros(price)} stays protected.'
+          : 'You just protected ${formatEuros(price)}.\n'
+              'Invested, that\'s ${formatEuros(future)} '
+              'in $kDefaultHorizonYears years.';
+      footnote = 'Put it to work: a low-cost ETF at your broker beats a '
+          'gadget in a drawer.';
+    }
 
     return Scaffold(
       body: SafeArea(
@@ -57,29 +81,25 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
               const Text('🔥', textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 72)),
               const SizedBox(height: 16),
-              Text('Desire destroyed',
+              Text(headline,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.headlineMedium
                       ?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 24),
               Text(
-                widget.target.itemId != null
-                    ? 'You resisted it again.\n'
-                        '${formatEuros(price)} stays protected.'
-                    : 'You just protected ${formatEuros(price)}.\n'
-                        'Invested, that\'s ${formatEuros(future)} '
-                        'in $kDefaultHorizonYears years.',
+                message,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.titleMedium,
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Put it to work: a low-cost ETF at your broker beats a '
-                'gadget in a drawer.',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant),
-              ),
+              if (footnote != null) ...[
+                const SizedBox(height: 16),
+                Text(
+                  footnote,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ],
               const Spacer(),
               FilledButton(
                 style: FilledButton.styleFrom(

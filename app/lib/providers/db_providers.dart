@@ -41,3 +41,7 @@ final protectedCentsProvider = Provider<int>((ref) {
 /// [spendCategories]).
 final spendCategoriesProvider =
     FutureProvider<List<String>>((ref) => savedSpendCategories());
+
+/// The burn goals picked during setup (ids from [burnGoals]).
+final burnGoalsProvider =
+    FutureProvider<List<String>>((ref) => savedBurnGoals());

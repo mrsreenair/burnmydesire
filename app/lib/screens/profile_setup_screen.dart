@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/user_prefs.dart';
 import '../widgets/pin_pad.dart';
-import 'category_selection_screen.dart';
+import 'goal_selection_screen.dart';
 
 enum _Stage { name, createPin, confirmPin }
 
@@ -51,7 +51,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       await savePin(_entry);
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const CategorySelectionScreen()),
+        MaterialPageRoute(builder: (_) => const GoalSelectionScreen()),
       );
     } else {
       setState(() {

@@ -12,6 +12,8 @@ class BurnTarget {
     required this.imageBytes,
     required this.priceCents,
     this.plan,
+    this.category = 'purchase',
+    this.burnNumber = 1,
   });
 
   final int? itemId;
@@ -19,4 +21,13 @@ class BurnTarget {
   final Uint8List imageBytes;
   final int priceCents;
   final InstallmentPlan? plan;
+
+  /// 'purchase' (money framing) or 'emotion' (written thought, no price).
+  final String category;
+
+  /// Resistance count this burn will reach (1 for a first burn; for
+  /// re-burns the stored count + 1). Drives streak messaging.
+  final int burnNumber;
+
+  bool get isEmotion => category == 'emotion';
 }

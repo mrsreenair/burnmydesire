@@ -7,10 +7,12 @@ import '../providers/db_providers.dart';
 import '../providers/pro_provider.dart';
 import '../utils/format_utils.dart';
 import '../utils/math_utils.dart';
+import 'burn_screen.dart';
 import 'capture_screen.dart';
 import 'dashboard_screen.dart';
 import 'paywall_screen.dart';
 import 'shock_screen.dart';
+import 'write_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -23,16 +25,66 @@ class HomeScreen extends ConsumerWidget {
     final plan = item.monthlyCents != null && item.months != null
         ? InstallmentPlan(monthlyCents: item.monthlyCents!, months: item.months!)
         : null;
+    final target = BurnTarget(
+      itemId: item.id,
+      image: image,
+      imageBytes: bytes,
+      priceCents: item.priceCents,
+      plan: plan,
+      category: item.category,
+      burnNumber: item.resistanceCount + 1,
+    );
+    // Thoughts have no price: skip the shock card, go straight to the fire.
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ShockScreen(
-          target: BurnTarget(
-            itemId: item.id,
-            image: image,
-            imageBytes: bytes,
-            priceCents: item.priceCents,
-            plan: plan,
-          ),
+        builder: (_) => target.isEmotion
+            ? BurnScreen(target: target)
+            : ShockScreen(target: target),
+      ),
+    );
+  }
+
+  void _chooseBurnType(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Text('🛍️', style: TextStyle(fontSize: 28)),
+              title: const Text('Burn a purchase'),
+              subtitle: const Text('Photo + price — see the real damage'),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ref.read(canAddItemProvider)
+                        ? const CaptureScreen()
+                        : const PaywallScreen(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Text('✍️', style: TextStyle(fontSize: 28)),
+              title: const Text('Burn a thought'),
+              subtitle:
+                  const Text('Write the craving or feeling — burn the paper'),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ref.read(canAddItemProvider)
+                        ? const WriteScreen()
+                        : const PaywallScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
         ),
       ),
     );
@@ -122,7 +174,9 @@ class HomeScreen extends ConsumerWidget {
                             child: Image.file(store.file(item.imageFile),
                                 width: 48, height: 48, fit: BoxFit.cover),
                           ),
-                          title: Text(formatEuros(item.priceCents)),
+                          title: Text(item.category == 'emotion'
+                              ? 'A thought you let go'
+                              : formatEuros(item.priceCents)),
                           subtitle:
                               Text('resisted ${item.resistanceCount}×'),
                           trailing: const Text('🔥'),
@@ -135,15 +189,9 @@ class HomeScreen extends ConsumerWidget {
             FilledButton.icon(
               style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 18)),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => ref.read(canAddItemProvider)
-                      ? const CaptureScreen()
-                      : const PaywallScreen(),
-                ),
-              ),
+              onPressed: () => _chooseBurnType(context, ref),
               icon: const Icon(Icons.local_fire_department),
-              label: const Text('I want something…'),
+              label: const Text('I need to burn…'),
             ),
           ],
         ),

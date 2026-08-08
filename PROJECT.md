@@ -115,9 +115,19 @@ Urge hits → open app (or share item into it)
 - Instead: a **local privacy lock** — 4-digit PIN (stored as salted SHA-256 in the iOS Keychain, never the raw PIN) with **Face ID / Touch ID** unlock (`local_auth`), PIN always available as fallback.
 - Setup flow after onboarding: name (greetings only) → create/confirm PIN → **spending-category selection** ("Where does your money leak?" — clothes, gadgets, sneakers, food delivery, subscriptions, gaming, …). Categories are stored on-device and will personalize the dashboard.
 
-### 4.4 Temptation categories (v2 — designed in now, built later)
+### 4.4 Temptation categories (v1.5 — pulled forward, founder decision 2026-08-08)
 
-Every item record carries a `category` from day one, even though v1 only exposes `purchase`:
+**The founder chose to ship the broader temptation system now** rather than waiting for v2: the app targets every kind of unwanted desire — impulse buying, breakup/heartbreak, alcohol, smoking, junk food, social media, porn/sex urges, gambling, doomscrolling, intrusive thoughts. Consequences of this decision:
+
+- **Accounts were reconsidered and rejected again.** Addiction data is health-grade sensitive (GDPR special category). Everything stays on-device behind the PIN/Face ID lock; there is nothing to breach. *"Your addictions never leave your phone."*
+- **Goal picker in onboarding** (F8): "What do you want to burn?" multi-select of the goals above; drives dashboard personalization and message tone. If impulse buying is picked, the spending-weakness picker follows.
+- **Supportive disclaimer** (F8) closes onboarding: the app is a ritual, not treatment — seeing a doctor/therapist for a harmful addiction is strength, not defeat. Never claim to treat addiction (App Store + ethics).
+- **Write-and-burn** (F9): write the thought/craving on on-screen paper, rendered to an image, burned with the same shader. Emotion burns skip the shock card (no price), keep resistance counts ("resisted texting them 7×").
+- **Reflection step** (F10): before the shock card — "investment in your growth, or an impulse?" A growth answer softens the framing; the app never tells people to buy.
+- **Motivation messages** (F11): curated per-category encouragement after emotional burns instead of money math.
+- **AI roadmap:** curated content now → Apple on-device Foundation Models for personalized encouragement (privacy-true) → optional opt-in cloud AI coach much later. No emotional content leaves the device without explicit consent.
+
+Every item record carries a `category` from day one:
 
 | Category | Examples | Cost model | Shock card |
 |---|---|---|---|
