@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../config.dart';
 import '../data/database.dart';
 import '../models/burn_target.dart';
 import '../providers/db_providers.dart';
@@ -23,7 +24,12 @@ import 'write_screen.dart';
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  Future<void> _reBurn(BuildContext context, WidgetRef ref, Item item) async {
+  Future<void> _reBurn(
+    BuildContext context,
+    WidgetRef ref,
+    Item item, {
+    bool forever = false,
+  }) async {
     final store = ref.read(imageStoreProvider);
     final bytes = await store.read(item.imageFile);
     final image = await decodeImageFromList(bytes);
@@ -39,13 +45,48 @@ class HomeScreen extends ConsumerWidget {
       plan: plan,
       category: item.category,
       burnNumber: item.resistanceCount + 1,
+      letGoForever: forever,
     );
-    // Thoughts have no price: skip the shock card, go straight to the fire.
+    // Thoughts have no price and a forever-burn is a release, not a
+    // decision: both skip the shock card and go straight to the fire.
     Navigator.of(context).push(
-      target.isEmotion
+      target.isEmotion || forever
           ? fireRoute(BurnScreen(target: target))
           : emberRoute(ShockScreen(target: target)),
     );
+  }
+
+  /// Long-press: end the desire now instead of waiting for burn three.
+  Future<void> _confirmForever(
+      BuildContext context, WidgetRef ref, Item item) async {
+    final isThought = item.category == 'emotion';
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Let it go forever?'),
+        content: Text(
+          isThought
+              ? 'One last burn. The page is deleted for good and this '
+                  'thought leaves your list.'
+              : 'One last burn. The photo is deleted for good and this '
+                  'desire leaves your list — the '
+                  '${formatEuros(item.priceCents)} stays protected.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Not yet'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Final burn'),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && context.mounted) {
+      await _reBurn(context, ref, item, forever: true);
+    }
   }
 
   void _chooseBurnType(BuildContext context, WidgetRef ref) {
@@ -109,7 +150,7 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(itemsProvider).value ?? const <Item>[];
+    final items = ref.watch(liveItemsProvider);
     final protected = ref.watch(protectedCentsProvider);
     final theme = Theme.of(context);
 
@@ -187,6 +228,8 @@ class HomeScreen extends ConsumerWidget {
                             item: item,
                             tiltSeed: i,
                             onTap: () => _reBurn(context, ref, item),
+                            onLongPress: () =>
+                                _confirmForever(context, ref, item),
                           ),
                         ),
                       ),
@@ -271,11 +314,13 @@ class _ItemCollage extends ConsumerWidget {
     required this.item,
     required this.tiltSeed,
     required this.onTap,
+    required this.onLongPress,
   });
 
   final Item item;
   final int tiltSeed;
   final VoidCallback onTap;
+  final VoidCallback onLongPress;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -287,6 +332,7 @@ class _ItemCollage extends ConsumerWidget {
 
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -323,7 +369,8 @@ class _ItemCollage extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 18),
-              // A sticky-note card carrying the re-burn nudge.
+              // A sticky-note card carrying the re-burn nudge. One burn
+              // from the final-burn threshold, it becomes a warning label.
               TiltCard(
                 tiltDegrees: 1.6 * dir,
                 color: isThought ? AppColors.sticky : AppColors.paperHigh,
@@ -338,7 +385,9 @@ class _ItemCollage extends ConsumerWidget {
                       const Text('🔥', style: TextStyle(fontSize: 20)),
                       const SizedBox(height: 6),
                       Text(
-                        'Craving it again?\nTap to burn it.',
+                        item.resistanceCount >= kFinalBurnCount - 1
+                            ? 'One more burn and\nit\'s gone forever.'
+                            : 'Tap to burn again.\nHold to end it now.',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: isThought
                               ? AppColors.stickyInk

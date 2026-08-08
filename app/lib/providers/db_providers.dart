@@ -30,6 +30,20 @@ final itemsProvider = StreamProvider<List<Item>>(
   (ref) => ref.watch(databaseProvider).watchItems(),
 );
 
+/// Temptations still in the fight — what home shows. Destroyed items
+/// vanish from sight (their photo is gone; a visible item is a cue).
+final liveItemsProvider = Provider<List<Item>>((ref) =>
+    (ref.watch(itemsProvider).value ?? const <Item>[])
+        .where((i) => i.destroyedAt == null)
+        .toList());
+
+/// Desires ended forever by a final burn. Tombstones only: price, dates,
+/// streak — no image. Feeds the dashboard "Ashes" section.
+final destroyedItemsProvider = Provider<List<Item>>((ref) =>
+    (ref.watch(itemsProvider).value ?? const <Item>[])
+        .where((i) => i.destroyedAt != null)
+        .toList());
+
 /// Total wealth protected: each unique item counted once, no matter how
 /// often it was re-burned (PROJECT.md F4).
 final protectedCentsProvider = Provider<int>((ref) {

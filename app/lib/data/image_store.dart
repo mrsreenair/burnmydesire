@@ -22,4 +22,10 @@ class ImageStore {
   File file(String name) => File(p.join(_dir.path, name));
 
   Future<Uint8List> read(String name) => file(name).readAsBytes();
+
+  /// Final burn: the photo is the craving trigger — remove it for good.
+  Future<void> delete(String name) async {
+    final f = file(name);
+    if (await f.exists()) await f.delete();
+  }
 }

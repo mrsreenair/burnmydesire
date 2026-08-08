@@ -109,6 +109,17 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _destroyedAtMeta = const VerificationMeta(
+    'destroyedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> destroyedAt = GeneratedColumn<DateTime>(
+    'destroyed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -120,6 +131,7 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
     resistanceCount,
     createdAt,
     lastBurnedAt,
+    destroyedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -199,6 +211,15 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
         ),
       );
     }
+    if (data.containsKey('destroyed_at')) {
+      context.handle(
+        _destroyedAtMeta,
+        destroyedAt.isAcceptableOrUnknown(
+          data['destroyed_at']!,
+          _destroyedAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -244,6 +265,10 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_burned_at'],
       ),
+      destroyedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}destroyed_at'],
+      ),
     );
   }
 
@@ -263,6 +288,11 @@ class Item extends DataClass implements Insertable<Item> {
   final int resistanceCount;
   final DateTime createdAt;
   final DateTime? lastBurnedAt;
+
+  /// Set when the item was final-burned. A destroyed item is a tombstone:
+  /// the photo is deleted from disk (the craving trigger dies) but the row
+  /// survives so "wealth protected" totals stay honest forever.
+  final DateTime? destroyedAt;
   const Item({
     required this.id,
     required this.imageFile,
@@ -273,6 +303,7 @@ class Item extends DataClass implements Insertable<Item> {
     required this.resistanceCount,
     required this.createdAt,
     this.lastBurnedAt,
+    this.destroyedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -291,6 +322,9 @@ class Item extends DataClass implements Insertable<Item> {
     map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || lastBurnedAt != null) {
       map['last_burned_at'] = Variable<DateTime>(lastBurnedAt);
+    }
+    if (!nullToAbsent || destroyedAt != null) {
+      map['destroyed_at'] = Variable<DateTime>(destroyedAt);
     }
     return map;
   }
@@ -312,6 +346,9 @@ class Item extends DataClass implements Insertable<Item> {
       lastBurnedAt: lastBurnedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastBurnedAt),
+      destroyedAt: destroyedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(destroyedAt),
     );
   }
 
@@ -330,6 +367,7 @@ class Item extends DataClass implements Insertable<Item> {
       resistanceCount: serializer.fromJson<int>(json['resistanceCount']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       lastBurnedAt: serializer.fromJson<DateTime?>(json['lastBurnedAt']),
+      destroyedAt: serializer.fromJson<DateTime?>(json['destroyedAt']),
     );
   }
   @override
@@ -345,6 +383,7 @@ class Item extends DataClass implements Insertable<Item> {
       'resistanceCount': serializer.toJson<int>(resistanceCount),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'lastBurnedAt': serializer.toJson<DateTime?>(lastBurnedAt),
+      'destroyedAt': serializer.toJson<DateTime?>(destroyedAt),
     };
   }
 
@@ -358,6 +397,7 @@ class Item extends DataClass implements Insertable<Item> {
     int? resistanceCount,
     DateTime? createdAt,
     Value<DateTime?> lastBurnedAt = const Value.absent(),
+    Value<DateTime?> destroyedAt = const Value.absent(),
   }) => Item(
     id: id ?? this.id,
     imageFile: imageFile ?? this.imageFile,
@@ -368,6 +408,7 @@ class Item extends DataClass implements Insertable<Item> {
     resistanceCount: resistanceCount ?? this.resistanceCount,
     createdAt: createdAt ?? this.createdAt,
     lastBurnedAt: lastBurnedAt.present ? lastBurnedAt.value : this.lastBurnedAt,
+    destroyedAt: destroyedAt.present ? destroyedAt.value : this.destroyedAt,
   );
   Item copyWithCompanion(ItemsCompanion data) {
     return Item(
@@ -388,6 +429,9 @@ class Item extends DataClass implements Insertable<Item> {
       lastBurnedAt: data.lastBurnedAt.present
           ? data.lastBurnedAt.value
           : this.lastBurnedAt,
+      destroyedAt: data.destroyedAt.present
+          ? data.destroyedAt.value
+          : this.destroyedAt,
     );
   }
 
@@ -402,7 +446,8 @@ class Item extends DataClass implements Insertable<Item> {
           ..write('months: $months, ')
           ..write('resistanceCount: $resistanceCount, ')
           ..write('createdAt: $createdAt, ')
-          ..write('lastBurnedAt: $lastBurnedAt')
+          ..write('lastBurnedAt: $lastBurnedAt, ')
+          ..write('destroyedAt: $destroyedAt')
           ..write(')'))
         .toString();
   }
@@ -418,6 +463,7 @@ class Item extends DataClass implements Insertable<Item> {
     resistanceCount,
     createdAt,
     lastBurnedAt,
+    destroyedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -431,7 +477,8 @@ class Item extends DataClass implements Insertable<Item> {
           other.months == this.months &&
           other.resistanceCount == this.resistanceCount &&
           other.createdAt == this.createdAt &&
-          other.lastBurnedAt == this.lastBurnedAt);
+          other.lastBurnedAt == this.lastBurnedAt &&
+          other.destroyedAt == this.destroyedAt);
 }
 
 class ItemsCompanion extends UpdateCompanion<Item> {
@@ -444,6 +491,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
   final Value<int> resistanceCount;
   final Value<DateTime> createdAt;
   final Value<DateTime?> lastBurnedAt;
+  final Value<DateTime?> destroyedAt;
   const ItemsCompanion({
     this.id = const Value.absent(),
     this.imageFile = const Value.absent(),
@@ -454,6 +502,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     this.resistanceCount = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.lastBurnedAt = const Value.absent(),
+    this.destroyedAt = const Value.absent(),
   });
   ItemsCompanion.insert({
     this.id = const Value.absent(),
@@ -465,6 +514,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     this.resistanceCount = const Value.absent(),
     required DateTime createdAt,
     this.lastBurnedAt = const Value.absent(),
+    this.destroyedAt = const Value.absent(),
   }) : imageFile = Value(imageFile),
        priceCents = Value(priceCents),
        createdAt = Value(createdAt);
@@ -478,6 +528,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     Expression<int>? resistanceCount,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? lastBurnedAt,
+    Expression<DateTime>? destroyedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -489,6 +540,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
       if (resistanceCount != null) 'resistance_count': resistanceCount,
       if (createdAt != null) 'created_at': createdAt,
       if (lastBurnedAt != null) 'last_burned_at': lastBurnedAt,
+      if (destroyedAt != null) 'destroyed_at': destroyedAt,
     });
   }
 
@@ -502,6 +554,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     Value<int>? resistanceCount,
     Value<DateTime>? createdAt,
     Value<DateTime?>? lastBurnedAt,
+    Value<DateTime?>? destroyedAt,
   }) {
     return ItemsCompanion(
       id: id ?? this.id,
@@ -513,6 +566,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
       resistanceCount: resistanceCount ?? this.resistanceCount,
       createdAt: createdAt ?? this.createdAt,
       lastBurnedAt: lastBurnedAt ?? this.lastBurnedAt,
+      destroyedAt: destroyedAt ?? this.destroyedAt,
     );
   }
 
@@ -546,6 +600,9 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     if (lastBurnedAt.present) {
       map['last_burned_at'] = Variable<DateTime>(lastBurnedAt.value);
     }
+    if (destroyedAt.present) {
+      map['destroyed_at'] = Variable<DateTime>(destroyedAt.value);
+    }
     return map;
   }
 
@@ -560,7 +617,8 @@ class ItemsCompanion extends UpdateCompanion<Item> {
           ..write('months: $months, ')
           ..write('resistanceCount: $resistanceCount, ')
           ..write('createdAt: $createdAt, ')
-          ..write('lastBurnedAt: $lastBurnedAt')
+          ..write('lastBurnedAt: $lastBurnedAt, ')
+          ..write('destroyedAt: $destroyedAt')
           ..write(')'))
         .toString();
   }
@@ -588,6 +646,7 @@ typedef $$ItemsTableCreateCompanionBuilder =
       Value<int> resistanceCount,
       required DateTime createdAt,
       Value<DateTime?> lastBurnedAt,
+      Value<DateTime?> destroyedAt,
     });
 typedef $$ItemsTableUpdateCompanionBuilder =
     ItemsCompanion Function({
@@ -600,6 +659,7 @@ typedef $$ItemsTableUpdateCompanionBuilder =
       Value<int> resistanceCount,
       Value<DateTime> createdAt,
       Value<DateTime?> lastBurnedAt,
+      Value<DateTime?> destroyedAt,
     });
 
 class $$ItemsTableFilterComposer extends Composer<_$AppDatabase, $ItemsTable> {
@@ -652,6 +712,11 @@ class $$ItemsTableFilterComposer extends Composer<_$AppDatabase, $ItemsTable> {
 
   ColumnFilters<DateTime> get lastBurnedAt => $composableBuilder(
     column: $table.lastBurnedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get destroyedAt => $composableBuilder(
+    column: $table.destroyedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -709,6 +774,11 @@ class $$ItemsTableOrderingComposer
     column: $table.lastBurnedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get destroyedAt => $composableBuilder(
+    column: $table.destroyedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ItemsTableAnnotationComposer
@@ -754,6 +824,11 @@ class $$ItemsTableAnnotationComposer
     column: $table.lastBurnedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get destroyedAt => $composableBuilder(
+    column: $table.destroyedAt,
+    builder: (column) => column,
+  );
 }
 
 class $$ItemsTableTableManager
@@ -793,6 +868,7 @@ class $$ItemsTableTableManager
                 Value<int> resistanceCount = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime?> lastBurnedAt = const Value.absent(),
+                Value<DateTime?> destroyedAt = const Value.absent(),
               }) => ItemsCompanion(
                 id: id,
                 imageFile: imageFile,
@@ -803,6 +879,7 @@ class $$ItemsTableTableManager
                 resistanceCount: resistanceCount,
                 createdAt: createdAt,
                 lastBurnedAt: lastBurnedAt,
+                destroyedAt: destroyedAt,
               ),
           createCompanionCallback:
               ({
@@ -815,6 +892,7 @@ class $$ItemsTableTableManager
                 Value<int> resistanceCount = const Value.absent(),
                 required DateTime createdAt,
                 Value<DateTime?> lastBurnedAt = const Value.absent(),
+                Value<DateTime?> destroyedAt = const Value.absent(),
               }) => ItemsCompanion.insert(
                 id: id,
                 imageFile: imageFile,
@@ -825,6 +903,7 @@ class $$ItemsTableTableManager
                 resistanceCount: resistanceCount,
                 createdAt: createdAt,
                 lastBurnedAt: lastBurnedAt,
+                destroyedAt: destroyedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

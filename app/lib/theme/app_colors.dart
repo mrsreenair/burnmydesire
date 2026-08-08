@@ -42,6 +42,9 @@ class AppColors {
   static const money = Color(0xFF17A567);
   static const moneyDeep = Color(0xFF0D7A4B);
 
+  /// The final burn — a desire destroyed forever earns gold.
+  static const gold = Color(0xFFB8860B);
+
   // The ritual room (burn screen only)
   static const night = Color(0xFF0A0709);
 

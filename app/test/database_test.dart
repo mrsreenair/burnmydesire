@@ -43,4 +43,35 @@ void main() {
     final items = await db.watchItems().first;
     expect(items.first.id, a);
   });
+
+  test('final burn tombstones: image cleared, savings and streak survive',
+      () async {
+    final id = await db.insertBurnedItem(imageFile: 'a.jpg', priceCents: 80000);
+    await db.recordReBurn(id);
+    await db.recordReBurn(id);
+    await db.markDestroyed(id);
+
+    final item = (await db.watchItems().first).single;
+    expect(item.destroyedAt, isNotNull);
+    expect(item.imageFile, isEmpty, reason: 'trigger must be gone');
+    expect(item.resistanceCount, 3);
+    expect(item.priceCents, 80000,
+        reason: 'the ledger survives the final burn');
+  });
+
+  test('destroyed items excluded from live list, included in totals',
+      () async {
+    final a = await db.insertBurnedItem(imageFile: 'a.jpg', priceCents: 100);
+    await db.insertBurnedItem(imageFile: 'b.jpg', priceCents: 200);
+    await db.markDestroyed(a);
+
+    final items = await db.watchItems().first;
+    final live = items.where((i) => i.destroyedAt == null).toList();
+    expect(live, hasLength(1));
+    expect(live.single.priceCents, 200);
+
+    final protected = items.fold(0, (s, i) => s + i.priceCents);
+    expect(protected, 300,
+        reason: 'destroying an item must never shrink wealth protected');
+  });
 }

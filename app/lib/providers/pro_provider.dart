@@ -33,9 +33,9 @@ final proProvider = NotifierProvider<ProNotifier, bool>(ProNotifier.new);
 final dashboardUnlockedProvider = Provider<bool>((ref) =>
     ref.watch(proProvider) || !ref.watch(purchasesConfiguredProvider));
 
-/// Free users may add a new temptation only below the item limit.
+/// Free users may add a new temptation only below the item limit. Only
+/// live items count — destroying a desire forever frees the slot.
 final canAddItemProvider = Provider<bool>((ref) {
   if (ref.watch(proProvider)) return true;
-  final count = ref.watch(itemsProvider).value?.length ?? 0;
-  return count < kFreeItemLimit;
+  return ref.watch(liveItemsProvider).length < kFreeItemLimit;
 });

@@ -14,6 +14,7 @@ class BurnTarget {
     this.plan,
     this.category = 'purchase',
     this.burnNumber = 1,
+    this.letGoForever = false,
   });
 
   final int? itemId;
@@ -28,6 +29,10 @@ class BurnTarget {
   /// Resistance count this burn will reach (1 for a first burn; for
   /// re-burns the stored count + 1). Drives streak messaging.
   final int burnNumber;
+
+  /// The user chose to end this desire now (long-press on home) rather
+  /// than waiting for the automatic final burn.
+  final bool letGoForever;
 
   bool get isEmotion => category == 'emotion';
 }

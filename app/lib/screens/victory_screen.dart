@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../config.dart';
 import '../models/burn_target.dart';
 import '../providers/db_providers.dart';
 import '../theme/app_colors.dart';
@@ -25,6 +26,12 @@ class VictoryScreen extends ConsumerStatefulWidget {
 }
 
 class _VictoryScreenState extends ConsumerState<VictoryScreen> {
+  /// Whether this burn ends the desire forever: the user asked for it, or
+  /// the streak reached the final-burn count.
+  bool get _isFinal =>
+      widget.target.letGoForever ||
+      widget.target.burnNumber >= kFinalBurnCount;
+
   @override
   void initState() {
     super.initState();
@@ -41,18 +48,28 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
 
   Future<void> _persistBurn() async {
     final db = ref.read(databaseProvider);
+    final store = ref.read(imageStoreProvider);
     final target = widget.target;
+    final int id;
     if (target.itemId != null) {
       await db.recordReBurn(target.itemId!);
+      id = target.itemId!;
     } else {
-      final file = await ref.read(imageStoreProvider).save(target.imageBytes);
-      await db.insertBurnedItem(
+      final file = await store.save(target.imageBytes);
+      id = await db.insertBurnedItem(
         imageFile: file,
         priceCents: target.priceCents,
         monthlyCents: target.plan?.monthlyCents,
         months: target.plan?.months,
         category: target.category,
       );
+    }
+    if (_isFinal) {
+      // The final burn: delete the photo (the craving trigger), then
+      // tombstone the row so the savings ledger survives.
+      final item = await db.getItem(id);
+      if (item.imageFile.isNotEmpty) await store.delete(item.imageFile);
+      await db.markDestroyed(id);
     }
   }
 
@@ -67,7 +84,9 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
     final again = target.burnNumber > 1;
 
     final String badge;
-    if (again) {
+    if (_isFinal) {
+      badge = 'Destroyed forever';
+    } else if (again) {
       badge = 'Resisted ${target.burnNumber}×';
     } else {
       badge = target.isEmotion ? 'Thought burned' : 'Desire destroyed';
@@ -94,23 +113,27 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
                             from: 0.8,
                             child: BadgePill(
                               badge,
-                              color: target.isEmotion
-                                  ? AppColors.accent
-                                  : AppColors.money,
+                              color: _isFinal
+                                  ? AppColors.gold
+                                  : target.isEmotion
+                                      ? AppColors.accent
+                                      : AppColors.money,
                             ),
                           ),
                           const SizedBox(height: 18),
                           Reveal(
                             delay: const Duration(milliseconds: 340),
-                            child: target.isEmotion
-                                ? _ThoughtResult(target: target)
-                                : _MoneyResult(
-                                    target: target,
-                                    price: price,
-                                    future: future,
-                                  ),
+                            child: _isFinal
+                                ? _FinalResult(target: target, price: price)
+                                : target.isEmotion
+                                    ? _ThoughtResult(target: target)
+                                    : _MoneyResult(
+                                        target: target,
+                                        price: price,
+                                        future: future,
+                                      ),
                           ),
-                          if (!target.isEmotion && !again) ...[
+                          if (!target.isEmotion && !again && !_isFinal) ...[
                             const SizedBox(height: 20),
                             Reveal(
                               delay: const Duration(milliseconds: 520),
@@ -220,6 +243,53 @@ class _MoneyResult extends StatelessWidget {
               ? 'This one keeps trying. You keep winning.'
               : 'Invested, that\'s ${formatEuros(future)} '
                   'in $kDefaultHorizonYears years.',
+          textAlign: TextAlign.center,
+          style:
+              theme.textTheme.titleMedium?.copyWith(color: AppColors.textMid),
+        ),
+      ],
+    );
+  }
+}
+
+/// The Final Burn: the desire is dead, the trigger is deleted, the money
+/// stays counted forever.
+class _FinalResult extends StatelessWidget {
+  const _FinalResult({required this.target, required this.price});
+
+  final BurnTarget target;
+  final int price;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      children: [
+        Text(
+          'This desire is dead',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.headlineMedium,
+        ),
+        if (!target.isEmotion) ...[
+          const SizedBox(height: 6),
+          ShaderMask(
+            shaderCallback: (b) => AppColors.wealthGradient.createShader(b),
+            blendMode: BlendMode.srcIn,
+            child: CountUpText(
+              price,
+              formatter: formatEuros,
+              duration: const Duration(milliseconds: 1400),
+              style: theme.textTheme.displayMedium,
+            ),
+          ),
+        ],
+        const SizedBox(height: 14),
+        Text(
+          target.isEmotion
+              ? 'The page is gone for good — deleted, not stored. '
+                  'What you burn stops owning you.'
+              : 'The photo is deleted. It can\'t tempt you again — '
+                  'and your ${formatEuros(price)} stays protected forever.',
           textAlign: TextAlign.center,
           style:
               theme.textTheme.titleMedium?.copyWith(color: AppColors.textMid),
