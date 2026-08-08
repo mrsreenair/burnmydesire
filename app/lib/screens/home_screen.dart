@@ -8,6 +8,7 @@ import '../providers/pro_provider.dart';
 import '../utils/format_utils.dart';
 import '../utils/math_utils.dart';
 import 'capture_screen.dart';
+import 'dashboard_screen.dart';
 import 'paywall_screen.dart';
 import 'shock_screen.dart';
 
@@ -48,6 +49,13 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Burn My Desire'),
         actions: [
+          IconButton(
+            tooltip: 'Dashboard',
+            icon: const Icon(Icons.insights_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const DashboardScreen()),
+            ),
+          ),
           IconButton(
             tooltip: 'Go Pro',
             icon: const Icon(Icons.workspace_premium_outlined),

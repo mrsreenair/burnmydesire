@@ -28,6 +28,11 @@ class ProNotifier extends Notifier<bool> {
 
 final proProvider = NotifierProvider<ProNotifier, bool>(ProNotifier.new);
 
+/// The dashboard is a Pro feature. Dev builds without a RevenueCat key
+/// keep it open so the founder can demo it.
+final dashboardUnlockedProvider = Provider<bool>((ref) =>
+    ref.watch(proProvider) || !ref.watch(purchasesConfiguredProvider));
+
 /// Free users may add a new temptation only below the item limit.
 final canAddItemProvider = Provider<bool>((ref) {
   if (ref.watch(proProvider)) return true;

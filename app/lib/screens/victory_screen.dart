@@ -42,7 +42,9 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final price = widget.target.priceCents;
-    final future = futureValueCents(price, years: kDefaultHorizonYears);
+    final fund = ref.watch(marketDataProvider).value?.funds.first;
+    final future = fund?.projectedValueCents(price, kDefaultHorizonYears) ??
+        futureValueCents(price, years: kDefaultHorizonYears);
 
     return Scaffold(
       body: SafeArea(

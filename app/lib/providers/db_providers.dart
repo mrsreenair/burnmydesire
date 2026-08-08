@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/database.dart';
 import '../data/image_store.dart';
 import '../data/market_data.dart';
+import '../data/user_prefs.dart';
 
 /// Overridden in main() with the real documents path.
 final imageStoreProvider = Provider<ImageStore>(
@@ -35,3 +36,8 @@ final protectedCentsProvider = Provider<int>((ref) {
   final items = ref.watch(itemsProvider).value ?? const [];
   return items.fold(0, (sum, item) => sum + item.priceCents);
 });
+
+/// The spending weaknesses picked during setup (labels from
+/// [spendCategories]).
+final spendCategoriesProvider =
+    FutureProvider<List<String>>((ref) => savedSpendCategories());

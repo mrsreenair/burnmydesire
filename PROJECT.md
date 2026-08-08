@@ -106,8 +106,9 @@ Urge hits → open app (or share item into it)
 - Post-burn celebration + updated totals: "€4,200 protected this year → €19,600 by 2046."
 - CTA links to low-cost brokers (region-aware: DEGIRO, Interactive Brokers). Plain outbound affiliate links. **No eToro** (CFD model conflicts with our message).
 
-**F6 — Wealth-protected dashboard (Pro)**
-- Total protected, projections, resistance streaks, per-item history.
+**F6 — Wealth-protected dashboard (Pro)** ✅ *built 2026-08-08*
+- Total protected + real-market projection ("could be €9.451 by 2046 at the S&P 500's real 33-year average"), stat tiles (temptations / burns / best streak), weak-spot category chips from setup, per-item burn history with thumbnails.
+- Pro-gated with a Go Pro lock screen; dev builds without a RevenueCat key keep it open for demos.
 
 **F7 — Privacy lock & local profile (founder decision 2026-08-08)**
 - **No accounts, no login — ever.** Registration/login was considered and rejected: with no backend there is nothing an account unlocks, and it would break the "your temptations never leave your phone" pillar.
