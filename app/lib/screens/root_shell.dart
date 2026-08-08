@@ -4,12 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/motion.dart';
+import 'ashes_screen.dart';
 import 'dashboard_screen.dart';
 import 'home_screen.dart';
 import 'paywall_screen.dart';
 import 'settings_screen.dart';
 
-/// The app's four destinations, behind a floating pill tab bar (the Qonto
+/// The app's five destinations, behind a floating pill tab bar (the Qonto
 /// pattern): a raised capsule that sits *on* the paper rather than a slab
 /// welded to the bottom edge.
 class RootShell extends ConsumerStatefulWidget {
@@ -28,6 +29,7 @@ class _RootShellState extends ConsumerState<RootShell> {
     (Icons.local_fire_department_outlined, Icons.local_fire_department,
         'Desires'),
     (Icons.insights_outlined, Icons.insights, 'Wealth'),
+    (Icons.auto_awesome_outlined, Icons.auto_awesome, 'Ashes'),
     (Icons.workspace_premium_outlined, Icons.workspace_premium, 'Pro'),
     (Icons.settings_outlined, Icons.settings, 'Settings'),
   ];
@@ -41,6 +43,7 @@ class _RootShellState extends ConsumerState<RootShell> {
         children: const [
           HomeScreen(),
           DashboardScreen(),
+          AshesScreen(),
           PaywallScreen(embedded: true),
           SettingsScreen(),
         ],
@@ -109,7 +112,8 @@ class _Tab extends StatelessWidget {
         child: AnimatedContainer(
           duration: Motion.fast,
           curve: Motion.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          // Tight horizontal padding: five tabs share 402pt.
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
           decoration: BoxDecoration(
             color: selected
                 ? AppColors.accent.withValues(alpha: 0.1)
@@ -123,8 +127,10 @@ class _Tab extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 label,
+                maxLines: 1,
+                overflow: TextOverflow.visible,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 10.5,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   color: color,
                 ),

@@ -88,7 +88,6 @@ class _Dashboard extends ConsumerWidget {
     final theme = Theme.of(context);
     final items = ref.watch(itemsProvider).value ?? const <Item>[];
     final live = ref.watch(liveItemsProvider);
-    final destroyed = ref.watch(destroyedItemsProvider);
     final protected = ref.watch(protectedCentsProvider);
     final market = ref.watch(marketDataProvider).value;
     final categories = ref.watch(spendCategoriesProvider).value ?? const [];
@@ -219,29 +218,6 @@ class _Dashboard extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         for (final item in live) _ItemTile(item: item),
-        if (destroyed.isNotEmpty) ...[
-          const SizedBox(height: 24),
-          Text(
-            'Ashes',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Builder(builder: (context) {
-            final ashCents =
-                destroyed.fold(0, (s, i) => s + i.priceCents);
-            return Text(
-              '${destroyed.length} '
-              '${destroyed.length == 1 ? 'desire' : 'desires'} destroyed '
-              'forever'
-              '${ashCents > 0 ? ' · ${formatEuros(ashCents)} stays protected' : ''}',
-              style: theme.textTheme.bodySmall,
-            );
-          }),
-          const SizedBox(height: 12),
-          for (final item in destroyed) _AshTile(item: item),
-        ],
         const SizedBox(height: 16),
         Text(
           'Projections assume historical average returns repeat. Past '
@@ -290,47 +266,6 @@ class _StatTile extends StatelessWidget {
               Text(label, style: theme.textTheme.bodySmall),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A tombstone: no photo (deleted at the final burn), just the ledger
-/// entry — muted on purpose. The desire is dead; only the win remains.
-class _AshTile extends StatelessWidget {
-  const _AshTile({required this.item});
-
-  final Item item;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final when = item.destroyedAt ?? item.lastBurnedAt ?? item.createdAt;
-    return Card(
-      child: ListTile(
-        leading: Container(
-          width: 48,
-          height: 48,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: AppColors.field,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Text('🕯️', style: TextStyle(fontSize: 22)),
-        ),
-        title: Text(
-          item.category == 'emotion'
-              ? 'A thought, gone for good'
-              : '${formatEuros(item.priceCents)} protected forever',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: AppColors.textMid,
-          ),
-        ),
-        subtitle: Text(
-          'Resisted ${item.resistanceCount}× · destroyed '
-          '${DateFormat.yMMMd().format(when)}',
         ),
       ),
     );
