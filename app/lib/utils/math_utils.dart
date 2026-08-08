@@ -45,6 +45,11 @@ class InstallmentPlan {
 
   /// The full damage: everything paid plus the growth the price would have
   /// earned if invested instead.
-  int trueCostCents(int priceCents, {required int years}) =>
-      totalPaidCents + foregoneGrowthCents(priceCents, years: years);
+  int trueCostCents(
+    int priceCents, {
+    required int years,
+    double annualRate = kDefaultAnnualRate,
+  }) =>
+      totalPaidCents +
+      foregoneGrowthCents(priceCents, annualRate: annualRate, years: years);
 }

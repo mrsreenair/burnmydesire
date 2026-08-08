@@ -2,11 +2,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/database.dart';
 import '../data/image_store.dart';
+import '../data/market_data.dart';
 
 /// Overridden in main() with the real documents path.
 final imageStoreProvider = Provider<ImageStore>(
   (ref) => throw UnimplementedError('overridden in main'),
 );
+
+/// Real market history (bundled asset, network-refreshed monthly). Kicks
+/// off a silent background refresh after the first load.
+final marketDataProvider = FutureProvider<MarketData>((ref) async {
+  final store =
+      MarketDataStore(ref.watch(imageStoreProvider).documentsPath);
+  final data = await store.load();
+  store.refreshIfStale(data).ignore();
+  return data;
+});
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();

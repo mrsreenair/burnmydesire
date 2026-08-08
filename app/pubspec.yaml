@@ -32,6 +32,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/data/market_returns.json
   shaders:
     - assets/shaders/burn.frag
 

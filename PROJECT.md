@@ -81,8 +81,10 @@ Urge hits → open app (or share item into it)
 **F1 — Frictionless capture**
 - `image_picker` for camera/gallery. Image cached locally only. Zero uploads, ever.
 
-**F2 — Opportunity-cost calculator**
-- Future value: `A = P(1 + r)^t` with r = 8% default (adjustable in Pro), t = 10/20/30 years (default 20).
+**F2 — Opportunity-cost calculator (reworked 2026-08-08: real market data)**
+- **Founder decision:** no made-up rates. The shock number is a real backtest — *"invested instead, this €800 would be €6,659 in the S&P 500 since 2006 — its real record: 11.2%/yr."*
+- Three funds at launch: S&P 500 (SPY), NASDAQ-100 (QQQ), MSCI World (IWDA.AS) — index ETFs only; single stocks (FAANG) rejected as survivorship-biased and compliance-risky. Monthly adjusted closes (dividends included) bundled as an asset (~8 KB), refreshed silently from Yahoo Finance's chart endpoint when >30 days old; offline always works. Horizons 10/20/30y clamp honestly to a fund's available history ("since 2010, all its history").
+- Fallback when data can't load: `A = P(1 + r)^t` with r = 8%, t = 10/20/30 years (default 20).
 - **Installment mode:** given monthly payment, term, and (optional) interest rate, show total paid + foregone growth: *"€70/mo × 12 = €840 paid for an €800 printer, plus €3,728 foregone — this printer really costs you €4,500."*
 - **Shock card rule: ONE bold number.** The user is mid-craving; no lectures. Educational detail lives behind a tap.
 - Disclaimer on every projection: *"Based on historical market averages. Not a guarantee or investment advice."*
