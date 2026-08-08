@@ -61,6 +61,18 @@ void main() {
       expect(fund.investmentYear(1), 2025);
       expect(fund.investmentYear(10), 2024);
     });
+
+    test('full-history CAGR of a doubling fund is 100%', () {
+      expect(doublingFund().fullHistoryCagr, closeTo(1.0, 1e-9));
+    });
+
+    test('forward projection compounds the full-history average', () {
+      final fund = doublingFund();
+      // €800 at 100%/yr: 3 years ahead -> €6,400.
+      expect(fund.projectedValueCents(80000, 3), 640000);
+      // Projection horizon may exceed available history — it's a forecast.
+      expect(fund.projectedValueCents(80000, 5), 2560000);
+    });
   });
 
   group('serialization', () {
@@ -89,14 +101,20 @@ void main() {
       final data = MarketData.fromJson(jsonDecode(
               await rootBundleLoadString('assets/data/market_returns.json'))
           as Map<String, dynamic>);
-      expect(data.funds.map((f) => f.name),
-          containsAll(['S&P 500', 'NASDAQ-100', 'MSCI World']));
+      expect(
+          data.funds.map((f) => f.name),
+          containsAll([
+            'S&P 500', 'NASDAQ-100', 'MSCI World',
+            'Apple', 'Microsoft', 'Google', 'Amazon', 'Nvidia', 'Tesla',
+          ]));
       for (final fund in data.funds) {
         expect(fund.yearsAvailable, greaterThanOrEqualTo(10),
             reason: '${fund.name} needs at least a decade of history');
         expect(fund.monthly.every((p) => p > 0), isTrue);
         // Long-run equity multiples should be growth, not noise.
         expect(fund.multipleOverYears(10), greaterThan(1.5));
+        // Full-history averages should be sane annual percentages.
+        expect(fund.fullHistoryCagr, inExclusiveRange(0.02, 0.60));
       }
     });
   });

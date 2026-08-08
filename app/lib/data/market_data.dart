@@ -88,6 +88,15 @@ class FundSeries {
 
   /// True when the fund's history covers the full [years] horizon.
   bool covers(int years) => yearsAvailable >= years;
+
+  /// Annualized return over the fund's entire available history — the
+  /// long-run average used for forward projections.
+  double get fullHistoryCagr => realizedCagr(yearsAvailable);
+
+  /// Forward projection: what [cents] invested today could become in
+  /// [yearsAhead] years IF the fund repeats its full-history average.
+  int projectedValueCents(int cents, int yearsAhead) =>
+      (cents * math.pow(1 + fullHistoryCagr, yearsAhead)).round();
 }
 
 class MarketData {

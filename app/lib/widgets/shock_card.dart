@@ -6,8 +6,8 @@ import '../utils/format_utils.dart';
 import '../utils/math_utils.dart';
 
 /// The rational punch: one bold number, everything else quiet.
-/// The number is real market history — what the money would actually be
-/// worth today had it been invested [years] ago in the selected fund.
+/// Forward-looking: what the money could become by year X if invested
+/// today and the asset repeats its real historical average return.
 class ShockCard extends StatelessWidget {
   const ShockCard({
     super.key,
@@ -18,6 +18,8 @@ class ShockCard extends StatelessWidget {
     this.fundIndex = 0,
     this.onFundChanged,
   });
+
+  static const int maxYears = 30;
 
   final BurnTarget target;
   final int years;
@@ -31,17 +33,19 @@ class ShockCard extends StatelessWidget {
     final theme = Theme.of(context);
     final price = target.priceCents;
     final fund = market?.funds[fundIndex];
+    final targetYear = DateTime.now().year + years;
 
     final int shown;
     final double rate;
     if (fund != null) {
-      shown = fund.valueTodayCents(price, years);
-      rate = fund.realizedCagr(years);
+      shown = fund.projectedValueCents(price, years);
+      rate = fund.fullHistoryCagr;
     } else {
       shown = futureValueCents(price, years: years);
       rate = kDefaultAnnualRate;
     }
     final plan = target.plan;
+    final pct = (rate * 100).toStringAsFixed(1);
 
     return Card(
       child: Padding(
@@ -50,7 +54,7 @@ class ShockCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Invested instead, this ${formatEuros(price)} would be',
+              'Invested today instead, this ${formatEuros(price)} could be',
               textAlign: TextAlign.center,
               style: theme.textTheme.titleMedium,
             ),
@@ -64,30 +68,53 @@ class ShockCard extends StatelessWidget {
               ),
             ),
             Text(
-              fund != null ? _fundLine(fund, rate) : 'in $years years',
+              fund != null
+                  ? 'by $targetYear in ${fund.name} — real '
+                      '${fund.yearsAvailable}-year average: $pct%/yr'
+                  : 'by $targetYear at $pct%/yr',
               textAlign: TextAlign.center,
               style: theme.textTheme.titleMedium,
             ),
             const SizedBox(height: 16),
             if (market != null && onFundChanged != null) ...[
-              SegmentedButton<int>(
-                segments: [
-                  for (var i = 0; i < market!.funds.length; i++)
-                    ButtonSegment(
-                        value: i, label: Text(market!.funds[i].name)),
-                ],
-                selected: {fundIndex},
-                onSelectionChanged: (s) => onFundChanged!(s.first),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (var i = 0; i < market!.funds.length; i++) ...[
+                      ChoiceChip(
+                        label: Text(market!.funds[i].name),
+                        selected: i == fundIndex,
+                        onSelected: (_) => onFundChanged!(i),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                  ],
+                ),
               ),
               const SizedBox(height: 8),
             ],
-            SegmentedButton<int>(
-              segments: [
-                for (final h in kHorizons)
-                  ButtonSegment(value: h, label: Text('$h y')),
+            Row(
+              children: [
+                Expanded(
+                  child: Slider(
+                    value: years.toDouble(),
+                    min: 1,
+                    max: maxYears.toDouble(),
+                    divisions: maxYears - 1,
+                    label: '$years y',
+                    onChanged: (v) => onYearsChanged(v.round()),
+                  ),
+                ),
+                SizedBox(
+                  width: 64,
+                  child: Text(
+                    years == 1 ? '1 year' : '$years years',
+                    textAlign: TextAlign.end,
+                    style: theme.textTheme.titleSmall,
+                  ),
+                ),
               ],
-              selected: {years},
-              onSelectionChanged: (s) => onYearsChanged(s.first),
             ),
             if (plan != null) ...[
               const SizedBox(height: 16),
@@ -105,8 +132,10 @@ class ShockCard extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               fund != null
-                  ? 'Real ${fund.ticker} total return incl. dividends, data '
-                      'to ${market!.asOfLabel}. Past performance doesn\'t '
+                  ? 'Projection assumes ${fund.name} (${fund.ticker}) repeats '
+                      'its real ${fund.yearsAvailable}-year average total '
+                      'return, dividends included, data to '
+                      '${market!.asOfLabel}. Past performance doesn\'t '
                       'guarantee future results. Not investment advice.'
                   : 'Assumes ${(kDefaultAnnualRate * 100).toStringAsFixed(0)}% '
                       'avg. annual return (historical market average). Not a '
@@ -120,17 +149,5 @@ class ShockCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  /// e.g. "in the S&P 500 since 2006 — its real record: 10.2%/yr" (clamps
-  /// to the fund's full history when it's shorter than the horizon).
-  String _fundLine(FundSeries fund, double rate) {
-    final since = fund.investmentYear(years);
-    final clamped = !fund.covers(years);
-    final pct = (rate * 100).toStringAsFixed(1);
-    return clamped
-        ? 'in the ${fund.name} since $since (all its history) — '
-            'real record: $pct%/yr'
-        : 'in the ${fund.name} since $since — its real record: $pct%/yr';
   }
 }

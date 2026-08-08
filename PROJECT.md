@@ -82,9 +82,10 @@ Urge hits → open app (or share item into it)
 - `image_picker` for camera/gallery. Image cached locally only. Zero uploads, ever.
 
 **F2 — Opportunity-cost calculator (reworked 2026-08-08: real market data)**
-- **Founder decision:** no made-up rates. The shock number is a real backtest — *"invested instead, this €800 would be €6,659 in the S&P 500 since 2006 — its real record: 11.2%/yr."*
-- Three funds at launch: S&P 500 (SPY), NASDAQ-100 (QQQ), MSCI World (IWDA.AS) — index ETFs only; single stocks (FAANG) rejected as survivorship-biased and compliance-risky. Monthly adjusted closes (dividends included) bundled as an asset (~8 KB), refreshed silently from Yahoo Finance's chart endpoint when >30 days old; offline always works. Horizons 10/20/30y clamp honestly to a fund's available history ("since 2010, all its history").
-- Fallback when data can't load: `A = P(1 + r)^t` with r = 8%, t = 10/20/30 years (default 20).
+- **Founder decision:** no made-up rates. Forward projection from real history — *"invested today instead, this €800 could be €6,301 by 2046 in the S&P 500 — real 33-year average: 10.9%/yr."* Target year shown explicitly; horizon is a 1–30 year slider (default 20).
+- Nine assets at launch (founder decision 2026-08-08): index ETFs S&P 500 (SPY), NASDAQ-100 (QQQ), MSCI World (IWDA.AS) first/default, plus single stocks Apple, Microsoft, Google, Amazon, Nvidia, Tesla. Rate used = each asset's full-history realized CAGR (dividends included), disclosed in the card ("real 22-year average: 23.8%/yr"). Known caveat: hyper-growth single stocks produce heroic 30-year numbers (survivorship bias) — kept per founder preference, revisit after user feedback.
+- Data: monthly adjusted closes bundled as an asset (~23 KB), refreshed silently from Yahoo Finance's chart endpoint when >30 days old; offline always works.
+- Fallback when data can't load: `A = P(1 + r)^t` with r = 8%.
 - **Installment mode:** given monthly payment, term, and (optional) interest rate, show total paid + foregone growth: *"€70/mo × 12 = €840 paid for an €800 printer, plus €3,728 foregone — this printer really costs you €4,500."*
 - **Shock card rule: ONE bold number.** The user is mid-craving; no lectures. Educational detail lives behind a tap.
 - Disclaimer on every projection: *"Based on historical market averages. Not a guarantee or investment advice."*
