@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'home_screen.dart';
-
-const _kSeenKey = 'onboarding_seen';
-
-Future<bool> hasSeenOnboarding() async =>
-    (await SharedPreferences.getInstance()).getBool(_kSeenKey) ?? false;
+import 'profile_setup_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -40,11 +34,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     ),
   ];
 
-  Future<void> _finish() async {
-    (await SharedPreferences.getInstance()).setBool(_kSeenKey, true).ignore();
-    if (!mounted) return;
+  void _finish() {
+    // Setup completes (and is flagged) at the end of category selection.
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
+      MaterialPageRoute(builder: (_) => const ProfileSetupScreen()),
     );
   }
 

@@ -5,14 +5,17 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 
 import 'config.dart';
 import 'data/image_store.dart';
+import 'data/user_prefs.dart';
 import 'providers/db_providers.dart';
 import 'screens/home_screen.dart';
+import 'screens/lock_screen.dart';
 import 'screens/onboarding_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final docs = await getApplicationDocumentsDirectory();
-  final seenOnboarding = await hasSeenOnboarding();
+  final setupDone = await hasCompletedSetup();
+  final locked = setupDone && await hasPin();
   if (kRevenueCatIosApiKey.isNotEmpty) {
     await Purchases.configure(
       PurchasesConfiguration(kRevenueCatIosApiKey),
@@ -23,15 +26,17 @@ Future<void> main() async {
       overrides: [
         imageStoreProvider.overrideWithValue(ImageStore(docs.path)),
       ],
-      child: BurnMyDesireApp(showOnboarding: !seenOnboarding),
+      child: BurnMyDesireApp(showOnboarding: !setupDone, locked: locked),
     ),
   );
 }
 
 class BurnMyDesireApp extends StatelessWidget {
-  const BurnMyDesireApp({super.key, required this.showOnboarding});
+  const BurnMyDesireApp(
+      {super.key, required this.showOnboarding, required this.locked});
 
   final bool showOnboarding;
+  final bool locked;
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +49,11 @@ class BurnMyDesireApp extends StatelessWidget {
         colorSchemeSeed: Colors.deepOrange,
         scaffoldBackgroundColor: const Color(0xFF141416),
       ),
-      home: showOnboarding ? const OnboardingScreen() : const HomeScreen(),
+      home: showOnboarding
+          ? const OnboardingScreen()
+          : locked
+              ? const LockScreen()
+              : const HomeScreen(),
     );
   }
 }

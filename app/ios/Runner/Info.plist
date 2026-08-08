@@ -26,6 +26,8 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Unlock the app so only you can see your desires.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Photograph the thing you crave so you can burn it.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

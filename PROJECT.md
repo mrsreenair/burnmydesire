@@ -106,6 +106,11 @@ Urge hits → open app (or share item into it)
 **F6 — Wealth-protected dashboard (Pro)**
 - Total protected, projections, resistance streaks, per-item history.
 
+**F7 — Privacy lock & local profile (founder decision 2026-08-08)**
+- **No accounts, no login — ever.** Registration/login was considered and rejected: with no backend there is nothing an account unlocks, and it would break the "your temptations never leave your phone" pillar.
+- Instead: a **local privacy lock** — 4-digit PIN (stored as salted SHA-256 in the iOS Keychain, never the raw PIN) with **Face ID / Touch ID** unlock (`local_auth`), PIN always available as fallback.
+- Setup flow after onboarding: name (greetings only) → create/confirm PIN → **spending-category selection** ("Where does your money leak?" — clothes, gadgets, sneakers, food delivery, subscriptions, gaming, …). Categories are stored on-device and will personalize the dashboard.
+
 ### 4.4 Temptation categories (v2 — designed in now, built later)
 
 Every item record carries a `category` from day one, even though v1 only exposes `purchase`:
@@ -170,7 +175,12 @@ lib/
 │   ├── calculator_provider.dart
 │   ├── items_provider.dart
 │   └── purchase_provider.dart  # RevenueCat entitlements
+├── data/
+│   └── user_prefs.dart         # Local profile, spend categories, PIN hash (Keychain)
 ├── screens/
+│   ├── profile_setup_screen.dart   # Name + create/confirm PIN (F7)
+│   ├── category_selection_screen.dart  # Spending-weakness picker (F7)
+│   ├── lock_screen.dart        # PIN + Face ID gate on launch (F7)
 │   ├── home_screen.dart        # Item list + "New temptation" CTA
 │   ├── capture_screen.dart     # Photo + price + installment entry
 │   ├── shock_screen.dart       # One-number shock card
