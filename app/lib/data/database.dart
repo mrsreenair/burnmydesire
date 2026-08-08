@@ -78,6 +78,9 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
+  /// "Erase everything" from settings: wipe the ledger completely.
+  Future<void> deleteAllItems() => delete(items).go();
+
   Future<Item> getItem(int id) =>
       (select(items)..where((t) => t.id.equals(id))).getSingle();
 

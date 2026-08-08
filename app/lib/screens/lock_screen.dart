@@ -8,7 +8,7 @@ import '../theme/motion.dart';
 import '../widgets/paper_backdrop.dart';
 import '../widgets/ember_ui.dart';
 import '../widgets/pin_pad.dart';
-import 'home_screen.dart';
+import 'root_shell.dart';
 
 /// PIN gate shown on launch. Face ID / Touch ID unlocks too; the PIN is
 /// always available as fallback.
@@ -62,7 +62,7 @@ class _LockScreenState extends State<LockScreen> {
   void _unlock() {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
-      emberRoute(const HomeScreen()),
+      emberRoute(const RootShell()),
     );
   }
 

@@ -5,7 +5,7 @@ import '../theme/app_colors.dart';
 import '../theme/motion.dart';
 import '../widgets/paper_backdrop.dart';
 import '../widgets/ember_ui.dart';
-import 'home_screen.dart';
+import 'root_shell.dart';
 
 /// Last onboarding step: an honest, caring note about what this app is
 /// and isn't. Completing it marks setup done.
@@ -16,7 +16,7 @@ class DisclaimerScreen extends StatelessWidget {
     await markSetupComplete();
     if (!context.mounted) return;
     Navigator.of(context).pushReplacement(
-      emberRoute(const HomeScreen()),
+      emberRoute(const RootShell()),
     );
   }
 

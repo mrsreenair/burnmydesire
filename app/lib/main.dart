@@ -7,7 +7,7 @@ import 'config.dart';
 import 'data/image_store.dart';
 import 'data/user_prefs.dart';
 import 'providers/db_providers.dart';
-import 'screens/home_screen.dart';
+import 'screens/root_shell.dart';
 import 'screens/lock_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'theme/app_theme.dart';
@@ -49,7 +49,7 @@ class BurnMyDesireApp extends StatelessWidget {
           ? const OnboardingScreen()
           : locked
               ? const LockScreen()
-              : const HomeScreen(),
+              : const RootShell(),
     );
   }
 }

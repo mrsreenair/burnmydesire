@@ -16,7 +16,6 @@ import '../widgets/paper_backdrop.dart';
 import '../widgets/tilt_card.dart';
 import 'burn_screen.dart';
 import 'capture_screen.dart';
-import 'dashboard_screen.dart';
 import 'paywall_screen.dart';
 import 'shock_screen.dart';
 import 'write_screen.dart';
@@ -157,48 +156,26 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       body: PaperBackdrop(
         child: SafeArea(
+          // The tab bar floats over the body; content clears it itself.
+          bottom: false,
           child: Stack(
             children: [
               ListView(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 190),
                 children: [
-                  // Canopi-style editorial header: date up top, big black
-                  // title, quiet utility icons on the right.
+                  // Canopi editorial header: quiet date, then the title.
                   Reveal(
-                    child: Row(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                DateFormat('EEE d MMM')
-                                    .format(DateTime.now()),
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: AppColors.textMid,
-                                    fontWeight: FontWeight.w600),
-                              ),
-                              const SizedBox(height: 4),
-                              Text('Desires',
-                                  style: theme.textTheme.displaySmall),
-                            ],
-                          ),
+                        Text(
+                          DateFormat('EEE d MMM').format(DateTime.now()),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                              color: AppColors.textMid,
+                              fontWeight: FontWeight.w600),
                         ),
-                        IconButton(
-                          tooltip: 'Dashboard',
-                          icon: const Icon(Icons.insights_outlined),
-                          onPressed: () => Navigator.of(context)
-                              .push(emberRoute(const DashboardScreen())),
-                        ),
-                        IconButton(
-                          tooltip: 'Go Pro',
-                          icon: const Icon(
-                              Icons.workspace_premium_outlined,
-                              color: AppColors.accent),
-                          onPressed: () => Navigator.of(context)
-                              .push(emberRoute(const PaywallScreen())),
-                        ),
+                        const SizedBox(height: 4),
+                        Text('Desires', style: theme.textTheme.displaySmall),
                       ],
                     ),
                   ),
@@ -235,11 +212,12 @@ class HomeScreen extends ConsumerWidget {
                       ),
                 ],
               ),
-              // Orange fire FAB, Canopi-style circle, pinned bottom-right.
+              // Orange fire FAB, Canopi-style circle — floats just above
+              // the tab bar rather than on the screen edge.
               if (items.isNotEmpty)
                 Positioned(
                   right: 24,
-                  bottom: 24,
+                  bottom: 124,
                   child: Reveal(
                     delay: const Duration(milliseconds: 200),
                     child: _FireFab(
@@ -250,7 +228,7 @@ class HomeScreen extends ConsumerWidget {
                 Positioned(
                   left: 24,
                   right: 24,
-                  bottom: 24,
+                  bottom: 124,
                   child: Reveal(
                     delay: const Duration(milliseconds: 260),
                     child: EmberButton(

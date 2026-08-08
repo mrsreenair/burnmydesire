@@ -22,7 +22,7 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final unlocked = ref.watch(dashboardUnlockedProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Your wealth')),
+      appBar: AppBar(title: const Text('Your wealth'), automaticallyImplyLeading: false),
       body: unlocked ? const _Dashboard() : const _LockedView(),
     );
   }
@@ -124,7 +124,7 @@ class _Dashboard extends ConsumerWidget {
     );
 
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 110),
       children: [
         if (protected > 0)
           Card(

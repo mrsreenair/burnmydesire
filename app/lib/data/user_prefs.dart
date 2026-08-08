@@ -99,6 +99,14 @@ Future<void> savePin(String pin) async {
   await _storage.write(key: _kPinHashKey, value: hashPin(pin, salt));
 }
 
+/// "Erase everything": drop the profile, setup flags and the PIN. Leaves
+/// the device with a clean install — onboarding runs again.
+Future<void> clearAllPrefs() async {
+  await (await SharedPreferences.getInstance()).clear();
+  await _storage.delete(key: _kPinHashKey);
+  await _storage.delete(key: _kPinSaltKey);
+}
+
 Future<bool> verifyPin(String pin) async {
   final salt = await _storage.read(key: _kPinSaltKey);
   final hash = await _storage.read(key: _kPinHashKey);

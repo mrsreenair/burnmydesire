@@ -9,7 +9,10 @@ import '../widgets/paper_backdrop.dart';
 import '../widgets/ember_ui.dart';
 
 class PaywallScreen extends ConsumerStatefulWidget {
-  const PaywallScreen({super.key});
+  const PaywallScreen({super.key, this.embedded = false});
+
+  /// True when shown as a tab: no close button, and room for the tab bar.
+  final bool embedded;
 
   @override
   ConsumerState<PaywallScreen> createState() => _PaywallScreenState();
@@ -61,17 +64,21 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final packages = _offerings?.current?.availablePackages ?? const [];
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      extendBodyBehindAppBar: true,
+      appBar: widget.embedded
+          ? null
+          : AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+      extendBodyBehindAppBar: !widget.embedded,
       body: PaperBackdrop(
         child: SafeArea(
+          bottom: !widget.embedded,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+            padding: EdgeInsets.fromLTRB(
+                24, 16, 24, widget.embedded ? 96 : 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
