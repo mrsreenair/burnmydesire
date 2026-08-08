@@ -60,6 +60,92 @@ class _RevealState extends State<Reveal> with SingleTickerProviderStateMixin {
   }
 }
 
+/// Scales a child in with an overshoot, for things that should feel like
+/// they *landed* — celebration heroes, earned badges.
+class PopIn extends StatefulWidget {
+  const PopIn({
+    super.key,
+    required this.child,
+    this.delay = Duration.zero,
+    this.duration = Motion.slow,
+    this.from = 0.6,
+  });
+
+  final Widget child;
+  final Duration delay;
+  final Duration duration;
+  final double from;
+
+  @override
+  State<PopIn> createState() => _PopInState();
+}
+
+class _PopInState extends State<PopIn> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller =
+      AnimationController(vsync: this, duration: widget.duration);
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(widget.delay, () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = Tween(begin: widget.from, end: 1.0).animate(
+        CurvedAnimation(parent: _controller, curve: Motion.spring));
+    final fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    return FadeTransition(
+      opacity: fade,
+      child: ScaleTransition(scale: scale, child: widget.child),
+    );
+  }
+}
+
+/// The earned-achievement pill: tinted capsule with a star, set in small
+/// caps above the headline.
+class BadgePill extends StatelessWidget {
+  const BadgePill(this.label, {super.key, this.color = AppColors.money});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.star_rounded, size: 16, color: color),
+          const SizedBox(width: 7),
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.8,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// How a pill CTA is dressed.
 enum PillKind {
   /// Black pill — the default Canopi-style action.
