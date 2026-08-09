@@ -164,10 +164,12 @@ class _BurnableImageState extends State<BurnableImage>
   }
 }
 
-/// Head-room around the paper, as fractions of its own size. Generous at
-/// the top because that's where flames climb.
-const double _padTop = 0.34;
-const double _padBottom = 0.06;
+/// Head-room around the paper, as fractions of its own size. Now that the
+/// burn runs bottom-up, tongues spend most of their life *over* the sheet
+/// and only clear the top edge at the very end — so the top margin can be
+/// much tighter than it was when fire climbed into empty space.
+const double _padTop = 0.20;
+const double _padBottom = 0.08;
 const double _padLeft = 0.12;
 const double _padRight = 0.12;
 

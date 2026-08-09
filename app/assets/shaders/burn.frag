@@ -29,7 +29,7 @@ out vec4 fragColor;
 const float EMBER_W = 0.028; // white-hot line at the very edge
 const float CHAR_W  = 0.115; // blackened paper behind the ember
 const float WARM_W  = 0.34;  // firelight falling on intact paper
-const float FLAME_H = 0.26;  // tallest tongue, in paper heights
+const float FLAME_H = 0.20;  // tallest tongue, in paper heights
 
 float hash(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
@@ -86,9 +86,11 @@ void main() {
   vec4 tex = onPaper ? texture(uTexture, uv) : vec4(0.0);
 
   // --- The burn field. Position dominates so the front stays connected;
-  // two noise scales make it ragged at both large and small scale. The
-  // x term leans the front into a diagonal, the way a held sheet burns.
-  float base = uv.y * 0.86 + uv.x * 0.14;
+  // two noise scales make it ragged at both large and small scale.
+  //
+  // (1 - uv.y) lights the BOTTOM edge first and eats upward, the way a
+  // sheet held at the top actually burns — and the way heat wants to go.
+  float base = (1.0 - uv.y) * 0.86 + uv.x * 0.14;
   float sweep = fbm3(uv * vec2(2.6, 1.9)) - 0.5; // broad lobes
   float ragged = fbm3(uv * 11.0) - 0.5;          // torn-edge detail
   float field = base + sweep * 0.26 + ragged * 0.055;
@@ -103,62 +105,52 @@ void main() {
   float flicker =
       0.84 + 0.16 * noise(uv * 26.0 + vec2(uTime * 6.0, uTime * 8.5));
 
-  // Air ahead of the front: nothing to see. (Air *behind* it still gets
-  // flames, handled below.)
-  if (!onPaper && d >= 0.0) {
-    fragColor = vec4(0.0);
-    return;
-  }
-
-  if (onPaper && d >= CHAR_W) {
+  // --- Layer 1: the sheet, premultiplied.
+  vec4 col;
+  if (!onPaper || d < 0.0) {
+    // Air, or paper already consumed.
+    col = vec4(0.0);
+  } else if (d >= CHAR_W) {
     // Intact paper. Pixels near the front catch the firelight — but only
     // once something is actually alight.
     float warm = (1.0 - smoothstep(CHAR_W, WARM_W, d))
                * step(0.002, uProgress);
     vec3 lit = tex.rgb + vec3(0.45, 0.20, 0.02) * warm * warm * flicker;
-    fragColor = vec4(min(lit, vec3(1.0)) * tex.a, tex.a);
-    return;
-  }
-
-  if (onPaper && d >= EMBER_W) {
+    col = vec4(min(lit, vec3(1.0)) * tex.a, tex.a);
+  } else if (d >= EMBER_W) {
     // Charred band: paper blackens as it approaches the ember line, with
     // a faint red heat bleeding through the char.
     float t = (d - EMBER_W) / (CHAR_W - EMBER_W); // 0 at ember, 1 at paper
     vec3 soot = vec3(0.06, 0.04, 0.035);
     vec3 charred = mix(soot, tex.rgb, t * t);
     charred += vec3(0.55, 0.12, 0.02) * (1.0 - t) * (1.0 - t) * flicker;
-    fragColor = vec4(min(charred, vec3(1.0)) * tex.a, tex.a);
-    return;
-  }
-
-  if (onPaper && d >= 0.0) {
+    col = vec4(min(charred, vec3(1.0)) * tex.a, tex.a);
+  } else {
     // The ember line itself — the brightest thing on screen.
-    float t = d / EMBER_W; // 0 at the void, 1 at the char
+    float t = d / EMBER_W;
     vec3 glow = fireColor(1.0 - t * 0.55) * (0.9 + 0.35 * flicker);
     float a = smoothstep(0.0, 0.006, d);
-    fragColor = vec4(glow * a, a);
-    return;
+    col = vec4(glow * a, a);
   }
 
-  // --- Burned void: flames rise from the edge.
+  // --- Layer 2: flames, composited OVER the sheet.
   //
-  // Height is measured as real vertical distance above the local front
-  // line, NOT as a difference in field value. The field's noise term is
-  // as large as the flame height itself, so using it scatters fire into
-  // detached patches; solving for where the front sits at this x keeps
-  // every tongue rooted on the burning edge.
+  // Burning upward means tongues lick across paper that is still
+  // standing rather than into empty space, so fire is a layer on top of
+  // whatever is behind it — not an alternative branch the way it was
+  // when the burn ran downward into a void.
   //
-  // The noise must be sampled at the front's OWN height, not at this
-  // pixel's. Sampling locally makes every pixel disagree about where the
-  // front is, so tongues float away from the paper. One refinement step
-  // — guess the height ignoring noise, then re-sample there — makes a
-  // whole column agree on one base line.
-  float y0 = front / 0.86;
+  // Height is real vertical distance above the local front line, NOT a
+  // difference in field value: the field's noise term is as large as the
+  // flame height itself, and using it scatters fire into detached
+  // patches. The noise is sampled at the front's OWN height so a whole
+  // column agrees on one base line and the tongues stay rooted.
+  float y0 = 1.0 - front / 0.86;
   vec2 s = vec2(uv.x, y0);
   float g = uv.x * 0.14
           + (fbm3(s * vec2(2.6, 1.9)) - 0.5) * 0.26
           + (fbm3(s * 11.0) - 0.5) * 0.055;
-  float frontY = (front - g) / 0.86;
+  float frontY = 1.0 - (front - g) / 0.86;
   float above = frontY - uv.y;
 
   // Only burn where the front is actually eating paper. The front starts
@@ -183,18 +175,17 @@ void main() {
       float t = above / top; // 0 at the burning edge, 1 at the tip
 
       // Solid and hot at the root, thinning and reddening as it climbs.
-      // Alpha holds up through the body so the fire stays saturated
-      // instead of washing out to brown.
       float a = pow(1.0 - t, 0.7) * flicker;
       vec3 c = fireColor(1.0 - t * 0.85);
 
       // Ragged edges so tongues don't look extruded.
       a *= 0.75 + 0.25 * fbm3(vec2(x * 22.0, uv.y * 9.0 - uTime * 3.4));
+      a = clamp(a, 0.0, 1.0);
 
-      fragColor = vec4(c * a, a);
-      return;
+      // Premultiplied source-over.
+      col = vec4(c * a, a) + col * (1.0 - a);
     }
   }
 
-  fragColor = vec4(0.0);
+  fragColor = col;
 }

@@ -61,7 +61,7 @@ class _BurnScreenState extends State<BurnScreen> {
             Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 44),
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 72),
                 child: AnimatedOpacity(
                   duration: Motion.base,
                   opacity: p > 0.995 ? 0 : 1,
