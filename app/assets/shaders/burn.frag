@@ -94,8 +94,9 @@ void main() {
   float field = base + sweep * 0.26 + ragged * 0.055;
 
   // Sweep the front past both ends so 0 leaves the sheet whole and 1
-  // clears every pixel.
-  float front = mix(-0.22, 1.30, uProgress);
+  // clears every pixel. The start must clear the field's lowest value by
+  // more than CHAR_W, or the first pixels are already charred at rest.
+  float front = mix(-0.34, 1.30, uProgress);
   float d = field - front; // > 0 intact, < 0 already burned
 
   // Flicker shared by the ember line and the flames.
@@ -110,8 +111,10 @@ void main() {
   }
 
   if (onPaper && d >= CHAR_W) {
-    // Intact paper. Pixels near the front catch the firelight.
-    float warm = 1.0 - smoothstep(CHAR_W, WARM_W, d);
+    // Intact paper. Pixels near the front catch the firelight — but only
+    // once something is actually alight.
+    float warm = (1.0 - smoothstep(CHAR_W, WARM_W, d))
+               * step(0.002, uProgress);
     vec3 lit = tex.rgb + vec3(0.45, 0.20, 0.02) * warm * warm * flicker;
     fragColor = vec4(min(lit, vec3(1.0)) * tex.a, tex.a);
     return;
@@ -158,7 +161,11 @@ void main() {
   float frontY = (front - g) / 0.86;
   float above = frontY - uv.y;
 
-  if (above > 0.0) {
+  // Only burn where the front is actually eating paper. The front starts
+  // (and ends) outside the sheet so that progress 0 leaves it whole and 1
+  // clears it — without this guard those off-sheet positions light a band
+  // of fire in mid-air before the user has even touched the screen.
+  if (above > 0.0 && frontY > 0.0 && frontY < 1.0 && uProgress > 0.002) {
     // Flames are a HEIGHT FIELD, not a thresholded cloud: every column of
     // pixels gets its own tongue height, animated over time. Thresholding
     // 2D turbulence (the obvious approach) fills the whole band with haze

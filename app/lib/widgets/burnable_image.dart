@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
+import 'fire_sound.dart';
+
 /// The burn ritual: press-and-hold dissolves [image] through the GLSL
 /// shader with haptic ticks; [onBurned] fires once when fully burned.
 class BurnableImage extends StatefulWidget {
@@ -39,6 +41,7 @@ class _BurnableImageState extends State<BurnableImage>
   late final Ticker _clock;
   final ValueNotifier<double> _time = ValueNotifier(0);
   Timer? _haptics;
+  final _fire = FireSound();
   bool _completed = false;
 
   @override
@@ -50,6 +53,7 @@ class _BurnableImageState extends State<BurnableImage>
         if (status == AnimationStatus.completed && !_completed) {
           _completed = true;
           _haptics?.cancel();
+          _fire.finish();
           HapticFeedback.heavyImpact();
           widget.onBurned();
         }
@@ -67,6 +71,7 @@ class _BurnableImageState extends State<BurnableImage>
   void _start() {
     if (_completed) return;
     HapticFeedback.mediumImpact();
+    _fire.start();
     _burn.forward();
     _haptics = Timer.periodic(const Duration(milliseconds: 90), (_) {
       HapticFeedback.selectionClick();
@@ -74,13 +79,16 @@ class _BurnableImageState extends State<BurnableImage>
   }
 
   void _stop() {
+    if (_completed) return;
     _burn.stop();
     _haptics?.cancel();
+    _fire.pause();
   }
 
   @override
   void dispose() {
     _haptics?.cancel();
+    _fire.dispose();
     _clock.dispose();
     _burn.dispose();
     _time.dispose();
