@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../data/ai_coach.dart';
+import '../data/encrypted_db.dart';
 import '../data/user_prefs.dart';
 import '../providers/db_providers.dart';
 import '../providers/pro_provider.dart';
@@ -36,6 +37,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /// Raw platform status code behind [_aiStatusText].
   String? _aiStatus;
 
+  /// Whether the database on disk is really encrypted.
+  String? _dbSecurity;
+
   @override
   void initState() {
     super.initState();
@@ -50,6 +54,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     });
     AiCoach().status().then((s) {
       if (mounted) setState(() => _aiStatus = s);
+    });
+    databaseSecurityReport().then((r) {
+      if (mounted) setState(() => _dbSecurity = r);
     });
   }
 
@@ -220,6 +227,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       icon: Icons.phone_iphone,
                       title: 'Everything stays on this phone',
                       subtitle: 'No account, no server, no uploads — ever',
+                    ),
+                    _Row(
+                      icon: Icons.shield_outlined,
+                      title: 'Encrypted on this device',
+                      subtitle: _dbSecurity == null
+                          ? 'Checking…'
+                          : '${_dbSecurity!}. Photos and written pages are '
+                              'locked by iOS whenever your phone is locked. '
+                              'The key lives in the Keychain and never '
+                              'leaves this device.',
                     ),
                     _SwitchRow(
                       icon: Icons.auto_awesome_outlined,

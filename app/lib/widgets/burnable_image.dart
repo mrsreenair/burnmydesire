@@ -93,26 +93,47 @@ class _BurnableImageState extends State<BurnableImage>
     if (program == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    // The canvas is deliberately larger than the paper: flames need air
-    // above the burning edge, and a shader can only paint inside its own
-    // quad. Without this margin the fire is clipped flat at the edge.
-    final w = widget.image.width * (1 + _padLeft + _padRight);
-    final h = widget.image.height * (1 + _padTop + _padBottom);
-    return AspectRatio(
-      aspectRatio: w / h,
-      child: Listener(
-        onPointerDown: (_) => _start(),
-        onPointerUp: (_) => _stop(),
-        onPointerCancel: (_) => _stop(),
-        child: CustomPaint(
-          painter: _BurnPainter(
-            shader: program.fragmentShader(),
-            image: widget.image,
-            progress: _burn,
-            time: _time,
+    // The paper fills the width it's given; the shader quad is larger on
+    // every side so flames have air to climb into. Sizing the quad with
+    // AspectRatio instead would shrink the sheet by the padding — the
+    // paper, not the canvas, is what should reach the screen edges.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spanX = 1 + _padLeft + _padRight;
+        const spanY = 1 + _padTop + _padBottom;
+        final aspect = widget.image.width / widget.image.height;
+
+        var paperW = constraints.maxWidth;
+        var paperH = paperW / aspect;
+        // Only give up full width if the quad would otherwise overflow the
+        // top, where clipping the flames would be obvious.
+        if (paperH * spanY > constraints.maxHeight) {
+          paperH = constraints.maxHeight / spanY;
+          paperW = paperH * aspect;
+        }
+
+        return OverflowBox(
+          maxWidth: paperW * spanX,
+          maxHeight: paperH * spanY,
+          child: SizedBox(
+            width: paperW * spanX,
+            height: paperH * spanY,
+            child: Listener(
+              onPointerDown: (_) => _start(),
+              onPointerUp: (_) => _stop(),
+              onPointerCancel: (_) => _stop(),
+              child: CustomPaint(
+                painter: _BurnPainter(
+                  shader: program.fragmentShader(),
+                  image: widget.image,
+                  progress: _burn,
+                  time: _time,
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

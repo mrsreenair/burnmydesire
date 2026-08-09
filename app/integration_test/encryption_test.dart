@@ -1,8 +1,11 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:burn_my_desire/data/database.dart';
 import 'package:burn_my_desire/data/db_key.dart';
 import 'package:burn_my_desire/data/encrypted_db.dart';
+import 'package:burn_my_desire/data/file_protection.dart';
+import 'package:burn_my_desire/data/image_store.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path/path.dart' as p;
@@ -70,6 +73,25 @@ void main() {
     unlock(db, await databaseKey());
     final rows = db.select('SELECT image_file, price_cents FROM items;');
     expect(rows, isNotEmpty);
+  });
+
+  test('image files get complete protection, not the iOS default',
+      () async {
+    final dir = await getApplicationDocumentsDirectory();
+    final store = ImageStore(dir.path);
+    final name = await store.save(Uint8List.fromList(List.filled(64, 7)));
+    // Check the image itself, not just the folder around it.
+    final applied =
+        await FileProtection().protectionOf(store.file(name).path);
+    if (await FileProtection().isSimulator()) {
+      // No Secure Enclave: the simulator reports no class at all. This
+      // assertion is only meaningful on real hardware.
+      expect(applied, anyOf('none', 'complete'));
+      return;
+    }
+    expect(applied, 'complete',
+        reason: 'thought pages hold the user\'s words as pixels; they must '
+            'be unreadable while the phone is locked');
   });
 
   test('no plaintext database is left behind after migration', () async {

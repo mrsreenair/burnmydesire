@@ -82,18 +82,14 @@ class _BurnScreenState extends State<BurnScreen> {
             ),
           ],
         ),
+        // No padding and no clip: the sheet runs edge to edge, and the
+        // flames need to spill past its bounds to read as fire.
         child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: BurnableImage(
-                image: widget.target.image,
-                onProgress: (p) => _progress.value = p,
-                onBurned: () => Navigator.of(context).pushReplacement(
-                  fireRoute(VictoryScreen(target: widget.target)),
-                ),
-              ),
+          child: BurnableImage(
+            image: widget.target.image,
+            onProgress: (p) => _progress.value = p,
+            onBurned: () => Navigator.of(context).pushReplacement(
+              fireRoute(VictoryScreen(target: widget.target)),
             ),
           ),
         ),

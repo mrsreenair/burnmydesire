@@ -16,7 +16,10 @@ import 'theme/app_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final docs = await getApplicationDocumentsDirectory();
+  final imageStore = ImageStore(docs.path);
+  await imageStore.protectAll();
   debugPrint('DB SECURITY: ${await databaseSecurityReport()}');
+  debugPrint('IMAGE PROTECTION: ${await imageStore.protectionClass()}');
   final setupDone = await hasCompletedSetup();
   final locked = setupDone && await hasPin();
   if (kRevenueCatIosApiKey.isNotEmpty) {
@@ -27,7 +30,7 @@ Future<void> main() async {
   runApp(
     ProviderScope(
       overrides: [
-        imageStoreProvider.overrideWithValue(ImageStore(docs.path)),
+        imageStoreProvider.overrideWithValue(imageStore),
       ],
       child: BurnMyDesireApp(showOnboarding: !setupDone, locked: locked),
     ),

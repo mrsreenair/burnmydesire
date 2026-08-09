@@ -16,6 +16,7 @@ import UIKit
       engineBridge.pluginRegistry.registrar(forPlugin: "FoundationModelsChannel")
     {
       FoundationModelsChannel.register(with: registrar.messenger())
+      FileProtectionChannel.register(with: registrar.messenger())
     }
   }
 }
