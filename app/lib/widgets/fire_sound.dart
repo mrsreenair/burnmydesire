@@ -17,7 +17,11 @@ class FireSound {
   /// Rises over this long when the hold starts, falls over it on release,
   /// so starting and stopping never clicks.
   static const _fade = Duration(milliseconds: 420);
-  static const _maxVolume = 0.85;
+
+  /// Deliberately low. This sits under a quiet, private ritual — it should
+  /// be felt more than heard, and never startle someone holding the phone
+  /// close.
+  static const _maxVolume = 0.4;
 
   final AudioPlayer _player = AudioPlayer();
   Timer? _ramp;

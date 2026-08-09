@@ -8,6 +8,17 @@ import 'package:flutter/services.dart';
 
 import 'fire_sound.dart';
 
+/// Lets a sibling widget — the Hold-to-burn button — drive the same burn
+/// the paper responds to, so there is one animation with two handles on
+/// it rather than two competing ones.
+class BurnHoldController {
+  VoidCallback? _press;
+  VoidCallback? _release;
+
+  void press() => _press?.call();
+  void release() => _release?.call();
+}
+
 /// The burn ritual: press-and-hold dissolves [image] through the GLSL
 /// shader with haptic ticks; [onBurned] fires once when fully burned.
 class BurnableImage extends StatefulWidget {
@@ -16,6 +27,7 @@ class BurnableImage extends StatefulWidget {
     required this.image,
     required this.onBurned,
     this.onProgress,
+    this.controller,
     this.duration = const Duration(milliseconds: 3000),
   });
 
@@ -25,6 +37,9 @@ class BurnableImage extends StatefulWidget {
   /// Reports burn progress 0→1 every frame so the host screen can react
   /// (glow, hint fade) without owning the animation.
   final ValueChanged<double>? onProgress;
+
+  /// Optional external handle, so a button can hold the burn too.
+  final BurnHoldController? controller;
 
   final Duration duration;
 
@@ -58,6 +73,9 @@ class _BurnableImageState extends State<BurnableImage>
           widget.onBurned();
         }
       });
+    widget.controller
+      ?.._press = _start
+      .._release = _stop;
     _clock = createTicker((elapsed) {
       _time.value = elapsed.inMicroseconds / 1e6;
     })
