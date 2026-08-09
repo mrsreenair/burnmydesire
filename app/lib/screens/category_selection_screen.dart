@@ -6,7 +6,7 @@ import '../theme/motion.dart';
 import '../widgets/burn_chip.dart';
 import '../widgets/paper_backdrop.dart';
 import '../widgets/ember_ui.dart';
-import 'disclaimer_screen.dart';
+import 'financial_goal_screen.dart';
 
 /// Pick the spending temptations that hit hardest. Feeds dashboard
 /// personalization later; stored on-device only.
@@ -24,7 +24,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   Future<void> _finish() async {
     await saveSpendCategories(_selected.toList());
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(emberRoute(const DisclaimerScreen()));
+    Navigator.of(context).pushReplacement(emberRoute(const FinancialGoalScreen()));
   }
 
   @override

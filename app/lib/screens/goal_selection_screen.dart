@@ -7,7 +7,7 @@ import '../widgets/burn_chip.dart';
 import '../widgets/paper_backdrop.dart';
 import '../widgets/ember_ui.dart';
 import 'category_selection_screen.dart';
-import 'disclaimer_screen.dart';
+import 'financial_goal_screen.dart';
 
 /// "What do you want to burn?" — the goals that shape the whole app.
 /// Stored on-device only; this is health-grade private data.
@@ -25,10 +25,10 @@ class _GoalSelectionScreenState extends State<GoalSelectionScreen> {
     await saveBurnGoals(_selected.toList());
     if (!mounted) return;
     // Impulse buyers also pick their spending weak spots; everyone else
-    // goes straight to the disclaimer.
+    // goes straight to the savings goal.
     final next = _selected.contains('impulse_buying')
         ? const CategorySelectionScreen()
-        : const DisclaimerScreen();
+        : const FinancialGoalScreen();
     Navigator.of(context).pushReplacement(emberRoute(next));
   }
 

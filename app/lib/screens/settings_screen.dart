@@ -19,6 +19,7 @@ import '../data/world_counter.dart';
 import '../utils/format_utils.dart';
 import '../providers/burn_effect_provider.dart';
 import '../providers/currency_provider.dart';
+import '../providers/financial_goal_provider.dart';
 import '../providers/db_providers.dart';
 import '../providers/pro_provider.dart';
 import '../theme/app_colors.dart';
@@ -26,6 +27,7 @@ import '../theme/motion.dart';
 import '../widgets/ember_ui.dart';
 import '../widgets/paper_backdrop.dart';
 import 'currency_screen.dart';
+import 'financial_goal_screen.dart';
 import 'lock_screen.dart';
 import 'paywall_screen.dart';
 import 'onboarding_screen.dart';
@@ -457,6 +459,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final goals = ref.watch(burnGoalsProvider).value ?? const [];
     final effect = ref.watch(burnEffectProvider);
     final currency = ref.watch(currencyProvider);
+    final financialGoal = ref.watch(financialGoalProvider).value;
 
     return Scaffold(
       body: PaperBackdrop(
@@ -485,6 +488,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       title: 'What you\'re burning',
                       trailing: '${goals.length} picked',
                       onTap: () => _showGoals(goals),
+                    ),
+                    _Row(
+                      icon: Icons.flag_outlined,
+                      title: 'Savings goal',
+                      trailing: financialGoal == null
+                          ? 'Not set'
+                          : '${financialGoal.emoji} ${financialGoal.name}',
+                      onTap: () => Navigator.of(context).push(
+                        emberRoute(
+                          const FinancialGoalScreen(inSetup: false),
+                        ),
+                      ),
                     ),
                     _Row(
                       icon: Icons.currency_exchange_outlined,

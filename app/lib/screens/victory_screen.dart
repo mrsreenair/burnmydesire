@@ -13,6 +13,7 @@ import '../data/user_prefs.dart';
 import '../data/world_counter.dart';
 import '../models/burn_target.dart';
 import '../providers/db_providers.dart';
+import '../providers/financial_goal_provider.dart';
 import '../providers/pro_provider.dart';
 import '../theme/app_colors.dart';
 import '../utils/format_utils.dart';
@@ -20,6 +21,7 @@ import '../utils/math_utils.dart';
 import '../utils/motivation.dart';
 import '../widgets/confetti.dart';
 import '../widgets/ember_ui.dart';
+import '../widgets/goal_progress.dart';
 import '../widgets/paper_backdrop.dart';
 
 /// The payoff. Structured like a proper achievement screen: hero, earned
@@ -130,6 +132,8 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
         fund?.projectedValueCents(price, kDefaultHorizonYears) ??
         futureValueCents(price, years: kDefaultHorizonYears);
     final again = target.burnNumber > 1;
+    final goal = ref.watch(financialGoalProvider).value;
+    final protected = ref.watch(protectedCentsProvider);
 
     final String badge;
     if (_isFinal) {
@@ -184,6 +188,19 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
                                     future: future,
                                   ),
                           ),
+                          // The destination. Money burns only — telling
+                          // someone their breakup burn brought a MacBook
+                          // closer would be exactly the wrong note.
+                          if (!target.isEmotion && price > 0 && goal != null) ...[
+                            const SizedBox(height: 24),
+                            Reveal(
+                              delay: const Duration(milliseconds: 480),
+                              child: GoalProgress(
+                                goal: goal,
+                                protectedCents: protected,
+                              ),
+                            ),
+                          ],
                           // Only after a money burn, and only once the
                           // craving has passed — never mid-urge.
                           if (!target.isEmotion &&

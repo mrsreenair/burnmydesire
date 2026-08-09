@@ -10,13 +10,16 @@ import '../data/database.dart';
 import '../data/user_prefs.dart';
 import '../providers/currency_provider.dart';
 import '../providers/db_providers.dart';
+import '../providers/financial_goal_provider.dart';
 import '../providers/pro_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/motion.dart';
 import '../utils/format_utils.dart';
 import '../utils/milestone_card.dart';
 import '../widgets/ember_ui.dart';
+import '../widgets/goal_progress.dart';
 import '../utils/math_utils.dart';
+import 'financial_goal_screen.dart';
 import 'paywall_screen.dart';
 
 /// Pro analytics: total protected, real-market projection, resistance
@@ -103,6 +106,7 @@ class _Dashboard extends ConsumerWidget {
     final market = ref.watch(marketDataProvider).value;
     final categories = ref.watch(spendCategoriesProvider).value ?? const [];
     final goalIds = ref.watch(burnGoalsProvider).value ?? const [];
+    final goal = ref.watch(financialGoalProvider).value;
 
     if (items.isEmpty) {
       return Center(
@@ -174,6 +178,27 @@ class _Dashboard extends ConsumerWidget {
         if (protected > 0) ...[
           const SizedBox(height: 12),
           _ShareMilestone(protectedCents: protected, burns: items.length),
+        ],
+        if (goal != null) ...[
+          const SizedBox(height: 16),
+          GoalProgress(
+            goal: goal,
+            protectedCents: protected,
+            onTap: () => Navigator.of(context).push(
+              emberRoute(const FinancialGoalScreen(inSetup: false)),
+            ),
+          ),
+        ] else ...[
+          const SizedBox(height: 8),
+          // The retention hook, offered where it's most likely to land:
+          // right under the number it would give a destination to.
+          TextButton.icon(
+            icon: const Icon(Icons.flag_outlined, size: 18),
+            label: const Text('Set a savings goal'),
+            onPressed: () => Navigator.of(context).push(
+              emberRoute(const FinancialGoalScreen(inSetup: false)),
+            ),
+          ),
         ],
         const SizedBox(height: 16),
         Row(
