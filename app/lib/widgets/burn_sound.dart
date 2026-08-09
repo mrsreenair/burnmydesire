@@ -3,39 +3,52 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 
-/// The crackle under the burn ritual.
-///
-/// Deliberately polite: the loop is set to the *ambient* audio category, so
-/// it honours the phone's mute switch and ducks nothing — someone burning a
-/// craving on the bus should not have the room hear it. Every failure is
-/// swallowed; the ritual must never break because audio is unavailable.
-class FireSound {
-  FireSound();
+import '../data/user_prefs.dart';
 
-  static const _asset = 'audio/fire.wav';
+/// The sound under the burn ritual — crackle for fire, motor and tearing
+/// paper for the shredder. Each effect brings its own loop.
+///
+/// This used to run in the *ambient* category so it would honour the ring
+/// switch. That was too polite to be heard: iOS silences ambient audio
+/// whenever the phone is on silent, which is where most phones live, so
+/// the sound effectively never played. It now uses `playback`, which plays
+/// through the switch, with `mixWithOthers` so it never stops someone's
+/// music — and a Settings toggle for anyone who wants the old silence.
+///
+/// Every failure is swallowed; the ritual must never break because audio
+/// is unavailable.
+class BurnSound {
+  BurnSound(this.asset);
+
+  /// Asset path under `assets/`, e.g. `audio/fire.wav`.
+  final String asset;
 
   /// Rises over this long when the hold starts, falls over it on release,
   /// so starting and stopping never clicks.
   static const _fade = Duration(milliseconds: 420);
 
-  /// Deliberately low. This sits under a quiet, private ritual — it should
-  /// be felt more than heard, and never startle someone holding the phone
-  /// close.
-  static const _maxVolume = 0.4;
+  /// Loud enough to be part of the ritual, quiet enough not to startle
+  /// someone holding the phone close.
+  static const _maxVolume = 0.85;
 
   final AudioPlayer _player = AudioPlayer();
   Timer? _ramp;
   bool _ready = false;
+  bool _muted = false;
   double _volume = 0;
 
   Future<void> _ensure() async {
     if (_ready) return;
+    _muted = !await burnSoundEnabled();
+    if (_muted) return;
     await _player.setAudioContext(
       AudioContext(
-        // `ambient` already mixes with other audio and honours the mute
-        // switch; passing mixWithOthers explicitly here is an assertion
-        // error in audioplayers.
-        iOS: AudioContextIOS(category: AVAudioSessionCategory.ambient),
+        iOS: AudioContextIOS(
+          // Plays even when the ring switch is on silent. mixWithOthers
+          // keeps a podcast or playlist running underneath.
+          category: AVAudioSessionCategory.playback,
+          options: const {AVAudioSessionOptions.mixWithOthers},
+        ),
         android: AudioContextAndroid(
           usageType: AndroidUsageType.game,
           audioFocus: AndroidAudioFocus.none,
@@ -43,20 +56,21 @@ class FireSound {
       ),
     );
     await _player.setReleaseMode(ReleaseMode.loop);
-    await _player.setSource(AssetSource(_asset));
+    await _player.setSource(AssetSource(asset));
     await _player.setVolume(0);
     _ready = true;
   }
 
-  /// Start (or resume) the fire under a press-and-hold.
+  /// Start (or resume) the sound under a press-and-hold.
   Future<void> start() async {
     try {
       await _ensure();
+      if (_muted) return;
       await _player.resume();
       _rampTo(_maxVolume);
     } on Object catch (e) {
       // Silence is an acceptable outcome; a crash is not.
-      debugPrint('FireSound.start: $e');
+      debugPrint('BurnSound.start: $e');
     }
   }
 
@@ -67,7 +81,7 @@ class FireSound {
     _rampTo(0, then: () => _player.pause());
   }
 
-  /// The paper is gone: let the last crackles die away, then stop.
+  /// The paper is gone: let the last of it die away, then stop.
   Future<void> finish() async {
     if (!_ready) return;
     _rampTo(0, then: () => _player.stop());

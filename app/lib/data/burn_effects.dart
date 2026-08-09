@@ -14,7 +14,9 @@ class BurnEffect {
     required this.name,
     required this.blurb,
     required this.asset,
+    required this.sound,
     required this.glow,
+    this.verb = 'burn',
     this.pro = true,
   });
 
@@ -29,6 +31,20 @@ class BurnEffect {
 
   /// Shader asset path, as registered in pubspec.yaml.
   final String asset;
+
+  /// The loop that plays under the hold, relative to `assets/`. It belongs
+  /// to the effect: a fire crackle under a shredder would be as wrong as
+  /// an orange glow under a grey crumble.
+  final String sound;
+
+  /// What the user is about to do, for the hold button: "Hold to burn",
+  /// "Hold to shred". Telling someone to burn a page while steel teeth
+  /// pull it in is a small lie, and the button is the one bit of copy
+  /// they are staring at while they commit.
+  ///
+  /// Ash and Cold flame keep "burn": both are still burning, and it stays
+  /// the app's word for the act.
+  final String verb;
 
   /// The light this burn throws into the dark room around the paper. The
   /// glow is half the effect — an orange room under a grey crumble would
@@ -50,6 +66,7 @@ const burnEffects = <BurnEffect>[
     name: 'Fire',
     blurb: 'The original. A ragged orange front eats the page.',
     asset: 'assets/shaders/burn.frag',
+    sound: 'audio/fire.wav',
     glow: Color(0xFFA8102A), // AppColors.coal
     pro: false,
   ),
@@ -58,6 +75,7 @@ const burnEffects = <BurnEffect>[
     name: 'Ash',
     blurb: 'No flame. The page cools, greys and crumbles away.',
     asset: 'assets/shaders/ash.frag',
+    sound: 'audio/fire.wav',
     glow: Color(0xFF3A3630),
   ),
   BurnEffect(
@@ -65,17 +83,27 @@ const burnEffects = <BurnEffect>[
     name: 'Cold flame',
     blurb: 'A gas-blue burn that bleaches the page instead of charring it.',
     asset: 'assets/shaders/cold.frag',
+    sound: 'audio/fire.wav',
     glow: Color(0xFF0E2C86),
+  ),
+  BurnEffect(
+    id: 'shred',
+    name: 'Shredder',
+    blurb: 'Steel teeth take the page and give back ribbons.',
+    asset: 'assets/shaders/shred.frag',
+    sound: 'audio/shred.wav',
+    verb: 'shred',
+    // Machine light, not firelight — the room should look like an office
+    // at night, which is exactly the unsentimental register this is for.
+    glow: Color(0xFF2A3238),
   ),
 ];
 
 /// The effect for [id], falling back to fire for anything unknown — an
 /// effect removed in a later version must never leave a user unable to
 /// burn.
-BurnEffect burnEffectById(String? id) => burnEffects.firstWhere(
-      (e) => e.id == id,
-      orElse: () => burnEffects.first,
-    );
+BurnEffect burnEffectById(String? id) =>
+    burnEffects.firstWhere((e) => e.id == id, orElse: () => burnEffects.first);
 
 /// The effect this user may actually use right now. Losing Pro silently
 /// drops them back to fire rather than breaking the ritual.

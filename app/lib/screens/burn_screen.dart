@@ -74,6 +74,10 @@ class _BurnScreenState extends ConsumerState<BurnScreen> {
                   opacity: p > 0.995 ? 0 : 1,
                   child: HoldToBurnButton(
                     progress: _progress,
+                    // The button is the one bit of copy someone is looking
+                    // at while they commit, so it names what will actually
+                    // happen to the page.
+                    label: 'Hold to ${effect.verb}',
                     onHoldStart: _hold.press,
                     onHoldEnd: _hold.release,
                   ),
@@ -103,6 +107,7 @@ class _BurnScreenState extends ConsumerState<BurnScreen> {
             child: BurnableImage(
               image: widget.target.image,
               shaderAsset: effect.asset,
+              soundAsset: effect.sound,
               controller: _hold,
               onProgress: (p) => _progress.value = p,
               onBurned: () => Navigator.of(context).pushReplacement(

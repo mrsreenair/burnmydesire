@@ -41,6 +41,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String _name = '';
   bool _busy = false;
   bool _aiOn = true;
+  bool _soundOn = true;
 
   /// null while we ask the platform whether Apple Intelligence is usable.
   bool? _aiReady;
@@ -68,6 +69,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     aiCoachEnabled().then((on) {
       if (mounted) setState(() => _aiOn = on);
     });
+    burnSoundEnabled().then((on) {
+      if (mounted) setState(() => _soundOn = on);
+    });
     AiCoach().isAvailable().then((ready) {
       if (mounted) setState(() => _aiReady = ready);
     });
@@ -93,35 +97,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() => _counterOptIn = on);
     await setWorldCounterOptIn(on);
     if (!on) return;
-    final stats =
-        await WorldCounter().contribute(ref.read(protectedCentsProvider));
+    final stats = await WorldCounter().contribute(
+      ref.read(protectedCentsProvider),
+    );
     if (mounted && stats != null) setState(() => _worldStats = stats);
   }
 
   /// Plain-language explanation of the raw platform status code.
   String get _aiStatusText => switch (_aiStatus) {
-        null => 'Checking…',
-        'available' => 'Ready — your burns get personal messages',
-        'apple_intelligence_off' =>
-          'Apple Intelligence is off. Turn it on in iOS Settings → Apple '
-              'Intelligence & Siri.',
-        'model_downloading' =>
-          'The model is still downloading. Try again once iOS finishes.',
-        'device_not_eligible' =>
-          'This iPhone doesn\'t support Apple Intelligence. You\'ll get '
-              'the built-in encouragements instead.',
-        'ios_too_old' => 'Needs iOS 26 or newer.',
-        'framework_missing' =>
-          'This build can\'t see Apple Intelligence (built with an older '
-              'SDK).',
-        'channel_missing' =>
-          'The AI bridge didn\'t load — this is a bug, not a setting.',
-        _ => 'Unavailable ($_aiStatus)',
-      };
+    null => 'Checking…',
+    'available' => 'Ready — your burns get personal messages',
+    'apple_intelligence_off' =>
+      'Apple Intelligence is off. Turn it on in iOS Settings → Apple '
+          'Intelligence & Siri.',
+    'model_downloading' =>
+      'The model is still downloading. Try again once iOS finishes.',
+    'device_not_eligible' =>
+      'This iPhone doesn\'t support Apple Intelligence. You\'ll get '
+          'the built-in encouragements instead.',
+    'ios_too_old' => 'Needs iOS 26 or newer.',
+    'framework_missing' =>
+      'This build can\'t see Apple Intelligence (built with an older '
+          'SDK).',
+    'channel_missing' =>
+      'The AI bridge didn\'t load — this is a bug, not a setting.',
+    _ => 'Unavailable ($_aiStatus)',
+  };
 
   Future<void> _toggleAi(bool on) async {
     setState(() => _aiOn = on);
     await setAiCoachEnabled(on);
+  }
+
+  Future<void> _toggleSound(bool on) async {
+    setState(() => _soundOn = on);
+    await setBurnSoundEnabled(on);
   }
 
   /// Asks for a passphrase. The same sheet serves export and import, so
@@ -141,10 +151,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               Text(
                 forExport
                     ? 'Pick a passphrase. It encrypts the file — without it '
-                        'nobody, including us, can open your backup. If you '
-                        'lose it the backup is gone for good.'
+                          'nobody, including us, can open your backup. If you '
+                          'lose it the backup is gone for good.'
                     : 'Enter the passphrase you used when you made this '
-                        'backup.',
+                          'backup.',
                 style: Theme.of(dialogContext).textTheme.bodyMedium,
               ),
               const SizedBox(height: 12),
@@ -167,11 +177,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             FilledButton(
               onPressed: () {
                 final value = controller.text;
-                final problem =
-                    forExport ? passphraseProblem(value) : null;
+                final problem = forExport ? passphraseProblem(value) : null;
                 if (problem != null || value.isEmpty) {
-                  setDialogState(() =>
-                      error = problem ?? 'Enter your passphrase');
+                  setDialogState(
+                    () => error = problem ?? 'Enter your passphrase',
+                  );
                   return;
                 }
                 Navigator.pop(dialogContext, value);
@@ -185,9 +195,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   CloudBackup _cloud() => CloudBackup(
-        BackupService(
-            ref.read(databaseProvider), ref.read(imageStoreProvider)),
-      );
+    BackupService(ref.read(databaseProvider), ref.read(imageStoreProvider)),
+  );
 
   Future<void> _refreshCloud() async {
     final cloud = _cloud();
@@ -216,9 +225,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         final when = _lastCloudBackup;
         return when == null
             ? 'Encrypted with your passphrase before it leaves the phone — '
-                'Apple can\'t read it either.'
+                  'Apple can\'t read it either.'
             : 'Last backup ${DateFormat.yMMMd().add_jm().format(when)}. '
-                'Encrypted with your passphrase before it leaves the phone.';
+                  'Encrypted with your passphrase before it leaves the phone.';
     }
   }
 
@@ -230,9 +239,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     try {
       await saveCloudPassphrase(pass);
       final ok = await _cloud().backUp(passphrase: pass);
-      _toast(ok
-          ? 'Backed up to iCloud.'
-          : 'iCloud isn\'t available right now.');
+      _toast(
+        ok ? 'Backed up to iCloud.' : 'iCloud isn\'t available right now.',
+      );
       await _refreshCloud();
     } on BackupException catch (e) {
       _toast(e.message);
@@ -252,9 +261,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() => _busy = true);
     try {
       final restored = await _cloud().restore(passphrase: pass);
-      _toast(restored == null
-          ? 'No iCloud backup found yet.'
-          : 'Restored $restored ${restored == 1 ? 'desire' : 'desires'}.');
+      _toast(
+        restored == null
+            ? 'No iCloud backup found yet.'
+            : 'Restored $restored ${restored == 1 ? 'desire' : 'desires'}.',
+      );
     } on BackupException catch (e) {
       _toast(e.message);
     } on Object catch (e) {
@@ -265,25 +276,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<bool?> _confirmReplace() => showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('Restore from backup?'),
-          content: const Text(
-            'This replaces every desire currently on this phone with the '
-            'ones in the backup. Your current data is deleted.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Restore'),
-            ),
-          ],
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('Restore from backup?'),
+      content: const Text(
+        'This replaces every desire currently on this phone with the '
+        'ones in the backup. Your current data is deleted.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext, false),
+          child: const Text('Cancel'),
         ),
-      );
+        FilledButton(
+          onPressed: () => Navigator.pop(dialogContext, true),
+          child: const Text('Restore'),
+        ),
+      ],
+    ),
+  );
 
   Future<void> _exportBackup() async {
     final passphrase = await _askPassphrase(forExport: true);
@@ -292,8 +303,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     try {
       final store = ref.read(imageStoreProvider);
       final dir = await getTemporaryDirectory();
-      final file = await BackupService(ref.read(databaseProvider), store)
-          .export(passphrase: passphrase, destinationDir: dir.path);
+      final file = await BackupService(
+        ref.read(databaseProvider),
+        store,
+      ).export(passphrase: passphrase, destinationDir: dir.path);
       if (!mounted) return;
       await SharePlus.instance.share(
         ShareParams(
@@ -320,10 +333,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     setState(() => _busy = true);
     try {
-      final restored =
-          await BackupService(ref.read(databaseProvider),
-                  ref.read(imageStoreProvider))
-              .import(path: path, passphrase: passphrase);
+      final restored = await BackupService(
+        ref.read(databaseProvider),
+        ref.read(imageStoreProvider),
+      ).import(path: path, passphrase: passphrase);
       _toast('Restored $restored ${restored == 1 ? 'desire' : 'desires'}.');
     } on BackupException catch (e) {
       _toast(e.message);
@@ -336,8 +349,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   void _toast(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _editName() async {
@@ -370,10 +384,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _lockNow() {
-    Navigator.of(context).pushAndRemoveUntil(
-      emberRoute(const LockScreen()),
-      (route) => false,
-    );
+    Navigator.of(
+      context,
+    ).pushAndRemoveUntil(emberRoute(const LockScreen()), (route) => false);
   }
 
   Future<void> _restore() async {
@@ -406,7 +419,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
             onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text('Erase everything'),
           ),
@@ -468,6 +482,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       trailing: '${goals.length} picked',
                       onTap: () => _showGoals(goals),
                     ),
+                    _Row(
+                      icon: Icons.currency_exchange_outlined,
+                      title: 'Currency',
+                      subtitle: 'Changes how amounts are written. Your '
+                          'saved numbers stay as they are.',
+                      trailing:
+                          '${currency.flag} ${currency.code}',
+                      onTap: _showCurrencies,
+                    ),
                   ],
                 ),
               ),
@@ -494,9 +517,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       subtitle: _dbSecurity == null
                           ? 'Checking…'
                           : '${_dbSecurity!}. Photos and written pages are '
-                              'locked by iOS whenever your phone is locked. '
-                              'The key lives in the Keychain and never '
-                              'leaves this device.',
+                                'locked by iOS whenever your phone is locked. '
+                                'The key lives in the Keychain and never '
+                                'leaves this device.',
                     ),
                     if (WorldCounter().configured)
                       _SwitchRow(
@@ -504,24 +527,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         title: 'Add my total to the world counter',
                         subtitle: _counterOptIn
                             ? _worldStats == null
-                                ? 'Sends one number: how much your protected '
-                                    'total grew. Nothing else — no name, no '
-                                    'items, nothing traceable.'
-                                : '${formatEuros(_worldStats!.totalCents)} '
-                                    'burned by '
-                                    '${_worldStats!.contributors} people so '
-                                    'far. Only a single number ever leaves '
-                                    'your phone.'
+                                  ? 'Sends one number: how much your protected '
+                                        'total grew. Nothing else — no name, no '
+                                        'items, nothing traceable.'
+                                  : '${formatMoney(_worldStats!.totalCents)} '
+                                        'burned by '
+                                        '${_worldStats!.contributors} people so '
+                                        'far. Only a single number ever leaves '
+                                        'your phone.'
                             : 'Off. Turn on to add your protected total to '
-                                'the public figure — one number, nothing '
-                                'that identifies you.',
+                                  'the public figure — one number, nothing '
+                                  'that identifies you.',
                         value: _counterOptIn,
                         onChanged: _toggleCounter,
                       ),
                     _SwitchRow(
                       icon: Icons.auto_awesome_outlined,
                       title: 'AI encouragement',
-                      subtitle: 'Personal messages from Apple\'s on-device '
+                      subtitle:
+                          'Personal messages from Apple\'s on-device '
                           'model. Runs on your phone — nothing is sent '
                           'anywhere.',
                       value: _aiOn,
@@ -535,7 +559,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       subtitle: AiCoach.lastError == null
                           ? _aiStatusText
                           : '$_aiStatusText\nLast burn: '
-                              '${AiCoach.lastError}',
+                                '${AiCoach.lastError}',
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Sound isn't a Pro feature, so it doesn't live in the Pro
+              // group — but it belongs next to the effect, since the two
+              // together are what the ritual feels like.
+              Reveal(
+                delay: const Duration(milliseconds: 150),
+                child: _Group(
+                  label: 'The ritual',
+                  children: [
+                    _SwitchRow(
+                      icon: Icons.volume_up_outlined,
+                      title: 'Burn sound',
+                      subtitle: _soundOn
+                          ? 'Plays even when your phone is on silent, so '
+                                'turn it off if you burn in public.'
+                          : 'Off. The burn stays silent.',
+                      value: _soundOn,
+                      onChanged: _toggleSound,
                     ),
                   ],
                 ),
@@ -583,9 +629,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       onTap: _busy
                           ? null
                           : isPro
-                              ? _backUpToCloud
-                              : () => Navigator.of(context)
-                                  .push(emberRoute(const PaywallScreen())),
+                          ? _backUpToCloud
+                          : () => Navigator.of(
+                              context,
+                            ).push(emberRoute(const PaywallScreen())),
                     ),
                     if (isPro && _cloudStatus == CloudStatus.available)
                       _Row(
@@ -599,16 +646,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       title: 'Create encrypted backup',
                       subtitle: isPro
                           ? 'One file, locked with your own passphrase. '
-                              'Save it to Files, iCloud Drive, anywhere — '
-                              'it stays unreadable without the passphrase.'
+                                'Save it to Files, iCloud Drive, anywhere — '
+                                'it stays unreadable without the passphrase.'
                           : 'Pro: export your desires as one encrypted file',
                       trailing: isPro ? null : 'Pro',
                       onTap: _busy
                           ? null
                           : isPro
-                              ? _exportBackup
-                              : () => Navigator.of(context)
-                                  .push(emberRoute(const PaywallScreen())),
+                          ? _exportBackup
+                          : () => Navigator.of(
+                              context,
+                            ).push(emberRoute(const PaywallScreen())),
                     ),
                     _Row(
                       icon: Icons.restore_page_outlined,
@@ -618,9 +666,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       onTap: _busy
                           ? null
                           : isPro
-                              ? _importBackup
-                              : () => Navigator.of(context)
-                                  .push(emberRoute(const PaywallScreen())),
+                          ? _importBackup
+                          : () => Navigator.of(
+                              context,
+                            ).push(emberRoute(const PaywallScreen())),
                     ),
                   ],
                 ),
@@ -659,20 +708,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   style: TextButton.styleFrom(
                     foregroundColor: theme.colorScheme.error,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor:
-                        theme.colorScheme.error.withValues(alpha: 0.07),
+                    backgroundColor: theme.colorScheme.error.withValues(
+                      alpha: 0.07,
+                    ),
                     shape: const StadiumBorder(),
                   ),
-                  child: const Text('Erase everything',
-                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  child: const Text(
+                    'Erase everything',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
               Text(
                 'Burn My Desire · v0.1.0',
                 textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: AppColors.textLow),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.textLow,
+                ),
               ),
             ],
           ),
@@ -696,14 +749,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Burn effect',
-                  style: Theme.of(sheetContext).textTheme.headlineSmall),
+              Text(
+                'Burn effect',
+                style: Theme.of(sheetContext).textTheme.headlineSmall,
+              ),
               const SizedBox(height: 4),
               Text(
                 'How a desire ends. The ritual is the same either way.',
-                style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textMid,
-                    ),
+                style: Theme.of(
+                  sheetContext,
+                ).textTheme.bodyMedium?.copyWith(color: AppColors.textMid),
               ),
               const SizedBox(height: 8),
               for (final e in burnEffects)
@@ -722,13 +777,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   trailing: e.pro && !unlocked
                       ? const Icon(Icons.lock_outline, size: 18)
                       : e.id == current.id
-                          ? const Icon(Icons.check, color: AppColors.accent)
-                          : null,
+                      ? const Icon(Icons.check, color: AppColors.accent)
+                      : null,
                   onTap: () {
                     Navigator.of(sheetContext).pop();
                     if (e.pro && !unlocked) {
-                      Navigator.of(context)
-                          .push(emberRoute(const PaywallScreen()));
+                      Navigator.of(
+                        context,
+                      ).push(emberRoute(const PaywallScreen()));
                     } else {
                       _pickEffect(e);
                     }
@@ -756,8 +812,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('What you\'re burning',
-                  style: Theme.of(sheetContext).textTheme.headlineSmall),
+              Text(
+                'What you\'re burning',
+                style: Theme.of(sheetContext).textTheme.headlineSmall,
+              ),
               const SizedBox(height: 16),
               Wrap(
                 spacing: 8,
@@ -810,7 +868,11 @@ class _Group extends StatelessWidget {
             children: [
               for (final (i, child) in children.indexed) ...[
                 if (i > 0)
-                  const Divider(height: 1, indent: 56, color: AppColors.hairline),
+                  const Divider(
+                    height: 1,
+                    indent: 56,
+                    color: AppColors.hairline,
+                  ),
                 child,
               ],
             ],
@@ -851,9 +913,10 @@ class _SwitchRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style:
-                        theme.textTheme.titleSmall?.copyWith(fontSize: 15.5)),
+                Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(fontSize: 15.5),
+                ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 3),
                   Text(subtitle!, style: theme.textTheme.bodySmall),
@@ -902,9 +965,12 @@ class _Row extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: theme.textTheme.titleSmall
-                            ?.copyWith(fontSize: 15.5)),
+                    Text(
+                      title,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontSize: 15.5,
+                      ),
+                    ),
                     if (subtitle != null) ...[
                       const SizedBox(height: 3),
                       Text(subtitle!, style: theme.textTheme.bodySmall),
@@ -914,14 +980,20 @@ class _Row extends StatelessWidget {
               ),
               if (trailing != null) ...[
                 const SizedBox(width: 10),
-                Text(trailing!,
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(color: AppColors.textMid)),
+                Text(
+                  trailing!,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textMid,
+                  ),
+                ),
               ],
               if (onTap != null) ...[
                 const SizedBox(width: 4),
-                const Icon(Icons.chevron_right,
-                    size: 20, color: AppColors.textLow),
+                const Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: AppColors.textLow,
+                ),
               ],
             ],
           ),

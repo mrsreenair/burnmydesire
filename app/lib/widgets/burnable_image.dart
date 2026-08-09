@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
-import 'fire_sound.dart';
+import 'burn_sound.dart';
 
 /// Lets a sibling widget — the Hold-to-burn button — drive the same burn
 /// the paper responds to, so there is one animation with two handles on
@@ -27,6 +27,7 @@ class BurnableImage extends StatefulWidget {
     required this.image,
     required this.onBurned,
     this.shaderAsset = 'assets/shaders/burn.frag',
+    this.soundAsset = 'audio/fire.wav',
     this.onProgress,
     this.controller,
     this.duration = const Duration(milliseconds: 3000),
@@ -39,6 +40,10 @@ class BurnableImage extends StatefulWidget {
   /// the ritual — hold, haptics, sound, completion — is unchanged by the
   /// choice (see data/burn_effects.dart).
   final String shaderAsset;
+
+  /// The loop that plays while the hold lasts — the chosen effect's own
+  /// sound (see data/burn_effects.dart).
+  final String soundAsset;
 
   /// Reports burn progress 0→1 every frame so the host screen can react
   /// (glow, hint fade) without owning the animation.
@@ -65,7 +70,7 @@ class _BurnableImageState extends State<BurnableImage>
   late final Ticker _clock;
   final ValueNotifier<double> _time = ValueNotifier(0);
   Timer? _haptics;
-  final _fire = FireSound();
+  late BurnSound _sound = BurnSound(widget.soundAsset);
   bool _completed = false;
 
   @override
@@ -77,7 +82,7 @@ class _BurnableImageState extends State<BurnableImage>
         if (status == AnimationStatus.completed && !_completed) {
           _completed = true;
           _haptics?.cancel();
-          _fire.finish();
+          _sound.finish();
           HapticFeedback.heavyImpact();
           widget.onBurned();
         }
@@ -111,12 +116,16 @@ class _BurnableImageState extends State<BurnableImage>
       _program = null;
       _load(widget.shaderAsset);
     }
+    if (old.soundAsset != widget.soundAsset) {
+      _sound.dispose();
+      _sound = BurnSound(widget.soundAsset);
+    }
   }
 
   void _start() {
     if (_completed) return;
     HapticFeedback.mediumImpact();
-    _fire.start();
+    _sound.start();
     _burn.forward();
     _haptics = Timer.periodic(const Duration(milliseconds: 90), (_) {
       HapticFeedback.selectionClick();
@@ -127,13 +136,13 @@ class _BurnableImageState extends State<BurnableImage>
     if (_completed) return;
     _burn.stop();
     _haptics?.cancel();
-    _fire.pause();
+    _sound.pause();
   }
 
   @override
   void dispose() {
     _haptics?.cancel();
-    _fire.dispose();
+    _sound.dispose();
     _clock.dispose();
     _burn.dispose();
     _time.dispose();

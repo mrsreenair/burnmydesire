@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:burn_my_desire/data/burn_effects.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -17,6 +19,21 @@ void main() {
     for (final e in burnEffects) {
       expect(e.asset, startsWith('assets/shaders/'));
       expect(e.asset, endsWith('.frag'));
+    }
+  });
+
+  // Sound failures are swallowed by design — the ritual must never break
+  // because audio is unavailable — so a mistyped or unregistered path
+  // would just be silence with no error anywhere. Catch it here instead.
+  test('every shader and sound is on disk and declared in pubspec', () {
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+    for (final e in burnEffects) {
+      expect(File(e.asset).existsSync(), isTrue, reason: '${e.id}: ${e.asset}');
+      expect(pubspec, contains(e.asset), reason: '${e.id} shader in pubspec');
+
+      final sound = 'assets/${e.sound}';
+      expect(File(sound).existsSync(), isTrue, reason: '${e.id}: $sound');
+      expect(pubspec, contains(sound), reason: '${e.id} sound in pubspec');
     }
   });
 

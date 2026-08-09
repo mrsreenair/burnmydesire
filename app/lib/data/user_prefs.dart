@@ -30,6 +30,16 @@ const burnGoals = <(String, String, String)>[
 
 const _kGoalsKey = 'burn_goals';
 const _kAiCoachKey = 'ai_coach_enabled';
+const _kCurrencyKey = 'currency_code';
+
+/// The chosen display currency (ISO code), null before setup picks one.
+/// Changing it later never converts stored amounts — numbers are numbers;
+/// the currency only decides how they're written.
+Future<String?> savedCurrencyCode() async =>
+    (await SharedPreferences.getInstance()).getString(_kCurrencyKey);
+
+Future<void> saveCurrencyCode(String code) async =>
+    (await SharedPreferences.getInstance()).setString(_kCurrencyKey, code);
 
 Future<void> saveBurnGoals(List<String> ids) async =>
     (await SharedPreferences.getInstance()).setStringList(_kGoalsKey, ids);
@@ -45,6 +55,17 @@ Future<bool> aiCoachEnabled() async =>
 
 Future<void> setAiCoachEnabled(bool on) async =>
     (await SharedPreferences.getInstance()).setBool(_kAiCoachKey, on);
+
+const _kBurnSoundKey = 'burn_sound_enabled';
+
+/// The crackle (or the shredder motor) under a hold. On by default, and
+/// deliberately loud enough to hear — but it plays through the ring
+/// switch, so anyone who burns in public needs a way to shut it off.
+Future<bool> burnSoundEnabled() async =>
+    (await SharedPreferences.getInstance()).getBool(_kBurnSoundKey) ?? true;
+
+Future<void> setBurnSoundEnabled(bool on) async =>
+    (await SharedPreferences.getInstance()).setBool(_kBurnSoundKey, on);
 
 /// Spending temptations offered during setup: (label, emoji).
 const spendCategories = <(String, String)>[
@@ -82,8 +103,10 @@ Future<String> profileName() async =>
 // ---- Spending categories ----
 
 Future<void> saveSpendCategories(List<String> labels) async =>
-    (await SharedPreferences.getInstance())
-        .setStringList(_kCategoriesKey, labels);
+    (await SharedPreferences.getInstance()).setStringList(
+      _kCategoriesKey,
+      labels,
+    );
 
 Future<List<String>> savedSpendCategories() async =>
     (await SharedPreferences.getInstance()).getStringList(_kCategoriesKey) ??
