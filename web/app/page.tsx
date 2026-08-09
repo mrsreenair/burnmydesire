@@ -3,6 +3,7 @@ import Link from "next/link";
 import BurnDemo from "@/components/burn-demo";
 import CountUp from "@/components/count-up";
 import Reveal from "@/components/reveal";
+import WorldCounter from "@/components/world-counter";
 import { formatDate, posts } from "@/lib/posts";
 
 const STEPS = [
@@ -439,6 +440,9 @@ export default function Home() {
           </Reveal>
         </div>
       </section>
+
+      {/* ---------------------------------------------------- world counter */}
+      <WorldCounter />
 
       {/* ------------------------------------------------------------- blog */}
       <section className="section-tight">
