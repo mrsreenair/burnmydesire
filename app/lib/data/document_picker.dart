@@ -4,8 +4,7 @@ import 'package:flutter/services.dart';
 /// Returns the copied file's path, or null when the user cancels.
 class DocumentPicker {
   DocumentPicker([MethodChannel? channel])
-      : _channel =
-            channel ?? const MethodChannel('burnmydesire/document_picker');
+    : _channel = channel ?? const MethodChannel('burnmydesire/document_picker');
 
   final MethodChannel _channel;
 

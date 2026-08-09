@@ -4,8 +4,10 @@
 ///   flutter build ios --dart-define=RC_IOS_KEY=appl_xxx
 /// With no key the app runs in free-only mode and the paywall shows a
 /// "purchases not live yet" state — safe for development and simulators.
-const String kRevenueCatIosApiKey =
-    String.fromEnvironment('RC_IOS_KEY', defaultValue: '');
+const String kRevenueCatIosApiKey = String.fromEnvironment(
+  'RC_IOS_KEY',
+  defaultValue: '',
+);
 
 /// RevenueCat entitlement identifier that unlocks Pro.
 const String kProEntitlementId = 'pro';
@@ -22,10 +24,14 @@ const int kFinalBurnCount = 3;
 /// Base URL of the anonymous world-counter service (self-hosted). Empty
 /// disables the feature entirely — the app then sends nothing, anywhere.
 ///   flutter build ios --dart-define=COUNTER_URL=https://counter.example.com
-const String kWorldCounterBaseUrl =
-    String.fromEnvironment('COUNTER_URL', defaultValue: '');
+const String kWorldCounterBaseUrl = String.fromEnvironment(
+  'COUNTER_URL',
+  defaultValue: '',
+);
 
 /// Where "move the money" sends people. Placeholder until affiliate
 /// accounts exist; the amount is appended so the partner can pre-fill.
-const String kMoveMoneyUrl =
-    String.fromEnvironment('MOVE_MONEY_URL', defaultValue: '');
+const String kMoveMoneyUrl = String.fromEnvironment(
+  'MOVE_MONEY_URL',
+  defaultValue: '',
+);

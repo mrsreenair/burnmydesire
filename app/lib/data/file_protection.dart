@@ -8,8 +8,7 @@ import 'package:flutter/services.dart';
 /// the first unlock after boot.
 class FileProtection {
   FileProtection([MethodChannel? channel])
-      : _channel =
-            channel ?? const MethodChannel('burnmydesire/file_protection');
+    : _channel = channel ?? const MethodChannel('burnmydesire/file_protection');
 
   final MethodChannel _channel;
 
@@ -43,8 +42,9 @@ class FileProtection {
   /// rather than assume the call worked.
   Future<String> protectionOf(String path) async {
     try {
-      return await _channel
-              .invokeMethod<String>('protectionOf', {'path': path}) ??
+      return await _channel.invokeMethod<String>('protectionOf', {
+            'path': path,
+          }) ??
           'unknown';
     } on PlatformException {
       return 'unknown';

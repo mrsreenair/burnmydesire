@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../data/database.dart';
 import '../data/user_prefs.dart';
+import '../providers/currency_provider.dart';
 import '../providers/db_providers.dart';
 import '../providers/pro_provider.dart';
 import '../theme/app_colors.dart';
@@ -27,7 +28,10 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final unlocked = ref.watch(dashboardUnlockedProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Your wealth'), automaticallyImplyLeading: false),
+      appBar: AppBar(
+        title: const Text('Your wealth'),
+        automaticallyImplyLeading: false,
+      ),
       body: unlocked ? const _Dashboard() : const _LockedView(),
     );
   }
@@ -73,9 +77,8 @@ class _LockedView extends StatelessWidget {
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 18),
               ),
-              onPressed: () => Navigator.of(
-                context,
-              ).push(emberRoute(const PaywallScreen())),
+              onPressed: () =>
+                  Navigator.of(context).push(emberRoute(const PaywallScreen())),
               child: const Text('Go Pro'),
             ),
           ],
@@ -93,6 +96,9 @@ class _Dashboard extends ConsumerWidget {
     final theme = Theme.of(context);
     final items = ref.watch(itemsProvider).value ?? const <Item>[];
     final live = ref.watch(liveItemsProvider);
+    // Rebuild when the currency changes — this screen sits in the tab
+    // stack, so nothing else would repaint its amounts.
+    ref.watch(currencyProvider);
     final protected = ref.watch(protectedCentsProvider);
     final market = ref.watch(marketDataProvider).value;
     final categories = ref.watch(spendCategoriesProvider).value ?? const [];
@@ -144,7 +150,7 @@ class _Dashboard extends ConsumerWidget {
                     blendMode: BlendMode.srcIn,
                     child: CountUpText(
                       protected,
-                      formatter: formatEuros,
+                      formatter: formatMoney,
                       style: theme.textTheme.displayMedium,
                     ),
                   ),
@@ -152,7 +158,7 @@ class _Dashboard extends ConsumerWidget {
                     const SizedBox(height: 8),
                     Text(
                       'Invested today, that could be '
-                      '${formatEuros(projected)} by $targetYear at the '
+                      '${formatMoney(projected)} by $targetYear at the '
                       '${fund.name}\'s real ${fund.yearsAvailable}-year '
                       'average (${(fund.fullHistoryCagr * 100).toStringAsFixed(1)}%/yr).',
                       textAlign: TextAlign.center,
@@ -310,7 +316,7 @@ class _ItemTile extends ConsumerWidget {
         title: Text(
           item.category == 'emotion'
               ? 'A thought you let go'
-              : '${formatEuros(item.priceCents)} protected',
+              : '${formatMoney(item.priceCents)} protected',
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
           ),
@@ -353,7 +359,8 @@ class _ShareMilestoneState extends State<_ShareMilestone> {
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path)],
-          text: 'I protected ${formatEuros(widget.protectedCents)} by '
+          text:
+              'I protected ${formatMoney(widget.protectedCents)} by '
               'burning what I wanted instead of buying it.',
         ),
       );

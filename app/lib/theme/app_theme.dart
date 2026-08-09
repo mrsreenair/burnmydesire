@@ -5,22 +5,23 @@ import 'app_colors.dart';
 /// Single ThemeData: the warm-paper world. (The burn screen overrides
 /// itself to [AppColors.night] — the one dark moment in the app.)
 ThemeData buildAppTheme() {
-  final scheme = ColorScheme.fromSeed(
-    seedColor: AppColors.accent,
-    brightness: Brightness.light,
-  ).copyWith(
-    primary: AppColors.accent,
-    secondary: AppColors.money,
-    surface: AppColors.paper,
-    surfaceContainerLow: AppColors.paper,
-    surfaceContainer: AppColors.paperHigh,
-    surfaceContainerHigh: AppColors.paperHigh,
-    surfaceContainerHighest: AppColors.field,
-    onSurface: AppColors.ink,
-    onSurfaceVariant: AppColors.textMid,
-    outlineVariant: AppColors.hairline,
-    error: const Color(0xFFD8402C),
-  );
+  final scheme =
+      ColorScheme.fromSeed(
+        seedColor: AppColors.accent,
+        brightness: Brightness.light,
+      ).copyWith(
+        primary: AppColors.accent,
+        secondary: AppColors.money,
+        surface: AppColors.paper,
+        surfaceContainerLow: AppColors.paper,
+        surfaceContainer: AppColors.paperHigh,
+        surfaceContainerHigh: AppColors.paperHigh,
+        surfaceContainerHighest: AppColors.field,
+        onSurface: AppColors.ink,
+        onSurfaceVariant: AppColors.textMid,
+        outlineVariant: AppColors.hairline,
+        error: const Color(0xFFD8402C),
+      );
 
   // Canopi-style editorial type: heavy black headings with tight
   // tracking, calm gray body.
@@ -37,25 +38,42 @@ ThemeData buildAppTheme() {
     headlineMedium: display.copyWith(fontSize: 30, letterSpacing: -0.8),
     headlineSmall: display.copyWith(fontSize: 24, letterSpacing: -0.5),
     titleLarge: const TextStyle(
-        fontSize: 21,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.3,
-        color: AppColors.ink),
+      fontSize: 21,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.3,
+      color: AppColors.ink,
+    ),
     titleMedium: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w500,
-        height: 1.45,
-        color: AppColors.inkSoft),
+      fontSize: 16,
+      fontWeight: FontWeight.w500,
+      height: 1.45,
+      color: AppColors.inkSoft,
+    ),
     titleSmall: const TextStyle(
-        fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink),
-    bodyLarge:
-        const TextStyle(fontSize: 16, height: 1.5, color: AppColors.inkSoft),
-    bodyMedium:
-        const TextStyle(fontSize: 14, height: 1.5, color: AppColors.inkSoft),
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+      color: AppColors.ink,
+    ),
+    bodyLarge: const TextStyle(
+      fontSize: 16,
+      height: 1.5,
+      color: AppColors.inkSoft,
+    ),
+    bodyMedium: const TextStyle(
+      fontSize: 14,
+      height: 1.5,
+      color: AppColors.inkSoft,
+    ),
     bodySmall: const TextStyle(
-        fontSize: 12, height: 1.45, color: AppColors.textMid),
+      fontSize: 12,
+      height: 1.45,
+      color: AppColors.textMid,
+    ),
     labelLarge: const TextStyle(
-        fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 0.1),
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.1,
+    ),
   );
 
   return ThemeData(
@@ -110,8 +128,7 @@ ThemeData buildAppTheme() {
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.field,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
         borderSide: BorderSide.none,
@@ -145,10 +162,11 @@ ThemeData buildAppTheme() {
     ),
     switchTheme: SwitchThemeData(
       thumbColor: const WidgetStatePropertyAll(Colors.white),
-      trackColor: WidgetStateProperty.resolveWith((states) =>
-          states.contains(WidgetState.selected)
-              ? AppColors.accent
-              : AppColors.field),
+      trackColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? AppColors.accent
+            : AppColors.field,
+      ),
       trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
     ),
     bottomSheetTheme: const BottomSheetThemeData(

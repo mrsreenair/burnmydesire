@@ -59,10 +59,15 @@ Future<Uint8List> renderMilestoneCard({
   }
 
   write('🔥', 150, 96, const ui.Color(0xFF1A1A1A), letterSpacing: 0);
-  write('I protected', 300, 52, const ui.Color(0xFF6B6257),
-      weight: FontWeight.w600, letterSpacing: 0);
-  write(formatEuros(protectedCents), 370, 148,
-      const ui.Color(0xFF1E9E6A));
+  write(
+    'I protected',
+    300,
+    52,
+    const ui.Color(0xFF6B6257),
+    weight: FontWeight.w600,
+    letterSpacing: 0,
+  );
+  write(formatMoney(protectedCents), 370, 148, const ui.Color(0xFF1E9E6A));
   write(
     burns == 1
         ? 'by burning one desire\ninstead of buying it'
@@ -73,13 +78,26 @@ Future<Uint8List> renderMilestoneCard({
     weight: FontWeight.w600,
     letterSpacing: 0,
   );
-  write('Burn My Desire', _size - 190, 40, const ui.Color(0xFF1A1A1A),
-      letterSpacing: -0.5);
-  write('burnmydesire.com', _size - 130, 32, const ui.Color(0xFF9A9186),
-      weight: FontWeight.w500, letterSpacing: 0);
+  write(
+    'Burn My Desire',
+    _size - 190,
+    40,
+    const ui.Color(0xFF1A1A1A),
+    letterSpacing: -0.5,
+  );
+  write(
+    'burnmydesire.com',
+    _size - 130,
+    32,
+    const ui.Color(0xFF9A9186),
+    weight: FontWeight.w500,
+    letterSpacing: 0,
+  );
 
-  final image =
-      await recorder.endRecording().toImage(_size.toInt(), _size.toInt());
+  final image = await recorder.endRecording().toImage(
+    _size.toInt(),
+    _size.toInt(),
+  );
   final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
   return bytes!.buffer.asUint8List();
 }

@@ -8,7 +8,9 @@ final burnEffectIdProvider = FutureProvider<String>((ref) => savedBurnEffect());
 
 /// The effect the burn screen should actually run: the choice, downgraded
 /// to fire if Pro isn't (or is no longer) active.
-final burnEffectProvider = Provider<BurnEffect>((ref) => effectiveBurnEffect(
-      ref.watch(burnEffectIdProvider).value,
-      isPro: ref.watch(proUnlockedProvider),
-    ));
+final burnEffectProvider = Provider<BurnEffect>(
+  (ref) => effectiveBurnEffect(
+    ref.watch(burnEffectIdProvider).value,
+    isPro: ref.watch(proUnlockedProvider),
+  ),
+);

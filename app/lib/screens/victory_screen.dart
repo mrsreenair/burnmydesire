@@ -42,8 +42,7 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
   /// Whether this burn ends the desire forever: the user asked for it, or
   /// the streak reached the final-burn count.
   bool get _isFinal =>
-      widget.target.letGoForever ||
-      widget.target.burnNumber >= kFinalBurnCount;
+      widget.target.letGoForever || widget.target.burnNumber >= kFinalBurnCount;
 
   @override
   void initState() {
@@ -116,9 +115,9 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
   /// data is already safe on the device.
   void _syncToCloud(AppDatabase db, ImageStore store) {
     if (!ref.read(proProvider)) return;
-    CloudBackup(BackupService(db, store))
-        .backUp()
-        .catchError((Object _) => false);
+    CloudBackup(
+      BackupService(db, store),
+    ).backUp().catchError((Object _) => false);
   }
 
   @override
@@ -127,7 +126,8 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
     final target = widget.target;
     final price = target.priceCents;
     final fund = ref.watch(marketDataProvider).value?.funds.first;
-    final future = fund?.projectedValueCents(price, kDefaultHorizonYears) ??
+    final future =
+        fund?.projectedValueCents(price, kDefaultHorizonYears) ??
         futureValueCents(price, years: kDefaultHorizonYears);
     final again = target.burnNumber > 1;
 
@@ -164,8 +164,8 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
                               color: _isFinal
                                   ? AppColors.gold
                                   : target.isEmotion
-                                      ? AppColors.accent
-                                      : AppColors.money,
+                                  ? AppColors.accent
+                                  : AppColors.money,
                             ),
                           ),
                           const SizedBox(height: 18),
@@ -174,15 +174,15 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
                             child: _isFinal
                                 ? _FinalResult(target: target, price: price)
                                 : target.isEmotion
-                                    ? _ThoughtResult(
-                                        target: target,
-                                        aiMessage: _aiMessage,
-                                      )
-                                    : _MoneyResult(
-                                        target: target,
-                                        price: price,
-                                        future: future,
-                                      ),
+                                ? _ThoughtResult(
+                                    target: target,
+                                    aiMessage: _aiMessage,
+                                  )
+                                : _MoneyResult(
+                                    target: target,
+                                    price: price,
+                                    future: future,
+                                  ),
                           ),
                           // Only after a money burn, and only once the
                           // craving has passed — never mid-urge.
@@ -203,8 +203,9 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
                                 'Put it to work: a low-cost ETF at your '
                                 'broker beats a gadget in a drawer.',
                                 textAlign: TextAlign.center,
-                                style: theme.textTheme.bodyMedium
-                                    ?.copyWith(color: AppColors.textLow),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: AppColors.textLow,
+                                ),
                               ),
                             ),
                           ],
@@ -216,7 +217,8 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
                   Container(
                     decoration: const BoxDecoration(
                       border: Border(
-                          top: BorderSide(color: AppColors.hairline)),
+                        top: BorderSide(color: AppColors.hairline),
+                      ),
                     ),
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
                     child: Reveal(
@@ -294,7 +296,7 @@ class _MoneyResult extends StatelessWidget {
           blendMode: BlendMode.srcIn,
           child: CountUpText(
             price,
-            formatter: formatEuros,
+            formatter: formatMoney,
             duration: const Duration(milliseconds: 1400),
             style: theme.textTheme.displayMedium,
           ),
@@ -303,11 +305,12 @@ class _MoneyResult extends StatelessWidget {
         Text(
           again
               ? 'This one keeps trying. You keep winning.'
-              : 'Invested, that\'s ${formatEuros(future)} '
-                  'in $kDefaultHorizonYears years.',
+              : 'Invested, that\'s ${formatMoney(future)} '
+                    'in $kDefaultHorizonYears years.',
           textAlign: TextAlign.center,
-          style:
-              theme.textTheme.titleMedium?.copyWith(color: AppColors.textMid),
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: AppColors.textMid,
+          ),
         ),
       ],
     );
@@ -339,7 +342,7 @@ class _FinalResult extends StatelessWidget {
             blendMode: BlendMode.srcIn,
             child: CountUpText(
               price,
-              formatter: formatEuros,
+              formatter: formatMoney,
               duration: const Duration(milliseconds: 1400),
               style: theme.textTheme.displayMedium,
             ),
@@ -349,12 +352,13 @@ class _FinalResult extends StatelessWidget {
         Text(
           target.isEmotion
               ? 'The page is gone for good — deleted, not stored. '
-                  'What you burn stops owning you.'
+                    'What you burn stops owning you.'
               : 'The photo is deleted. It can\'t tempt you again — '
-                  'and your ${formatEuros(price)} stays protected forever.',
+                    'and your ${formatMoney(price)} stays protected forever.',
           textAlign: TextAlign.center,
-          style:
-              theme.textTheme.titleMedium?.copyWith(color: AppColors.textMid),
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: AppColors.textMid,
+          ),
         ),
       ],
     );
@@ -373,7 +377,8 @@ class _ThoughtResult extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final message = aiMessage ??
+    final message =
+        aiMessage ??
         motivationMessage(
           resistanceCount: target.burnNumber,
           seed: target.itemId ?? target.imageBytes.length,
@@ -392,8 +397,9 @@ class _ThoughtResult extends StatelessWidget {
             message,
             key: ValueKey(message),
             textAlign: TextAlign.center,
-            style: theme.textTheme.titleMedium
-                ?.copyWith(color: AppColors.textMid),
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: AppColors.textMid,
+            ),
           ),
         ),
       ],
@@ -433,7 +439,7 @@ class _MoveTheMoney extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'Move the ${formatEuros(cents)} somewhere it grows',
+            'Move the ${formatMoney(cents)} somewhere it grows',
             textAlign: TextAlign.center,
             style: theme.textTheme.titleMedium,
           ),
@@ -442,22 +448,21 @@ class _MoveTheMoney extends StatelessWidget {
             'Resisting only counts if the money actually moves. '
             'Opens your provider — we never see your account.',
             textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: AppColors.textLow),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textLow,
+            ),
           ),
           const SizedBox(height: 14),
-          EmberButton(
-            label: 'Move it now',
-            glow: false,
-            onPressed: _open,
-          ),
+          EmberButton(label: 'Move it now', glow: false, onPressed: _open),
           const SizedBox(height: 8),
           Text(
             'We may earn a commission. It costs you nothing, and it never '
             'changes what the app tells you.',
             textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: AppColors.textLow, fontSize: 11),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textLow,
+              fontSize: 11,
+            ),
           ),
         ],
       ),

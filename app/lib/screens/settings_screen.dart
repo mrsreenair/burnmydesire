@@ -11,18 +11,21 @@ import '../data/ai_coach.dart';
 import '../data/backup.dart';
 import '../data/burn_effects.dart';
 import '../data/cloud_backup.dart';
+import '../data/currencies.dart';
 import '../data/document_picker.dart';
 import '../data/encrypted_db.dart';
 import '../data/user_prefs.dart';
 import '../data/world_counter.dart';
 import '../utils/format_utils.dart';
 import '../providers/burn_effect_provider.dart';
+import '../providers/currency_provider.dart';
 import '../providers/db_providers.dart';
 import '../providers/pro_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/motion.dart';
 import '../widgets/ember_ui.dart';
 import '../widgets/paper_backdrop.dart';
+import 'currency_screen.dart';
 import 'lock_screen.dart';
 import 'paywall_screen.dart';
 import 'onboarding_screen.dart';
@@ -453,6 +456,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final configured = ref.watch(purchasesConfiguredProvider);
     final goals = ref.watch(burnGoalsProvider).value ?? const [];
     final effect = ref.watch(burnEffectProvider);
+    final currency = ref.watch(currencyProvider);
 
     return Scaffold(
       body: PaperBackdrop(
@@ -530,7 +534,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   ? 'Sends one number: how much your protected '
                                         'total grew. Nothing else — no name, no '
                                         'items, nothing traceable.'
-                                  : '${formatMoney(_worldStats!.totalCents)} '
+                                  : '${formatWorldEuros(_worldStats!.totalCents)} '
                                         'burned by '
                                         '${_worldStats!.contributors} people so '
                                         'far. Only a single number ever leaves '
@@ -725,6 +729,48 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: AppColors.textLow,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// The currency picker. Changing it rewrites how every amount is
+  /// displayed and nothing else — stored numbers are never converted,
+  /// which the row's subtitle says out loud.
+  void _showCurrencies() {
+    final current = ref.read(currencyProvider);
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Currency',
+                  style: Theme.of(sheetContext).textTheme.headlineSmall),
+              const SizedBox(height: 12),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: currencies.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
+                  itemBuilder: (context, i) {
+                    final c = currencies[i];
+                    return CurrencyTile(
+                      currency: c,
+                      selected: c.code == current.code,
+                      onTap: () {
+                        Navigator.of(sheetContext).pop();
+                        ref.read(currencyProvider.notifier).change(c);
+                      },
+                    );
+                  },
                 ),
               ),
             ],

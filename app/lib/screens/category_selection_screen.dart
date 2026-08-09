@@ -24,8 +24,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   Future<void> _finish() async {
     await saveSpendCategories(_selected.toList());
     if (!mounted) return;
-    Navigator.of(context)
-        .pushReplacement(emberRoute(const DisclaimerScreen()));
+    Navigator.of(context).pushReplacement(emberRoute(const DisclaimerScreen()));
   }
 
   @override
@@ -41,17 +40,21 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
               children: [
                 const SizedBox(height: 16),
                 Reveal(
-                  child: Text('Where does your money leak?',
-                      style: theme.textTheme.headlineMedium),
+                  child: Text(
+                    'Where does your money leak?',
+                    style: theme.textTheme.headlineMedium,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Reveal(
                   delay: const Duration(milliseconds: 80),
                   child: Text(
-                      'Pick everything you can\'t resist. '
-                      'We\'ll help you burn it.',
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(color: AppColors.textMid)),
+                    'Pick everything you can\'t resist. '
+                    'We\'ll help you burn it.',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: AppColors.textMid,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Expanded(
@@ -69,9 +72,11 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                               emoji: emoji,
                               label: label,
                               selected: _selected.contains(label),
-                              onChanged: (on) => setState(() => on
-                                  ? _selected.add(label)
-                                  : _selected.remove(label)),
+                              onChanged: (on) => setState(
+                                () => on
+                                    ? _selected.add(label)
+                                    : _selected.remove(label),
+                              ),
                             ),
                           ),
                       ],

@@ -45,8 +45,7 @@ Future<void> deleteDatabaseKey() => _storage.delete(key: _kDbKeyKey);
 String pragmaKeyLiteral(String hexKey) => '"x\'$hexKey\'"';
 
 /// Escapes a passphrase for use in a single-quoted SQL string literal.
-String sqlStringLiteral(String value) =>
-    "'${value.replaceAll("'", "''")}'";
+String sqlStringLiteral(String value) => "'${value.replaceAll("'", "''")}'";
 
 /// Base64 of the raw key bytes — used when a key must travel inside an
 /// encrypted backup archive rather than the Keychain.

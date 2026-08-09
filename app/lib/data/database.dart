@@ -36,10 +36,10 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onUpgrade: (m, from, to) async {
-          if (from < 2) await m.addColumn(items, items.destroyedAt);
-        },
-      );
+    onUpgrade: (m, from, to) async {
+      if (from < 2) await m.addColumn(items, items.destroyedAt);
+    },
+  );
 
   Stream<List<Item>> watchItems() {
     final query = select(items)
@@ -59,16 +59,18 @@ class AppDatabase extends _$AppDatabase {
     String category = 'purchase',
   }) {
     final now = DateTime.now();
-    return into(items).insert(ItemsCompanion.insert(
-      imageFile: imageFile,
-      priceCents: priceCents,
-      category: Value(category),
-      monthlyCents: Value(monthlyCents),
-      months: Value(months),
-      resistanceCount: const Value(1),
-      createdAt: now,
-      lastBurnedAt: Value(now),
-    ));
+    return into(items).insert(
+      ItemsCompanion.insert(
+        imageFile: imageFile,
+        priceCents: priceCents,
+        category: Value(category),
+        monthlyCents: Value(monthlyCents),
+        months: Value(months),
+        resistanceCount: const Value(1),
+        createdAt: now,
+        lastBurnedAt: Value(now),
+      ),
+    );
   }
 
   /// The urge came back and the user burned it again.

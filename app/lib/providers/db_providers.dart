@@ -13,8 +13,7 @@ final imageStoreProvider = Provider<ImageStore>(
 /// Real market history (bundled asset, network-refreshed monthly). Kicks
 /// off a silent background refresh after the first load.
 final marketDataProvider = FutureProvider<MarketData>((ref) async {
-  final store =
-      MarketDataStore(ref.watch(imageStoreProvider).documentsPath);
+  final store = MarketDataStore(ref.watch(imageStoreProvider).documentsPath);
   final data = await store.load();
   store.refreshIfStale(data).ignore();
   return data;
@@ -32,17 +31,19 @@ final itemsProvider = StreamProvider<List<Item>>(
 
 /// Temptations still in the fight — what home shows. Destroyed items
 /// vanish from sight (their photo is gone; a visible item is a cue).
-final liveItemsProvider = Provider<List<Item>>((ref) =>
-    (ref.watch(itemsProvider).value ?? const <Item>[])
-        .where((i) => i.destroyedAt == null)
-        .toList());
+final liveItemsProvider = Provider<List<Item>>(
+  (ref) => (ref.watch(itemsProvider).value ?? const <Item>[])
+      .where((i) => i.destroyedAt == null)
+      .toList(),
+);
 
 /// Desires ended forever by a final burn. Tombstones only: price, dates,
 /// streak — no image. Feeds the dashboard "Ashes" section.
-final destroyedItemsProvider = Provider<List<Item>>((ref) =>
-    (ref.watch(itemsProvider).value ?? const <Item>[])
-        .where((i) => i.destroyedAt != null)
-        .toList());
+final destroyedItemsProvider = Provider<List<Item>>(
+  (ref) => (ref.watch(itemsProvider).value ?? const <Item>[])
+      .where((i) => i.destroyedAt != null)
+      .toList(),
+);
 
 /// Total wealth protected: each unique item counted once, no matter how
 /// often it was re-burned (PROJECT.md F4).
@@ -53,9 +54,11 @@ final protectedCentsProvider = Provider<int>((ref) {
 
 /// The spending weaknesses picked during setup (labels from
 /// [spendCategories]).
-final spendCategoriesProvider =
-    FutureProvider<List<String>>((ref) => savedSpendCategories());
+final spendCategoriesProvider = FutureProvider<List<String>>(
+  (ref) => savedSpendCategories(),
+);
 
 /// The burn goals picked during setup (ids from [burnGoals]).
-final burnGoalsProvider =
-    FutureProvider<List<String>>((ref) => savedBurnGoals());
+final burnGoalsProvider = FutureProvider<List<String>>(
+  (ref) => savedBurnGoals(),
+);

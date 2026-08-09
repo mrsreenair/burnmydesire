@@ -31,8 +31,10 @@ class ConfettiBurst extends StatefulWidget {
 
 class _ConfettiBurstState extends State<ConfettiBurst>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller =
-      AnimationController(vsync: this, duration: widget.duration)..forward();
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: widget.duration,
+  )..forward();
 
   late final List<_Piece> _pieces = _buildPieces();
 
@@ -141,9 +143,11 @@ class _ConfettiPainter extends CustomPainter {
     for (final p in pieces) {
       // Ballistic path: launch outward, gravity takes over, plus a little
       // sideways sway so pieces flutter instead of falling on rails.
-      final dx = math.cos(p.angle) * p.speed * elapsed +
+      final dx =
+          math.cos(p.angle) * p.speed * elapsed +
           math.sin(elapsed * 2.4 + p.tilt) * p.drift * elapsed;
-      final dy = math.sin(p.angle) * p.speed * elapsed +
+      final dy =
+          math.sin(p.angle) * p.speed * elapsed +
           0.5 * _gravity * elapsed * elapsed;
 
       // Snap in over the first beat, dissolve over the last third.

@@ -23,27 +23,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ['🛍️', '🔥', '💶'],
       'Craving something?',
       'Impulse buys aren\'t a math problem — they\'re a dopamine loop. '
-          'Burn My Desire breaks it in two punches.'
+          'Burn My Desire breaks it in two punches.',
     ),
     (
       ['💸', '📈', '⏳'],
       'See the real damage',
       'Every purchase steals from your future self. We show you exactly '
-          'how much wealth that gadget really costs over 10, 20, 30 years.'
+          'how much wealth that gadget really costs over 10, 20, 30 years.',
     ),
     (
       ['📷', '🔥', '🕯️'],
       'Then burn it',
       'Photograph what you crave and set it on fire. Watch it turn to ash. '
-          'The craving goes with it — and your money stays yours.'
+          'The craving goes with it — and your money stays yours.',
     ),
   ];
 
   void _finish() {
     // Setup completes (and is flagged) at the end of category selection.
-    Navigator.of(context).pushReplacement(
-      emberRoute(const ProfileSetupScreen()),
-    );
+    Navigator.of(
+      context,
+    ).pushReplacement(emberRoute(const ProfileSetupScreen()));
   }
 
   @override
@@ -89,8 +89,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               size: 84,
                               cards: [
                                 for (final e in emojis)
-                                  Text(e,
-                                      style: const TextStyle(fontSize: 30)),
+                                  Text(e, style: const TextStyle(fontSize: 30)),
                               ],
                             ),
                           ),
@@ -98,18 +97,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           Reveal(
                             key: ValueKey('title$i-${_page == i}'),
                             delay: const Duration(milliseconds: 90),
-                            child: Text(title,
-                                textAlign: TextAlign.center,
-                                style: theme.textTheme.headlineMedium),
+                            child: Text(
+                              title,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.headlineMedium,
+                            ),
                           ),
                           const SizedBox(height: 16),
                           Reveal(
                             key: ValueKey('body$i-${_page == i}'),
                             delay: const Duration(milliseconds: 180),
-                            child: Text(body,
-                                textAlign: TextAlign.center,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                    color: AppColors.textMid, height: 1.5)),
+                            child: Text(
+                              body,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: AppColors.textMid,
+                                height: 1.5,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -148,7 +153,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     onPressed: last
                         ? _finish
                         : () => _controller.nextPage(
-                            duration: Motion.base, curve: Motion.easeOut),
+                            duration: Motion.base,
+                            curve: Motion.easeOut,
+                          ),
                   ),
                 ),
               ),

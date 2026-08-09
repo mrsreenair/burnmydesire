@@ -25,10 +25,14 @@ class Reveal extends StatefulWidget {
 }
 
 class _RevealState extends State<Reveal> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller =
-      AnimationController(vsync: this, duration: widget.duration);
-  late final CurvedAnimation _curve =
-      CurvedAnimation(parent: _controller, curve: Motion.easeOut);
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: widget.duration,
+  );
+  late final CurvedAnimation _curve = CurvedAnimation(
+    parent: _controller,
+    curve: Motion.easeOut,
+  );
 
   @override
   void initState() {
@@ -81,8 +85,10 @@ class PopIn extends StatefulWidget {
 }
 
 class _PopInState extends State<PopIn> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller =
-      AnimationController(vsync: this, duration: widget.duration);
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: widget.duration,
+  );
 
   @override
   void initState() {
@@ -100,8 +106,10 @@ class _PopInState extends State<PopIn> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final scale = Tween(begin: widget.from, end: 1.0).animate(
-        CurvedAnimation(parent: _controller, curve: Motion.spring));
+    final scale = Tween(
+      begin: widget.from,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Motion.spring));
     final fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
     return FadeTransition(
       opacity: fade,
@@ -209,8 +217,7 @@ class _EmberButtonState extends State<EmberButton> {
               gradient: fire ? AppColors.emberGradient : null,
               borderRadius: BorderRadius.circular(28),
               boxShadow: fire && widget.glow && enabled
-                  ? AppColors.emberGlow(
-                      opacity: _down ? 0.2 : 0.32, blur: 24)
+                  ? AppColors.emberGlow(opacity: _down ? 0.2 : 0.32, blur: 24)
                   : null,
             ),
             child: Row(
@@ -262,19 +269,20 @@ class CountUpText extends StatelessWidget {
       tween: Tween(begin: 0, end: value.toDouble()),
       duration: duration,
       curve: curve,
-      builder: (context, v, _) => Text(
-        formatter(v.round()),
-        textAlign: TextAlign.center,
-        style: style,
-      ),
+      builder: (context, v, _) =>
+          Text(formatter(v.round()), textAlign: TextAlign.center, style: style),
     );
   }
 }
 
 /// Text filled with the ember gradient (for the shock number).
 class GradientText extends StatelessWidget {
-  const GradientText(this.text,
-      {super.key, this.style, this.gradient = AppColors.emberGradient});
+  const GradientText(
+    this.text, {
+    super.key,
+    this.style,
+    this.gradient = AppColors.emberGradient,
+  });
 
   final String text;
   final TextStyle? style;
@@ -292,12 +300,13 @@ class GradientText extends StatelessWidget {
 
 /// Slow breathing scale, for idle flames and glows.
 class Breathe extends StatefulWidget {
-  const Breathe(
-      {super.key,
-      required this.child,
-      this.min = 0.97,
-      this.max = 1.03,
-      this.period = const Duration(milliseconds: 2400)});
+  const Breathe({
+    super.key,
+    required this.child,
+    this.min = 0.97,
+    this.max = 1.03,
+    this.period = const Duration(milliseconds: 2400),
+  });
 
   final Widget child;
   final double min;
@@ -308,11 +317,11 @@ class Breathe extends StatefulWidget {
   State<Breathe> createState() => _BreatheState();
 }
 
-class _BreatheState extends State<Breathe>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller =
-      AnimationController(vsync: this, duration: widget.period)
-        ..repeat(reverse: true);
+class _BreatheState extends State<Breathe> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: widget.period,
+  )..repeat(reverse: true);
 
   @override
   void dispose() {
@@ -323,8 +332,10 @@ class _BreatheState extends State<Breathe>
   @override
   Widget build(BuildContext context) {
     return ScaleTransition(
-      scale: Tween(begin: widget.min, end: widget.max).animate(
-          CurvedAnimation(parent: _controller, curve: Curves.easeInOut)),
+      scale: Tween(
+        begin: widget.min,
+        end: widget.max,
+      ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut)),
       child: widget.child,
     );
   }

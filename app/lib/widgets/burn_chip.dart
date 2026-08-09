@@ -46,8 +46,7 @@ class BurnChip extends StatelessWidget {
                   : AppColors.ink.withValues(alpha: 0.06),
               width: selected ? 1.4 : 1,
             ),
-            boxShadow:
-                selected ? null : AppColors.cardShadow(opacity: 0.05),
+            boxShadow: selected ? null : AppColors.cardShadow(opacity: 0.05),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

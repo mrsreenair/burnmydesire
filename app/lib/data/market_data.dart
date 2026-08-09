@@ -48,14 +48,14 @@ class FundSeries {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'ticker': ticker,
-        'currency': currency,
-        'start': '$startYear-${startMonth.toString().padLeft(2, '0')}',
-        'end': '$endYear-${endMonth.toString().padLeft(2, '0')}',
-        'monthly': monthly,
-      };
+    'id': id,
+    'name': name,
+    'ticker': ticker,
+    'currency': currency,
+    'start': '$startYear-${startMonth.toString().padLeft(2, '0')}',
+    'end': '$endYear-${endMonth.toString().padLeft(2, '0')}',
+    'monthly': monthly,
+  };
 
   /// Whole years of history available.
   int get yearsAvailable => (monthly.length - 1) ~/ 12;
@@ -107,23 +107,33 @@ class MarketData {
   final List<FundSeries> funds;
 
   factory MarketData.fromJson(Map<String, dynamic> json) => MarketData(
-        generated: json['generated'] as String,
-        funds: [
-          for (final f in json['funds'] as List)
-            FundSeries.fromJson(f as Map<String, dynamic>)
-        ],
-      );
+    generated: json['generated'] as String,
+    funds: [
+      for (final f in json['funds'] as List)
+        FundSeries.fromJson(f as Map<String, dynamic>),
+    ],
+  );
 
   Map<String, dynamic> toJson() => {
-        'generated': generated,
-        'funds': [for (final f in funds) f.toJson()],
-      };
+    'generated': generated,
+    'funds': [for (final f in funds) f.toJson()],
+  };
 
   /// Human label like "Aug 2026" for "data as of".
   String get asOfLabel {
     const names = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     final f = funds.first;
     return '${names[f.endMonth - 1]} ${f.endYear}';
@@ -137,10 +147,10 @@ const _kRefreshAfter = Duration(days: 30);
 /// Yahoo Finance chart endpoint (free, no key). Used only to refresh public
 /// price history — no user data is ever sent.
 Uri _chartUri(String ticker) => Uri.https(
-      'query1.finance.yahoo.com',
-      '/v8/finance/chart/$ticker',
-      {'range': '35y', 'interval': '1mo'},
-    );
+  'query1.finance.yahoo.com',
+  '/v8/finance/chart/$ticker',
+  {'range': '35y', 'interval': '1mo'},
+);
 
 class MarketDataStore {
   MarketDataStore(this.documentsPath);
@@ -152,12 +162,14 @@ class MarketDataStore {
   /// Bundled data, or the cached network refresh when it's newer.
   Future<MarketData> load() async {
     final bundled = MarketData.fromJson(
-        jsonDecode(await rootBundle.loadString(_kAssetPath))
-            as Map<String, dynamic>);
+      jsonDecode(await rootBundle.loadString(_kAssetPath))
+          as Map<String, dynamic>,
+    );
     try {
       if (await _cache.exists()) {
         final cached = MarketData.fromJson(
-            jsonDecode(await _cache.readAsString()) as Map<String, dynamic>);
+          jsonDecode(await _cache.readAsString()) as Map<String, dynamic>,
+        );
         if (cached.generated.compareTo(bundled.generated) > 0 &&
             cached.funds.length >= bundled.funds.length) {
           return cached;
@@ -207,12 +219,12 @@ class MarketDataStore {
   FundSeries? _parseChart(String body, FundSeries meta) {
     try {
       final root = jsonDecode(body) as Map<String, dynamic>;
-      final result =
-          ((root['chart'] as Map)['result'] as List).first as Map;
+      final result = ((root['chart'] as Map)['result'] as List).first as Map;
       final timestamps = (result['timestamp'] as List).cast<int>();
       final adjclose =
           (((result['indicators'] as Map)['adjclose'] as List).first
-              as Map)['adjclose'] as List;
+                  as Map)['adjclose']
+              as List;
       final series = <double>[];
       DateTime? first;
       DateTime? last;
@@ -222,8 +234,7 @@ class MarketDataStore {
         final value = raw is num ? raw.toDouble() : prev;
         if (value == null) continue;
         prev = value;
-        final date =
-            DateTime.fromMillisecondsSinceEpoch(timestamps[i] * 1000);
+        final date = DateTime.fromMillisecondsSinceEpoch(timestamps[i] * 1000);
         first ??= date;
         last = date;
         series.add(value);

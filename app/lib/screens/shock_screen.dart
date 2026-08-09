@@ -53,8 +53,10 @@ class _ShockScreenState extends ConsumerState<ShockScreen> {
                                 color: AppColors.money.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(18),
                                 border: Border.all(
-                                    color: AppColors.money
-                                        .withValues(alpha: 0.25)),
+                                  color: AppColors.money.withValues(
+                                    alpha: 0.25,
+                                  ),
+                                ),
                               ),
                               child: Text(
                                 '🌱  Tools that truly grow your skills can be '
@@ -89,9 +91,9 @@ class _ShockScreenState extends ConsumerState<ShockScreen> {
                   label: 'Burn this desire',
                   icon: Icons.local_fire_department,
                   kind: PillKind.fire,
-                  onPressed: () => Navigator.of(context).push(
-                    fireRoute(BurnScreen(target: widget.target)),
-                  ),
+                  onPressed: () => Navigator.of(
+                    context,
+                  ).push(fireRoute(BurnScreen(target: widget.target))),
                 ),
               ),
             ],

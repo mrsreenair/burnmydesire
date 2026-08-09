@@ -33,16 +33,15 @@ String buildEncouragementPrompt({
     }
   } else {
     what.write(
-        'They photographed something they were about to impulse-buy and '
-        'burned the photo instead of buying it.');
+      'They photographed something they were about to impulse-buy and '
+      'burned the photo instead of buying it.',
+    );
   }
   if (goalLabels.isNotEmpty) {
-    what.write(
-        ' The desires they are working on: ${goalLabels.join(', ')}.');
+    what.write(' The desires they are working on: ${goalLabels.join(', ')}.');
   }
   if (burnNumber > 1) {
-    what.write(
-        ' This same desire has now been resisted $burnNumber times.');
+    what.write(' This same desire has now been resisted $burnNumber times.');
   } else {
     what.write(' This is their first burn of this desire.');
   }
@@ -54,7 +53,7 @@ String buildEncouragementPrompt({
 /// any failure or oddity — callers always keep the curated fallback.
 class AiCoach {
   AiCoach([MethodChannel? channel])
-      : _channel = channel ?? const MethodChannel('burnmydesire/ai');
+    : _channel = channel ?? const MethodChannel('burnmydesire/ai');
 
   final MethodChannel _channel;
 
@@ -91,15 +90,17 @@ class AiCoach {
     String? thought,
   }) async {
     try {
-      final raw = await _channel.invokeMethod<String>('generate', {
-        'instructions': kCoachInstructions,
-        'prompt': buildEncouragementPrompt(
-          isEmotion: isEmotion,
-          burnNumber: burnNumber,
-          goalLabels: goalLabels,
-          thought: thought,
-        ),
-      }).timeout(const Duration(seconds: 8));
+      final raw = await _channel
+          .invokeMethod<String>('generate', {
+            'instructions': kCoachInstructions,
+            'prompt': buildEncouragementPrompt(
+              isEmotion: isEmotion,
+              burnNumber: burnNumber,
+              goalLabels: goalLabels,
+              thought: thought,
+            ),
+          })
+          .timeout(const Duration(seconds: 8));
       final text = raw?.trim();
       // Sanity bounds: a one-liner, not an essay, not empty.
       if (text == null || text.isEmpty) {

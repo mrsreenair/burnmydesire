@@ -15,16 +15,16 @@ class DisclaimerScreen extends StatelessWidget {
   Future<void> _finish(BuildContext context) async {
     await markSetupComplete();
     if (!context.mounted) return;
-    Navigator.of(context).pushReplacement(
-      emberRoute(const RootShell()),
-    );
+    Navigator.of(context).pushReplacement(emberRoute(const RootShell()));
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final muted = theme.textTheme.titleMedium
-        ?.copyWith(color: AppColors.textMid, height: 1.5);
+    final muted = theme.textTheme.titleMedium?.copyWith(
+      color: AppColors.textMid,
+      height: 1.5,
+    );
     return Scaffold(
       body: PaperBackdrop(
         child: SafeArea(
@@ -35,16 +35,20 @@ class DisclaimerScreen extends StatelessWidget {
               children: [
                 const Spacer(),
                 const Reveal(
-                  child: Text('🤍',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 64)),
+                  child: Text(
+                    '🤍',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 64),
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Reveal(
                   delay: const Duration(milliseconds: 90),
-                  child: Text('One honest thing first',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.headlineMedium),
+                  child: Text(
+                    'One honest thing first',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineMedium,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Reveal(

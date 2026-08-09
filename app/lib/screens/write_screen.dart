@@ -70,8 +70,9 @@ class _WriteScreenState extends State<WriteScreen> {
             Reveal(
               child: Text(
                 'The thought, the craving, the feeling — put it on paper.',
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(color: AppColors.textMid),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: AppColors.textMid,
+                ),
               ),
             ),
             const SizedBox(height: 16),

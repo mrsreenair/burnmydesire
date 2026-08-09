@@ -13,7 +13,7 @@ import 'file_protection.dart';
 /// phone is locked, not merely until the first unlock.
 class ImageStore {
   ImageStore(this.documentsPath, [FileProtection? protection])
-      : _protection = protection ?? FileProtection();
+    : _protection = protection ?? FileProtection();
 
   final String documentsPath;
   final FileProtection _protection;

@@ -64,18 +64,18 @@ class AppColors {
 
   /// The soft physical-card shadow every white card sits on.
   static List<BoxShadow> cardShadow({double opacity = 0.10}) => [
-        BoxShadow(
-          color: const Color(0xFF3A342A).withValues(alpha: opacity),
-          blurRadius: 24,
-          spreadRadius: -4,
-          offset: const Offset(0, 10),
-        ),
-        BoxShadow(
-          color: const Color(0xFF3A342A).withValues(alpha: opacity * 0.5),
-          blurRadius: 4,
-          offset: const Offset(0, 1),
-        ),
-      ];
+    BoxShadow(
+      color: const Color(0xFF3A342A).withValues(alpha: opacity),
+      blurRadius: 24,
+      spreadRadius: -4,
+      offset: const Offset(0, 10),
+    ),
+    BoxShadow(
+      color: const Color(0xFF3A342A).withValues(alpha: opacity * 0.5),
+      blurRadius: 4,
+      offset: const Offset(0, 1),
+    ),
+  ];
 
   /// Glow cast by anything on fire (dark ritual screens).
   static List<BoxShadow> emberGlow({double opacity = 0.45, double blur = 32}) =>

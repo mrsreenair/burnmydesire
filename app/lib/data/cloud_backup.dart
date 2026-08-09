@@ -45,8 +45,7 @@ Future<void> clearCloudPassphrase() => _storage.delete(key: _kPassphraseKey);
 
 class CloudBackup {
   CloudBackup(this.backups, [MethodChannel? channel])
-      : _channel =
-            channel ?? const MethodChannel('burnmydesire/cloud_backup');
+    : _channel = channel ?? const MethodChannel('burnmydesire/cloud_backup');
 
   final BackupService backups;
   final MethodChannel _channel;
@@ -96,8 +95,7 @@ class CloudBackup {
       destinationDir: staged.path,
     );
     try {
-      return await _channel
-              .invokeMethod<bool>('upload', {'path': file.path}) ??
+      return await _channel.invokeMethod<bool>('upload', {'path': file.path}) ??
           false;
     } on PlatformException catch (e) {
       throw BackupException(e.message ?? 'iCloud upload failed.');

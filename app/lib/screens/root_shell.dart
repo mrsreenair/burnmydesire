@@ -26,8 +26,11 @@ class _RootShellState extends ConsumerState<RootShell> {
   late int _index = widget.initialIndex;
 
   static const _tabs = [
-    (Icons.local_fire_department_outlined, Icons.local_fire_department,
-        'Desires'),
+    (
+      Icons.local_fire_department_outlined,
+      Icons.local_fire_department,
+      'Desires',
+    ),
     (Icons.insights_outlined, Icons.insights, 'Wealth'),
     (Icons.auto_awesome_outlined, Icons.auto_awesome, 'Ashes'),
     (Icons.workspace_premium_outlined, Icons.workspace_premium, 'Pro'),

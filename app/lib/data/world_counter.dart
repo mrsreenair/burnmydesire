@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config.dart';
+import '../utils/format_utils.dart';
 
 /// The opt-in global counter.
 ///
@@ -15,18 +16,15 @@ const _kOptInKey = 'world_counter_opt_in';
 const _kContributedKey = 'world_counter_contributed_cents';
 
 class WorldStats {
-  const WorldStats({
-    required this.totalCents,
-    required this.contributors,
-  });
+  const WorldStats({required this.totalCents, required this.contributors});
 
   final int totalCents;
   final int contributors;
 
   factory WorldStats.fromJson(Map<String, dynamic> json) => WorldStats(
-        totalCents: (json['totalCents'] as num?)?.toInt() ?? 0,
-        contributors: (json['contributors'] as num?)?.toInt() ?? 0,
-      );
+    totalCents: (json['totalCents'] as num?)?.toInt() ?? 0,
+    contributors: (json['contributors'] as num?)?.toInt() ?? 0,
+  );
 }
 
 Future<bool> worldCounterOptIn() async =>
@@ -45,8 +43,8 @@ Future<void> setContributedCents(int cents) async =>
 
 class WorldCounter {
   WorldCounter({HttpClient? client, String? baseUrl})
-      : _client = client ?? HttpClient(),
-        _baseUrl = baseUrl ?? kWorldCounterBaseUrl;
+    : _client = client ?? HttpClient(),
+      _baseUrl = baseUrl ?? kWorldCounterBaseUrl;
 
   final HttpClient _client;
   final String _baseUrl;
@@ -62,20 +60,28 @@ class WorldCounter {
     final delta = protectedCents - already;
     if (delta <= 0) return null;
 
+    // The public total is one number, so it needs one unit: euros. The
+    // conversion is a rough static rate — fine for a figure the site
+    // already labels self-reported — but without it, one ¥100,000 user
+    // would inflate a euro counter a hundredfold. Too small to round to
+    // a cent yet? Don't mark it contributed; it accumulates until it
+    // does.
+    final euroDelta = (delta * activeCurrency.eurosPerUnit).round();
+    if (euroDelta <= 0) return null;
+
     try {
-      final request =
-          await _client.postUrl(Uri.parse('$_baseUrl/api/contributions'));
+      final request = await _client.postUrl(
+        Uri.parse('$_baseUrl/api/contributions'),
+      );
       request.headers.contentType = ContentType.json;
-      request.write(jsonEncode({
-        'deltaCents': delta,
-        'firstTime': already == 0,
-      }));
+      request.write(
+        jsonEncode({'deltaCents': euroDelta, 'firstTime': already == 0}),
+      );
       final response = await request.close();
       if (response.statusCode != 200) return null;
       final body = await response.transform(utf8.decoder).join();
       await setContributedCents(protectedCents);
-      return WorldStats.fromJson(
-          jsonDecode(body) as Map<String, dynamic>);
+      return WorldStats.fromJson(jsonDecode(body) as Map<String, dynamic>);
     } on IOException {
       return null;
     } on FormatException {

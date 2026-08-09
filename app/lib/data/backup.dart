@@ -68,9 +68,7 @@ class BackupService {
       );
       archive.execute('CREATE TABLE images (name TEXT, bytes BLOB);');
 
-      final meta = archive.prepare(
-        'INSERT INTO meta VALUES (?, ?, ?, ?, ?);',
-      );
+      final meta = archive.prepare('INSERT INTO meta VALUES (?, ?, ?, ?, ?);');
       meta.execute([
         kBackupFormatVersion,
         DateTime.now().toIso8601String(),
@@ -84,8 +82,7 @@ class BackupService {
       final insertItem = archive.prepare(
         'INSERT INTO items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);',
       );
-      final insertImage =
-          archive.prepare('INSERT INTO images VALUES (?, ?);');
+      final insertImage = archive.prepare('INSERT INTO images VALUES (?, ?);');
       for (final item in items) {
         insertItem.execute([
           item.imageFile,
@@ -115,10 +112,7 @@ class BackupService {
 
   /// Restores an archive, replacing what's on the device.
   /// Returns how many desires came back.
-  Future<int> import({
-    required String path,
-    required String passphrase,
-  }) async {
+  Future<int> import({required String path, required String passphrase}) async {
     final archive = sqlite3.open(path);
     try {
       archive.execute('PRAGMA key = ${sqlStringLiteral(passphrase)};');
@@ -155,15 +149,16 @@ class BackupService {
         if (bytes is List<int>) {
           storedName = await store.save(Uint8List.fromList(bytes));
         }
-        await db.into(db.items).insert(
+        await db
+            .into(db.items)
+            .insert(
               ItemsCompanion.insert(
                 imageFile: storedName,
                 priceCents: row['price_cents'] as int? ?? 0,
                 category: Value(row['category'] as String? ?? 'purchase'),
                 monthlyCents: Value(row['monthly_cents'] as int?),
                 months: Value(row['months'] as int?),
-                resistanceCount:
-                    Value(row['resistance_count'] as int? ?? 1),
+                resistanceCount: Value(row['resistance_count'] as int? ?? 1),
                 createdAt: _dateFrom(row['created_at']) ?? DateTime.now(),
                 lastBurnedAt: Value(_dateFrom(row['last_burned_at'])),
                 destroyedAt: Value(_dateFrom(row['destroyed_at'])),

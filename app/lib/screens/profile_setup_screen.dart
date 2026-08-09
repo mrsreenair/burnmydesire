@@ -6,7 +6,7 @@ import '../theme/motion.dart';
 import '../widgets/ember_ui.dart';
 import '../widgets/paper_backdrop.dart';
 import '../widgets/pin_pad.dart';
-import 'goal_selection_screen.dart';
+import 'currency_screen.dart';
 
 enum _Stage { name, createPin, confirmPin }
 
@@ -54,9 +54,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       await saveProfileName(_nameController.text);
       await savePin(_entry);
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        emberRoute(const GoalSelectionScreen()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(emberRoute(const CurrencyScreen()));
     } else {
       setState(() {
         _stage = _Stage.createPin;
@@ -116,15 +116,20 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       children: [
         const Spacer(),
         Reveal(
-          child: Text('What should\nwe call you?',
-              style: theme.textTheme.headlineMedium),
+          child: Text(
+            'What should\nwe call you?',
+            style: theme.textTheme.headlineMedium,
+          ),
         ),
         const SizedBox(height: 8),
         Reveal(
           delay: const Duration(milliseconds: 80),
-          child: Text('Just for greetings. Nothing leaves your phone.',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(color: AppColors.textMid)),
+          child: Text(
+            'Just for greetings. Nothing leaves your phone.',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: AppColors.textMid,
+            ),
+          ),
         ),
         const SizedBox(height: 20),
         Reveal(
@@ -133,8 +138,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             controller: _nameController,
             textCapitalization: TextCapitalization.words,
             autofocus: true,
-            style: theme.textTheme.titleMedium
-                ?.copyWith(color: AppColors.ink),
+            style: theme.textTheme.titleMedium?.copyWith(color: AppColors.ink),
             decoration: const InputDecoration(hintText: 'Your name'),
             onSubmitted: (_) => setState(() => _stage = _Stage.createPin),
           ),
@@ -158,21 +162,28 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const Spacer(),
-        const Text('🔒',
-            textAlign: TextAlign.center, style: TextStyle(fontSize: 56)),
+        const Text(
+          '🔒',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 56),
+        ),
         const SizedBox(height: 24),
-        Text(creating ? 'Create your PIN' : 'Confirm your PIN',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.headlineMedium),
+        Text(
+          creating ? 'Create your PIN' : 'Confirm your PIN',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.headlineMedium,
+        ),
         const SizedBox(height: 8),
         Text(
-            _pinError ??
-                'Your desires are private. This PIN keeps them that way.',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.titleMedium?.copyWith(
-                color: _pinError != null
-                    ? theme.colorScheme.error
-                    : AppColors.textMid)),
+          _pinError ??
+              'Your desires are private. This PIN keeps them that way.',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: _pinError != null
+                ? theme.colorScheme.error
+                : AppColors.textMid,
+          ),
+        ),
         const SizedBox(height: 32),
         PinDots(filled: _entry.length, error: _pinError != null),
         const Spacer(),

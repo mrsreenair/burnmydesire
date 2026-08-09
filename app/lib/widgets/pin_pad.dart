@@ -20,10 +20,11 @@ class PinDots extends StatefulWidget {
   State<PinDots> createState() => _PinDotsState();
 }
 
-class _PinDotsState extends State<PinDots>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _shake =
-      AnimationController(vsync: this, duration: Motion.slow);
+class _PinDotsState extends State<PinDots> with SingleTickerProviderStateMixin {
+  late final AnimationController _shake = AnimationController(
+    vsync: this,
+    duration: Motion.slow,
+  );
 
   @override
   void didUpdateWidget(PinDots old) {
@@ -63,8 +64,8 @@ class _PinDotsState extends State<PinDots>
                 color: widget.error
                     ? scheme.error
                     : i < widget.filled
-                        ? AppColors.ink
-                        : AppColors.field,
+                    ? AppColors.ink
+                    : AppColors.field,
               ),
             ),
         ],
@@ -122,10 +123,9 @@ class PinPad extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context)
-        .textTheme
-        .headlineSmall
-        ?.copyWith(fontWeight: FontWeight.w600);
+    final style = Theme.of(
+      context,
+    ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

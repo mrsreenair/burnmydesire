@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../config.dart';
 import '../data/database.dart';
+import '../providers/currency_provider.dart';
 import '../providers/db_providers.dart';
 import '../theme/app_colors.dart';
 import '../utils/format_utils.dart';
@@ -23,8 +24,10 @@ class AshesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final destroyed = ref.watch(destroyedItemsProvider);
-    final protectedForever =
-        destroyed.fold(0, (s, i) => s + i.priceCents);
+    // Rebuild when the currency changes — this screen sits in the tab
+    // stack, so nothing else would repaint its amounts.
+    ref.watch(currencyProvider);
+    final protectedForever = destroyed.fold(0, (s, i) => s + i.priceCents);
 
     return Scaffold(
       body: PaperBackdrop(
@@ -44,10 +47,11 @@ class AshesScreen extends ConsumerWidget {
                       destroyed.isEmpty
                           ? 'Desires you ended forever'
                           : '${destroyed.length} '
-                              '${destroyed.length == 1 ? 'desire' : 'desires'} '
-                              'destroyed forever',
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(color: AppColors.textMid),
+                                '${destroyed.length == 1 ? 'desire' : 'desires'} '
+                                'destroyed forever',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: AppColors.textMid,
+                      ),
                     ),
                   ],
                 ),
@@ -79,33 +83,38 @@ class AshesScreen extends ConsumerWidget {
     final byMonth = <String, List<Item>>{};
     for (final item in destroyed) {
       final when = item.destroyedAt ?? item.createdAt;
-      byMonth.putIfAbsent(DateFormat('MMMM yyyy').format(when), () => [])
+      byMonth
+          .putIfAbsent(DateFormat('MMMM yyyy').format(when), () => [])
           .add(item);
     }
 
     final widgets = <Widget>[];
     var index = 0;
     for (final entry in byMonth.entries) {
-      widgets.add(Padding(
-        padding: EdgeInsets.only(top: widgets.isEmpty ? 0 : 24, bottom: 12),
-        child: Text(
-          entry.key.toUpperCase(),
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.8,
-            color: AppColors.textMid,
+      widgets.add(
+        Padding(
+          padding: EdgeInsets.only(top: widgets.isEmpty ? 0 : 24, bottom: 12),
+          child: Text(
+            entry.key.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.8,
+              color: AppColors.textMid,
+            ),
           ),
         ),
-      ));
+      );
       for (final item in entry.value) {
-        widgets.add(Reveal(
-          delay: Duration(milliseconds: 120 + 50 * index++),
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _AshTile(item: item),
+        widgets.add(
+          Reveal(
+            delay: Duration(milliseconds: 120 + 50 * index++),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _AshTile(item: item),
+            ),
           ),
-        ));
+        );
       }
     }
     return widgets;
@@ -138,7 +147,7 @@ class _ForeverCard extends StatelessWidget {
             blendMode: BlendMode.srcIn,
             child: CountUpText(
               cents,
-              formatter: formatEuros,
+              formatter: formatMoney,
               style: theme.textTheme.displayMedium,
             ),
           ),
@@ -147,8 +156,9 @@ class _ForeverCard extends StatelessWidget {
             'These desires can never tempt you again — their photos are '
             'gone. The money stays counted.',
             textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(color: AppColors.textMid),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.textMid,
+            ),
           ),
         ],
       ),
@@ -195,9 +205,11 @@ class _AshTile extends StatelessWidget {
                 Text(
                   isThought
                       ? 'A thought, gone for good'
-                      : '${formatEuros(item.priceCents)} protected forever',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontSize: 15.5, color: AppColors.inkSoft),
+                      : '${formatMoney(item.priceCents)} protected forever',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontSize: 15.5,
+                    color: AppColors.inkSoft,
+                  ),
                 ),
                 const SizedBox(height: 3),
                 Text(
@@ -224,11 +236,13 @@ class _EmptyAshes extends StatelessWidget {
       padding: const EdgeInsets.only(top: 40),
       child: Column(
         children: [
-          const CardFan(cards: [
-            Text('🕯️', style: TextStyle(fontSize: 26)),
-            Text('🔥', style: TextStyle(fontSize: 26)),
-            Text('🤍', style: TextStyle(fontSize: 26)),
-          ]),
+          const CardFan(
+            cards: [
+              Text('🕯️', style: TextStyle(fontSize: 26)),
+              Text('🔥', style: TextStyle(fontSize: 26)),
+              Text('🤍', style: TextStyle(fontSize: 26)),
+            ],
+          ),
           const SizedBox(height: 28),
           Text(
             'Nothing has died yet.',
@@ -240,8 +254,9 @@ class _EmptyAshes extends StatelessWidget {
             'Burn a desire $kFinalBurnCount times — or hold it and let it '
             'go — and it ends up here for good.',
             textAlign: TextAlign.center,
-            style: theme.textTheme.titleMedium
-                ?.copyWith(color: AppColors.textMid),
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: AppColors.textMid,
+            ),
           ),
         ],
       ),

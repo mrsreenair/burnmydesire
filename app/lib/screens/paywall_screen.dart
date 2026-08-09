@@ -77,17 +77,18 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         child: SafeArea(
           bottom: !widget.embedded,
           child: Padding(
-            padding: EdgeInsets.fromLTRB(
-                24, 16, 24, widget.embedded ? 96 : 16),
+            padding: EdgeInsets.fromLTRB(24, 16, 24, widget.embedded ? 96 : 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 24),
                 const Reveal(
                   child: Breathe(
-                    child: Text('🔥',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 56)),
+                    child: Text(
+                      '🔥',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 56),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -145,8 +146,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   const SizedBox(height: 6),
                   EmberButton(
                     label: 'Continue',
-                    onPressed:
-                        _busy ? null : () => _buy(packages[_picked]),
+                    onPressed: _busy ? null : () => _buy(packages[_picked]),
                   ),
                 ],
                 if (configured)
@@ -231,15 +231,20 @@ class _PlanCard extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: Text(title,
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700)),
-            ),
-            Text(price,
+              child: Text(
+                title,
                 style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color:
-                        selected ? AppColors.accent : AppColors.ink)),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            Text(
+              price,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: selected ? AppColors.accent : AppColors.ink,
+              ),
+            ),
           ],
         ),
       ),

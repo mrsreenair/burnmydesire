@@ -30,12 +30,14 @@ final proProvider = NotifierProvider<ProNotifier, bool>(ProNotifier.new);
 
 /// Whether Pro features are available. Dev builds without a RevenueCat
 /// key keep them open so the founder can demo.
-final proUnlockedProvider = Provider<bool>((ref) =>
-    ref.watch(proProvider) || !ref.watch(purchasesConfiguredProvider));
+final proUnlockedProvider = Provider<bool>(
+  (ref) => ref.watch(proProvider) || !ref.watch(purchasesConfiguredProvider),
+);
 
 /// The dashboard is a Pro feature.
-final dashboardUnlockedProvider =
-    Provider<bool>((ref) => ref.watch(proUnlockedProvider));
+final dashboardUnlockedProvider = Provider<bool>(
+  (ref) => ref.watch(proUnlockedProvider),
+);
 
 /// Free users may add a new temptation only below the item limit. Only
 /// live items count — destroying a desire forever frees the slot.

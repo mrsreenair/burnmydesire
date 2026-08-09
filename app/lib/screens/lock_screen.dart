@@ -61,9 +61,7 @@ class _LockScreenState extends State<LockScreen> {
 
   void _unlock() {
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      emberRoute(const RootShell()),
-    );
+    Navigator.of(context).pushReplacement(emberRoute(const RootShell()));
   }
 
   Future<void> _onDigit(String d) async {
@@ -98,50 +96,54 @@ class _LockScreenState extends State<LockScreen> {
       body: PaperBackdrop(
         child: SafeArea(
           child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Spacer(),
-              const Reveal(
-                child: Breathe(
-                  child: Text('🔥',
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Spacer(),
+                const Reveal(
+                  child: Breathe(
+                    child: Text(
+                      '🔥',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 64)),
+                      style: TextStyle(fontSize: 64),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              Reveal(
-                delay: const Duration(milliseconds: 80),
-                child: Text(
+                const SizedBox(height: 24),
+                Reveal(
+                  delay: const Duration(milliseconds: 80),
+                  child: Text(
                     _name.isEmpty ? 'Welcome back' : 'Welcome back, $_name',
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.headlineMedium),
-              ),
-              const SizedBox(height: 8),
-              Text(_error ? 'Wrong PIN — try again' : 'Enter your PIN',
+                    style: theme.textTheme.headlineMedium,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _error ? 'Wrong PIN — try again' : 'Enter your PIN',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.titleMedium?.copyWith(
-                      color: _error
-                          ? theme.colorScheme.error
-                          : AppColors.textMid)),
-              const SizedBox(height: 32),
-              PinDots(filled: _entry.length, error: _error),
-              const Spacer(),
-              PinPad(
-                onDigit: _onDigit,
-                onDelete: _onDelete,
-                trailing: _biometricsAvailable
-                    ? IconButton(
-                        tooltip: 'Unlock with Face ID',
-                        iconSize: 32,
-                        icon: const Icon(Icons.face_retouching_natural),
-                        onPressed: _tryBiometrics,
-                      )
-                    : null,
-              ),
-            ],
-          ),
+                    color: _error ? theme.colorScheme.error : AppColors.textMid,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                PinDots(filled: _entry.length, error: _error),
+                const Spacer(),
+                PinPad(
+                  onDigit: _onDigit,
+                  onDelete: _onDelete,
+                  trailing: _biometricsAvailable
+                      ? IconButton(
+                          tooltip: 'Unlock with Face ID',
+                          iconSize: 32,
+                          icon: const Icon(Icons.face_retouching_natural),
+                          onPressed: _tryBiometrics,
+                        )
+                      : null,
+                ),
+              ],
+            ),
           ),
         ),
       ),

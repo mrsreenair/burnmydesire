@@ -61,10 +61,11 @@ class ShockCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Invested today instead, this ${formatEuros(price)} could be',
+            'Invested today instead, this ${formatMoney(price)} could be',
             textAlign: TextAlign.center,
-            style:
-                theme.textTheme.titleMedium?.copyWith(color: AppColors.textMid),
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: AppColors.textMid,
+            ),
           ),
           const SizedBox(height: 10),
           // The number itself: ember gradient, animated between values so
@@ -74,7 +75,7 @@ class ShockCard extends StatelessWidget {
             duration: Motion.slow,
             curve: Motion.easeOut,
             builder: (context, v, _) => GradientText(
-              formatEuros(v.round()),
+              formatMoney(v.round()),
               style: theme.textTheme.displayMedium,
             ),
           ),
@@ -82,11 +83,12 @@ class ShockCard extends StatelessWidget {
           Text(
             fund != null
                 ? 'by $targetYear in ${fund.name} — real '
-                    '${fund.yearsAvailable}-year average: $pct%/yr'
+                      '${fund.yearsAvailable}-year average: $pct%/yr'
                 : 'by $targetYear at $pct%/yr',
             textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(color: AppColors.textMid),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.textMid,
+            ),
           ),
           const SizedBox(height: 20),
           if (market != null && onFundChanged != null) ...[
@@ -145,15 +147,16 @@ class ShockCard extends StatelessWidget {
                 color: AppColors.flame.withValues(alpha: 0.07),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                    color: AppColors.flame.withValues(alpha: 0.2)),
+                  color: AppColors.flame.withValues(alpha: 0.2),
+                ),
               ),
               child: Text(
                 'On installments it\'s worse: ${plan.months} × '
-                '${formatEuros(plan.monthlyCents)} = '
-                '${formatEuros(plan.totalPaidCents)} paid '
-                '(${formatEuros(plan.overpaymentCents(price))} extra), '
+                '${formatMoney(plan.monthlyCents)} = '
+                '${formatMoney(plan.totalPaidCents)} paid '
+                '(${formatMoney(plan.overpaymentCents(price))} extra), '
                 'a true cost of '
-                '${formatEuros(plan.trueCostCents(price, years: years, annualRate: rate))}.',
+                '${formatMoney(plan.trueCostCents(price, years: years, annualRate: rate))}.',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium,
               ),
@@ -163,13 +166,13 @@ class ShockCard extends StatelessWidget {
           Text(
             fund != null
                 ? 'Projection assumes ${fund.name} (${fund.ticker}) repeats '
-                    'its real ${fund.yearsAvailable}-year average total '
-                    'return, dividends included, data to '
-                    '${market!.asOfLabel}. Past performance doesn\'t '
-                    'guarantee future results. Not investment advice.'
+                      'its real ${fund.yearsAvailable}-year average total '
+                      'return, dividends included, data to '
+                      '${market!.asOfLabel}. Past performance doesn\'t '
+                      'guarantee future results. Not investment advice.'
                 : 'Assumes ${(kDefaultAnnualRate * 100).toStringAsFixed(0)}% '
-                    'avg. annual return (historical market average). Not a '
-                    'guarantee or investment advice.',
+                      'avg. annual return (historical market average). Not a '
+                      'guarantee or investment advice.',
             textAlign: TextAlign.center,
             style: theme.textTheme.bodySmall,
           ),

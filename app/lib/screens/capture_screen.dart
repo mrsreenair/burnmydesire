@@ -28,8 +28,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
   ui.Image? _image;
 
   Future<void> _pick(ImageSource source) async {
-    final picked =
-        await ImagePicker().pickImage(source: source, maxWidth: 1600);
+    final picked = await ImagePicker().pickImage(
+      source: source,
+      maxWidth: 1600,
+    );
     if (picked == null) return;
     final bytes = await picked.readAsBytes();
     final image = await decodeImageFromList(bytes);
@@ -40,14 +42,14 @@ class _CaptureScreenState extends State<CaptureScreen> {
   }
 
   Future<void> _continue() async {
-    final cents = parseEurosToCents(_price.text);
+    final cents = parseMoneyToCents(_price.text);
     final image = _image;
     final bytes = _bytes;
     if (cents == null || image == null || bytes == null) return;
 
     InstallmentPlan? plan;
     if (_installments) {
-      final monthly = parseEurosToCents(_monthly.text);
+      final monthly = parseMoneyToCents(_monthly.text);
       final months = int.tryParse(_months.text.trim());
       if (monthly != null && months != null && months > 0) {
         plan = InstallmentPlan(monthlyCents: monthly, months: months);
@@ -61,8 +63,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
       builder: (dialogContext) => AlertDialog(
         title: const Text('One honest question'),
         content: const Text(
-            'Is this a real investment in your growth — a tool for your '
-            'career or skills you\'ll actually use — or is it an impulse?'),
+          'Is this a real investment in your growth — a tool for your '
+          'career or skills you\'ll actually use — or is it an impulse?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
@@ -83,9 +86,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
       priceCents: cents,
       plan: plan,
     );
-    Navigator.of(context).push(
-      emberRoute(ShockScreen(target: target, forGrowth: growth)),
-    );
+    Navigator.of(
+      context,
+    ).push(emberRoute(ShockScreen(target: target, forGrowth: growth)));
   }
 
   @override
@@ -99,7 +102,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final ready = _image != null && parseEurosToCents(_price.text) != null;
+    final ready = _image != null && parseMoneyToCents(_price.text) != null;
 
     return Scaffold(
       appBar: AppBar(title: const Text('What do you crave?')),
@@ -118,24 +121,32 @@ class _CaptureScreenState extends State<CaptureScreen> {
                     borderRadius: BorderRadius.circular(24),
                     border: _bytes == null
                         ? Border.all(
-                            color: AppColors.ink.withValues(alpha: 0.08))
+                            color: AppColors.ink.withValues(alpha: 0.08),
+                          )
                         : Border.all(
-                            color:
-                                AppColors.accent.withValues(alpha: 0.6)),
+                            color: AppColors.accent.withValues(alpha: 0.6),
+                          ),
                     boxShadow: AppColors.cardShadow(
-                        opacity: _bytes == null ? 0.06 : 0.12),
+                      opacity: _bytes == null ? 0.06 : 0.12,
+                    ),
                   ),
                   clipBehavior: Clip.antiAlias,
                   child: _bytes == null
                       ? Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.add_photo_alternate_outlined,
-                                size: 40, color: AppColors.textLow),
+                            const Icon(
+                              Icons.add_photo_alternate_outlined,
+                              size: 40,
+                              color: AppColors.textLow,
+                            ),
                             const SizedBox(height: 8),
-                            Text('Add a photo of it',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                    color: AppColors.textMid)),
+                            Text(
+                              'Add a photo of it',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: AppColors.textMid,
+                              ),
+                            ),
                           ],
                         )
                       : Image.memory(_bytes!, fit: BoxFit.cover),
@@ -165,11 +176,12 @@ class _CaptureScreenState extends State<CaptureScreen> {
             const SizedBox(height: 24),
             TextField(
               controller: _price,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: InputDecoration(
                 labelText: 'Price',
-                prefixText: '€ ',
+                prefixText: '${activeCurrency.symbol.trim()} ',
                 border: OutlineInputBorder(),
               ),
               onChanged: (_) => setState(() {}),
@@ -188,10 +200,11 @@ class _CaptureScreenState extends State<CaptureScreen> {
                     child: TextField(
                       controller: _monthly,
                       keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true),
-                      decoration: const InputDecoration(
+                        decimal: true,
+                      ),
+                      decoration: InputDecoration(
                         labelText: 'Per month',
-                        prefixText: '€ ',
+                        prefixText: '${activeCurrency.symbol.trim()} ',
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -201,7 +214,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                     child: TextField(
                       controller: _months,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Months',
                         border: OutlineInputBorder(),
                       ),

@@ -45,17 +45,21 @@ class _GoalSelectionScreenState extends State<GoalSelectionScreen> {
               children: [
                 const SizedBox(height: 16),
                 Reveal(
-                  child: Text('What do you want to burn?',
-                      style: theme.textTheme.headlineMedium),
+                  child: Text(
+                    'What do you want to burn?',
+                    style: theme.textTheme.headlineMedium,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Reveal(
                   delay: const Duration(milliseconds: 80),
                   child: Text(
-                      'Pick every desire that owns you. '
-                      'This never leaves your phone.',
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(color: AppColors.textMid)),
+                    'Pick every desire that owns you. '
+                    'This never leaves your phone.',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: AppColors.textMid,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Expanded(
@@ -64,8 +68,7 @@ class _GoalSelectionScreenState extends State<GoalSelectionScreen> {
                       spacing: 10,
                       runSpacing: 10,
                       children: [
-                        for (final (i, (id, label, emoji))
-                            in burnGoals.indexed)
+                        for (final (i, (id, label, emoji)) in burnGoals.indexed)
                           Reveal(
                             delay: Duration(milliseconds: 120 + 40 * i),
                             offset: 14,
@@ -73,8 +76,11 @@ class _GoalSelectionScreenState extends State<GoalSelectionScreen> {
                               emoji: emoji,
                               label: label,
                               selected: _selected.contains(id),
-                              onChanged: (on) => setState(() =>
-                                  on ? _selected.add(id) : _selected.remove(id)),
+                              onChanged: (on) => setState(
+                                () => on
+                                    ? _selected.add(id)
+                                    : _selected.remove(id),
+                              ),
                             ),
                           ),
                       ],

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../config.dart';
 import '../data/database.dart';
 import '../models/burn_target.dart';
+import '../providers/currency_provider.dart';
 import '../providers/db_providers.dart';
 import '../providers/pro_provider.dart';
 import '../theme/app_colors.dart';
@@ -34,7 +35,10 @@ class HomeScreen extends ConsumerWidget {
     final image = await decodeImageFromList(bytes);
     if (!context.mounted) return;
     final plan = item.monthlyCents != null && item.months != null
-        ? InstallmentPlan(monthlyCents: item.monthlyCents!, months: item.months!)
+        ? InstallmentPlan(
+            monthlyCents: item.monthlyCents!,
+            months: item.months!,
+          )
         : null;
     final target = BurnTarget(
       itemId: item.id,
@@ -57,7 +61,10 @@ class HomeScreen extends ConsumerWidget {
 
   /// Long-press: end the desire now instead of waiting for burn three.
   Future<void> _confirmForever(
-      BuildContext context, WidgetRef ref, Item item) async {
+    BuildContext context,
+    WidgetRef ref,
+    Item item,
+  ) async {
     final isThought = item.category == 'emotion';
     final ok = await showDialog<bool>(
       context: context,
@@ -66,10 +73,10 @@ class HomeScreen extends ConsumerWidget {
         content: Text(
           isThought
               ? 'One last burn. The page is deleted for good and this '
-                  'thought leaves your list.'
+                    'thought leaves your list.'
               : 'One last burn. The photo is deleted for good and this '
-                  'desire leaves your list — the '
-                  '${formatEuros(item.priceCents)} stays protected.',
+                    'desire leaves your list — the '
+                    '${formatMoney(item.priceCents)} stays protected.',
         ),
         actions: [
           TextButton(
@@ -109,9 +116,11 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              Text('What\'s pulling at you?',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(sheetContext).textTheme.headlineSmall),
+              Text(
+                'What\'s pulling at you?',
+                textAlign: TextAlign.center,
+                style: Theme.of(sheetContext).textTheme.headlineSmall,
+              ),
               const SizedBox(height: 20),
               _SheetChoice(
                 emoji: '🛍️',
@@ -120,9 +129,11 @@ class HomeScreen extends ConsumerWidget {
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   Navigator.of(context).push(
-                    emberRoute(ref.read(canAddItemProvider)
-                        ? const CaptureScreen()
-                        : const PaywallScreen()),
+                    emberRoute(
+                      ref.read(canAddItemProvider)
+                          ? const CaptureScreen()
+                          : const PaywallScreen(),
+                    ),
                   );
                 },
               ),
@@ -134,9 +145,11 @@ class HomeScreen extends ConsumerWidget {
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   Navigator.of(context).push(
-                    emberRoute(ref.read(canAddItemProvider)
-                        ? const WriteScreen()
-                        : const PaywallScreen()),
+                    emberRoute(
+                      ref.read(canAddItemProvider)
+                          ? const WriteScreen()
+                          : const PaywallScreen(),
+                    ),
                   );
                 },
               ),
@@ -151,6 +164,9 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(liveItemsProvider);
     final protected = ref.watch(protectedCentsProvider);
+    // Rebuild when the currency changes — this screen sits in the tab
+    // stack, so nothing else would repaint its amounts.
+    ref.watch(currencyProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -171,8 +187,9 @@ class HomeScreen extends ConsumerWidget {
                         Text(
                           DateFormat('EEE d MMM').format(DateTime.now()),
                           style: theme.textTheme.bodyMedium?.copyWith(
-                              color: AppColors.textMid,
-                              fontWeight: FontWeight.w600),
+                            color: AppColors.textMid,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text('Desires', style: theme.textTheme.displaySmall),
@@ -221,7 +238,8 @@ class HomeScreen extends ConsumerWidget {
                   child: Reveal(
                     delay: const Duration(milliseconds: 200),
                     child: _FireFab(
-                        onPressed: () => _chooseBurnType(context, ref)),
+                      onPressed: () => _chooseBurnType(context, ref),
+                    ),
                   ),
                 ),
               if (items.isEmpty)
@@ -265,7 +283,7 @@ class _WealthHero extends StatelessWidget {
           blendMode: BlendMode.srcIn,
           child: CountUpText(
             protected,
-            formatter: formatEuros,
+            formatter: formatMoney,
             style: theme.textTheme.headlineMedium,
           ),
         ),
@@ -274,10 +292,11 @@ class _WealthHero extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 3),
           child: Text(
             'protected · '
-            '${formatEuros(futureValueCents(protected, years: kDefaultHorizonYears))} '
+            '${formatMoney(futureValueCents(protected, years: kDefaultHorizonYears))} '
             'in ${kDefaultHorizonYears}y',
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(color: AppColors.textMid),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.textMid,
+            ),
           ),
         ),
       ],
@@ -317,13 +336,13 @@ class _ItemCollage extends ConsumerWidget {
           Text(
             'Resisted ${item.resistanceCount}×',
             style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.accent, fontWeight: FontWeight.w700),
+              color: AppColors.accent,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
-            isThought
-                ? 'A thought you let go'
-                : formatEuros(item.priceCents),
+            isThought ? 'A thought you let go' : formatMoney(item.priceCents),
             style: theme.textTheme.headlineSmall,
           ),
           const SizedBox(height: 14),
@@ -341,8 +360,10 @@ class _ItemCollage extends ConsumerWidget {
                     width: 96,
                     height: 110,
                     color: AppColors.field,
-                    child: const Icon(Icons.image_outlined,
-                        color: AppColors.textLow),
+                    child: const Icon(
+                      Icons.image_outlined,
+                      color: AppColors.textLow,
+                    ),
                   ),
                 ),
               ),
@@ -393,17 +414,20 @@ class _EmptyState extends StatelessWidget {
     final theme = Theme.of(context);
     return Column(
       children: [
-        const CardFan(cards: [
-          Text('🛍️', style: TextStyle(fontSize: 26)),
-          Text('🔥', style: TextStyle(fontSize: 26)),
-          Text('✍️', style: TextStyle(fontSize: 26)),
-        ]),
+        const CardFan(
+          cards: [
+            Text('🛍️', style: TextStyle(fontSize: 26)),
+            Text('🔥', style: TextStyle(fontSize: 26)),
+            Text('✍️', style: TextStyle(fontSize: 26)),
+          ],
+        ),
         const SizedBox(height: 24),
         Text(
           'Craving something you shouldn\'t?\nBring it here before it owns you.',
           textAlign: TextAlign.center,
-          style: theme.textTheme.titleMedium
-              ?.copyWith(color: AppColors.textMid),
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: AppColors.textMid,
+          ),
         ),
       ],
     );
@@ -431,8 +455,11 @@ class _FireFab extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: AppColors.emberGlow(opacity: 0.3, blur: 20),
           ),
-          child: const Icon(Icons.local_fire_department,
-              color: Colors.white, size: 28),
+          child: const Icon(
+            Icons.local_fire_department,
+            color: Colors.white,
+            size: 28,
+          ),
         ),
       ),
     );
@@ -484,10 +511,13 @@ class _SheetChoice extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.ink)),
+                    Text(
+                      title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.ink,
+                      ),
+                    ),
                     const SizedBox(height: 2),
                     Text(subtitle, style: theme.textTheme.bodySmall),
                   ],
