@@ -21,6 +21,15 @@ dependencies:
   path_provider: ^2.1.6
   purchases_flutter: ^10.8.0
   shared_preferences: ^2.5.5
+  sqlite3: ^3.5.1
+
+# Swap the bundled SQLite for SQLCipher so the database is encrypted at rest
+# (PROJECT.md §5: temptation data is health-grade private). SQLCipher — not
+# sqlite3mc — because we rely on PRAGMA cipher_version and sqlcipher_export.
+hooks:
+  user_defines:
+    sqlite3:
+      source: sqlcipher
 
 dev_dependencies:
   flutter_test:
@@ -29,6 +38,8 @@ dev_dependencies:
   drift_dev: ^2.34.0
   build_runner: ^2.15.1
   flutter_launcher_icons: ^0.14.4
+  integration_test:
+    sdk: flutter
 
 flutter:
   uses-material-design: true

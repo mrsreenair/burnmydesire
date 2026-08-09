@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 import 'config.dart';
+import 'data/encrypted_db.dart';
 import 'data/image_store.dart';
 import 'data/user_prefs.dart';
 import 'providers/db_providers.dart';
@@ -15,6 +16,7 @@ import 'theme/app_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final docs = await getApplicationDocumentsDirectory();
+  debugPrint('DB SECURITY: ${await databaseSecurityReport()}');
   final setupDone = await hasCompletedSetup();
   final locked = setupDone && await hasPin();
   if (kRevenueCatIosApiKey.isNotEmpty) {

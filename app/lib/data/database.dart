@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
-import 'package:drift_flutter/drift_flutter.dart';
+
+import 'encrypted_db.dart';
 
 part 'database.g.dart';
 
@@ -24,7 +25,9 @@ class Items extends Table {
 
 @DriftDatabase(tables: [Items])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(driftDatabase(name: 'burn_my_desire'));
+  /// Encrypted at rest with a key that lives only in the iOS Keychain
+  /// (PROJECT.md §5). Without that key the file is ciphertext.
+  AppDatabase() : super(openEncryptedDatabase());
 
   AppDatabase.forTesting(super.e);
 
