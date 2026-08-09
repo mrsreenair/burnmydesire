@@ -4,7 +4,9 @@ import 'dart:ui' as ui;
 import 'package:flutter/painting.dart';
 
 const _width = 900.0;
-const _height = 1200.0;
+// Taller than a photo, close to a phone's own proportions: a 4:3 page
+// leaves a band of dead room above and below it on the burn screen.
+const _height = 1500.0;
 const _margin = 80.0;
 const _lineGap = 64.0;
 const _firstLineY = 180.0;
@@ -27,7 +29,11 @@ Future<Uint8List> renderThoughtImage(String text) async {
     ..color = const ui.Color(0x26715B33)
     ..strokeWidth = 2;
   for (var y = _firstLineY; y < _height - 60; y += _lineGap) {
-    canvas.drawLine(ui.Offset(_margin - 20, y), ui.Offset(_width - 60, y), rule);
+    canvas.drawLine(
+      ui.Offset(_margin - 20, y),
+      ui.Offset(_width - 60, y),
+      rule,
+    );
   }
   canvas.drawLine(
     const ui.Offset(_margin + 20, 60),
@@ -52,9 +58,10 @@ Future<Uint8List> renderThoughtImage(String text) async {
   )..layout(maxWidth: _width - _margin * 2 - 40);
   painter.paint(canvas, ui.Offset(_margin + 40, _firstLineY - 50));
 
-  final image = await recorder
-      .endRecording()
-      .toImage(_width.toInt(), _height.toInt());
+  final image = await recorder.endRecording().toImage(
+    _width.toInt(),
+    _height.toInt(),
+  );
   final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
   return bytes!.buffer.asUint8List();
 }
