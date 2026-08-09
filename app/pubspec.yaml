@@ -51,6 +51,8 @@ flutter:
     - assets/audio/fire.wav
   shaders:
     - assets/shaders/burn.frag
+    - assets/shaders/ash.frag
+    - assets/shaders/cold.frag
 
 flutter_launcher_icons:
   ios: true

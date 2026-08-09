@@ -93,7 +93,8 @@ Urge hits → open app (or share item into it)
 **F3 — Interactive GLSL burn**
 - Custom fragment shader (simplex noise dissolve, glowing orange/red edges → ash).
 - Press-and-hold or drag drives the burn progress uniform 0.0 → 1.0.
-- **Destruction effect library (post-v1, Pro up-sell):** the burn is the default; additional effects ship later as alternate shaders — paper burn (curling edges, drifting ash), shredder (strips falling), dissolve-to-dust. Same interaction contract (progress 0→1, completion callback), so each effect is just a new `.frag` + painter. Free tier: classic burn; Pro: full effect library.
+- **Destruction effect library (shipped, Pro up-sell):** three effects behind one contract — every shader takes the same uniforms (size, progress, time, paper rect, texture) and `BurnableImage` just swaps the asset, so the ritual (hold, haptics, sound, completion) never changes. Free: **Fire**. Pro: **Ash** (no flame — the page cools, greys and crumbles into drifting motes) and **Cold flame** (gas-blue; bleaches the page instead of charring it). Each effect also carries the colour of the light it throws into the room, because an orange glow over a grey crumble would defeat the point of a flameless option. Chosen in Settings → Pro → Burn effect; a locked row opens the paywall rather than doing nothing, and losing Pro silently falls back to Fire instead of breaking the burn.
+  - *Why these three, not shredder/dissolve:* the effect has to match the feeling. Fire suits a €400 impulse; it is the wrong register for grief. Ash gives the emotional burns a quiet, dignified ending, and Cold flame gives a clinical one. Mechanical effects (shredder, dust) are novelty — they read as a screensaver, not a ritual.
 - Haptics on burn progress; satisfying full-burn moment. This is the product — it must feel visceral at 60fps or the thesis fails (hence Phase 0).
 - Note: Flutter/Impeller shaders have no `discard` — output transparent pixels instead.
 

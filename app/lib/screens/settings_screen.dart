@@ -9,12 +9,14 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../data/ai_coach.dart';
 import '../data/backup.dart';
+import '../data/burn_effects.dart';
 import '../data/cloud_backup.dart';
 import '../data/document_picker.dart';
 import '../data/encrypted_db.dart';
 import '../data/user_prefs.dart';
 import '../data/world_counter.dart';
 import '../utils/format_utils.dart';
+import '../providers/burn_effect_provider.dart';
 import '../providers/db_providers.dart';
 import '../providers/pro_provider.dart';
 import '../theme/app_colors.dart';
@@ -436,6 +438,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final isPro = ref.watch(proProvider);
     final configured = ref.watch(purchasesConfiguredProvider);
     final goals = ref.watch(burnGoalsProvider).value ?? const [];
+    final effect = ref.watch(burnEffectProvider);
 
     return Scaffold(
       body: PaperBackdrop(
@@ -547,6 +550,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       icon: Icons.workspace_premium_outlined,
                       title: 'Subscription',
                       trailing: isPro ? 'Active' : 'Free',
+                    ),
+                    _Row(
+                      icon: Icons.whatshot_outlined,
+                      title: 'Burn effect',
+                      subtitle: effect.blurb,
+                      trailing: effect.name,
+                      onTap: _showEffects,
                     ),
                     if (configured)
                       _Row(
@@ -669,6 +679,71 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       ),
     );
+  }
+
+  /// The burn effect picker. Locked options stay visible and tappable —
+  /// tapping one goes to the paywall rather than doing nothing, since a
+  /// dead row teaches the user the app is broken.
+  void _showEffects() {
+    final current = ref.read(burnEffectProvider);
+    final unlocked = ref.read(proUnlockedProvider);
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Burn effect',
+                  style: Theme.of(sheetContext).textTheme.headlineSmall),
+              const SizedBox(height: 4),
+              Text(
+                'How a desire ends. The ritual is the same either way.',
+                style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textMid,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              for (final e in burnEffects)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: e.glow,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  title: Text(e.name),
+                  subtitle: Text(e.blurb),
+                  trailing: e.pro && !unlocked
+                      ? const Icon(Icons.lock_outline, size: 18)
+                      : e.id == current.id
+                          ? const Icon(Icons.check, color: AppColors.accent)
+                          : null,
+                  onTap: () {
+                    Navigator.of(sheetContext).pop();
+                    if (e.pro && !unlocked) {
+                      Navigator.of(context)
+                          .push(emberRoute(const PaywallScreen()));
+                    } else {
+                      _pickEffect(e);
+                    }
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickEffect(BurnEffect e) async {
+    await saveBurnEffect(e.id);
+    ref.invalidate(burnEffectIdProvider);
   }
 
   void _showGoals(List<String> ids) {

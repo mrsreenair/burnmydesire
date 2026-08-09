@@ -26,6 +26,7 @@ class BurnableImage extends StatefulWidget {
     super.key,
     required this.image,
     required this.onBurned,
+    this.shaderAsset = 'assets/shaders/burn.frag',
     this.onProgress,
     this.controller,
     this.duration = const Duration(milliseconds: 3000),
@@ -33,6 +34,11 @@ class BurnableImage extends StatefulWidget {
 
   final ui.Image image;
   final VoidCallback onBurned;
+
+  /// Which burn effect to run. Every shader takes the same uniforms, so
+  /// the ritual — hold, haptics, sound, completion — is unchanged by the
+  /// choice (see data/burn_effects.dart).
+  final String shaderAsset;
 
   /// Reports burn progress 0→1 every frame so the host screen can react
   /// (glow, hint fade) without owning the animation.
@@ -49,7 +55,10 @@ class BurnableImage extends StatefulWidget {
 
 class _BurnableImageState extends State<BurnableImage>
     with TickerProviderStateMixin {
-  static Future<ui.FragmentProgram>? _programFuture;
+  /// Compiled shaders, kept per asset for the life of the process —
+  /// compiling one costs a visible hitch, and the burn must start the
+  /// instant a finger lands.
+  static final _programs = <String, Future<ui.FragmentProgram>>{};
 
   ui.FragmentProgram? _program;
   late final AnimationController _burn;
@@ -79,10 +88,29 @@ class _BurnableImageState extends State<BurnableImage>
     _clock = createTicker((elapsed) {
       _time.value = elapsed.inMicroseconds / 1e6;
     })..start();
-    _programFuture ??= ui.FragmentProgram.fromAsset('assets/shaders/burn.frag');
-    _programFuture!.then((p) {
-      if (mounted) setState(() => _program = p);
+    _load(widget.shaderAsset);
+  }
+
+  void _load(String asset) {
+    final future = _programs.putIfAbsent(
+      asset,
+      () => ui.FragmentProgram.fromAsset(asset),
+    );
+    future.then((p) {
+      // Guard against a swap mid-load resolving after a newer one.
+      if (mounted && widget.shaderAsset == asset) {
+        setState(() => _program = p);
+      }
     });
+  }
+
+  @override
+  void didUpdateWidget(BurnableImage old) {
+    super.didUpdateWidget(old);
+    if (old.shaderAsset != widget.shaderAsset) {
+      _program = null;
+      _load(widget.shaderAsset);
+    }
   }
 
   void _start() {
@@ -118,46 +146,53 @@ class _BurnableImageState extends State<BurnableImage>
     if (program == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    // The paper fills the width it's given; the shader quad is larger on
-    // every side so flames have air to climb into. Sizing the quad with
-    // AspectRatio instead would shrink the sheet by the padding — the
-    // paper, not the canvas, is what should reach the screen edges.
+    // This widget occupies exactly the PAPER. The shader quad is larger on
+    // every side so flames have air to climb into, but that head-room is
+    // transparent and must not take part in layout — let it, and the top
+    // margin shows up on screen as a gap above the sheet.
     return LayoutBuilder(
       builder: (context, constraints) {
         const spanX = 1 + _padLeft + _padRight;
         const spanY = 1 + _padTop + _padBottom;
         final aspect = widget.image.width / widget.image.height;
 
+        // Largest sheet that fits the space it was given.
         var paperW = constraints.maxWidth;
         var paperH = paperW / aspect;
-        // Only give up full width if the quad would otherwise overflow the
-        // top, where clipping the flames would be obvious.
-        if (paperH * spanY > constraints.maxHeight) {
-          paperH = constraints.maxHeight / spanY;
+        if (paperH > constraints.maxHeight) {
+          paperH = constraints.maxHeight;
           paperW = paperH * aspect;
         }
 
-        return OverflowBox(
-          // Explicit zero minimums: if this ever sits under tight
-          // constraints, an inherited minHeight silently overrides the
-          // quad and the shader's coordinate mapping goes with it.
-          minWidth: 0,
-          minHeight: 0,
-          maxWidth: paperW * spanX,
-          maxHeight: paperH * spanY,
-          child: SizedBox(
-            width: paperW * spanX,
-            height: paperH * spanY,
-            child: Listener(
-              onPointerDown: (_) => _start(),
-              onPointerUp: (_) => _stop(),
-              onPointerCancel: (_) => _stop(),
-              child: CustomPaint(
-                painter: _BurnPainter(
-                  shader: program.fragmentShader(),
-                  image: widget.image,
-                  progress: _burn,
-                  time: _time,
+        return SizedBox(
+          width: paperW,
+          height: paperH,
+          child: OverflowBox(
+            // Explicit zero minimums: if this ever sits under tight
+            // constraints, an inherited minHeight silently overrides the
+            // quad and the shader's coordinate mapping goes with it.
+            minWidth: 0,
+            minHeight: 0,
+            maxWidth: paperW * spanX,
+            maxHeight: paperH * spanY,
+            // The head-room is asymmetric, so centring the quad would paint
+            // the sheet off its own box. This lands the quad's paper region
+            // exactly on it.
+            alignment: _quadAlign,
+            child: SizedBox(
+              width: paperW * spanX,
+              height: paperH * spanY,
+              child: Listener(
+                onPointerDown: (_) => _start(),
+                onPointerUp: (_) => _stop(),
+                onPointerCancel: (_) => _stop(),
+                child: CustomPaint(
+                  painter: _BurnPainter(
+                    shader: program.fragmentShader(),
+                    image: widget.image,
+                    progress: _burn,
+                    time: _time,
+                  ),
                 ),
               ),
             ),
@@ -176,6 +211,15 @@ const double _padTop = 0.20;
 const double _padBottom = 0.08;
 const double _padLeft = 0.12;
 const double _padRight = 0.12;
+
+/// Where to hang the oversized quad so its paper region lands on this
+/// widget's box. Alignment places a too-big child by `(1 + a) / 2` of the
+/// (negative) overflow, so the fraction below is the share of the overflow
+/// that belongs above the sheet.
+const Alignment _quadAlign = Alignment(
+  2 * _padLeft / (_padLeft + _padRight) - 1,
+  2 * _padTop / (_padTop + _padBottom) - 1,
+);
 
 class _BurnPainter extends CustomPainter {
   _BurnPainter({
