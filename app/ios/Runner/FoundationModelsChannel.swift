@@ -16,6 +16,8 @@ class FoundationModelsChannel {
       switch call.method {
       case "isAvailable":
         isAvailable(result: result)
+      case "status":
+        status(result: result)
       case "generate":
         guard let args = call.arguments as? [String: Any],
               let instructions = args["instructions"] as? String,
@@ -32,6 +34,37 @@ class FoundationModelsChannel {
         result(FlutterMethodNotImplemented)
       }
     }
+  }
+
+  /// Human-readable reason the model is or isn't usable — the only way to
+  /// tell "Apple Intelligence is off" from "this build can't see the
+  /// framework" from the Flutter side.
+  private static func status(result: @escaping FlutterResult) {
+    #if canImport(FoundationModels)
+    if #available(iOS 26.0, *) {
+      switch SystemLanguageModel.default.availability {
+      case .available:
+        result("available")
+      case .unavailable(let reason):
+        switch reason {
+        case .deviceNotEligible:
+          result("device_not_eligible")
+        case .appleIntelligenceNotEnabled:
+          result("apple_intelligence_off")
+        case .modelNotReady:
+          result("model_downloading")
+        @unknown default:
+          result("unavailable_other")
+        }
+      @unknown default:
+        result("unavailable_other")
+      }
+      return
+    }
+    result("ios_too_old")
+    #else
+    result("framework_missing")
+    #endif
   }
 
   private static func isAvailable(result: @escaping FlutterResult) {

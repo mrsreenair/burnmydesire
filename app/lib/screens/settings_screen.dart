@@ -33,6 +33,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /// null while we ask the platform whether Apple Intelligence is usable.
   bool? _aiReady;
 
+  /// Raw platform status code behind [_aiStatusText].
+  String? _aiStatus;
+
   @override
   void initState() {
     super.initState();
@@ -45,7 +48,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     AiCoach().isAvailable().then((ready) {
       if (mounted) setState(() => _aiReady = ready);
     });
+    AiCoach().status().then((s) {
+      if (mounted) setState(() => _aiStatus = s);
+    });
   }
+
+  /// Plain-language explanation of the raw platform status code.
+  String get _aiStatusText => switch (_aiStatus) {
+        null => 'Checking…',
+        'available' => 'Ready — your burns get personal messages',
+        'apple_intelligence_off' =>
+          'Apple Intelligence is off. Turn it on in iOS Settings → Apple '
+              'Intelligence & Siri.',
+        'model_downloading' =>
+          'The model is still downloading. Try again once iOS finishes.',
+        'device_not_eligible' =>
+          'This iPhone doesn\'t support Apple Intelligence. You\'ll get '
+              'the built-in encouragements instead.',
+        'ios_too_old' => 'Needs iOS 26 or newer.',
+        'framework_missing' =>
+          'This build can\'t see Apple Intelligence (built with an older '
+              'SDK).',
+        'channel_missing' =>
+          'The AI bridge didn\'t load — this is a bug, not a setting.',
+        _ => 'Unavailable ($_aiStatus)',
+      };
 
   Future<void> _toggleAi(bool on) async {
     setState(() => _aiOn = on);
@@ -208,15 +235,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ? Icons.check_circle_outline
                           : Icons.help_outline,
                       title: 'On-device model',
-                      subtitle: switch (_aiReady) {
-                        null => 'Checking…',
-                        true => 'Ready — your burns get personal messages',
-                        false =>
-                          'Not available on this phone. Turn on Apple '
-                              'Intelligence in iOS Settings (and let the '
-                              'model finish downloading). Until then you '
-                              'get the built-in encouragements.',
-                      },
+                      subtitle: AiCoach.lastError == null
+                          ? _aiStatusText
+                          : '$_aiStatusText\nLast burn: '
+                              '${AiCoach.lastError}',
                     ),
                   ],
                 ),

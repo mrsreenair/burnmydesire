@@ -68,6 +68,22 @@ class AiCoach {
     }
   }
 
+  /// Why the model is or isn't usable. 'channel_missing' means the native
+  /// bridge never registered — a build problem, not a device setting.
+  Future<String> status() async {
+    try {
+      return await _channel.invokeMethod<String>('status') ?? 'unknown';
+    } on MissingPluginException {
+      return 'channel_missing';
+    } on PlatformException catch (e) {
+      return 'error:${e.code}';
+    }
+  }
+
+  /// Set by [encouragement] when generation fails, so Settings can show
+  /// what actually went wrong instead of silently falling back.
+  static String? lastError;
+
   Future<String?> encouragement({
     required bool isEmotion,
     required int burnNumber,
@@ -86,11 +102,27 @@ class AiCoach {
       }).timeout(const Duration(seconds: 8));
       final text = raw?.trim();
       // Sanity bounds: a one-liner, not an essay, not empty.
-      if (text == null || text.isEmpty || text.length > 240) return null;
+      if (text == null || text.isEmpty) {
+        lastError = 'empty_response';
+        return null;
+      }
+      if (text.length > 240) {
+        lastError = 'too_long:${text.length}';
+        return null;
+      }
+      lastError = null;
       return text;
-    } on Exception {
-      // PlatformException, MissingPluginException, TimeoutException —
-      // all mean "no AI this time", never an error the user sees.
+    } on MissingPluginException {
+      lastError = 'channel_missing';
+      return null;
+    } on PlatformException catch (e) {
+      lastError = '${e.code}: ${e.message}';
+      return null;
+    } on TimeoutException {
+      lastError = 'timeout';
+      return null;
+    } on Exception catch (e) {
+      lastError = e.runtimeType.toString();
       return null;
     }
   }
