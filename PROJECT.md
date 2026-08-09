@@ -154,6 +154,14 @@ Every item record carries a `category` from day one:
 
 Rationale: gating *items* (not burns) puts the paywall where usage pressure actually is. Lifetime option matters — privacy-minded users prefer pay-once.
 
+### 4.6 Going global (founder decision 2026-08-09) ✅ *built*
+
+Launch markets: **US, India, Europe**, teens-and-up. Three pieces:
+
+- **Currency is a display setting, nothing more.** Amounts are stored as plain integer minor units with no currency attached; nothing is ever converted (no FX problem exists — everything lives on one device). Setup asks one question with the device locale's answer pre-filled; Settings can change it later and says stored numbers stay as they are. India groups by lakh (₹1,00,000); everywhere else keeps en_US grouping (the "1.689 reads as one euro" lesson). The opt-in world counter converts contributions to euro cents with rough static rates so the public total keeps one unit.
+- **Financial goal.** One goal — name, emoji, target amount — because a single destination keeps every burn pointed at the same picture. Skippable at setup; presets carry no prices (a car costs a different number in Mumbai and Munich). Progress shows after **money burns only** — an emotion burn is never told it brought a MacBook closer. Dashboard card + Settings edit. This is the retention spine: "you're 4% closer to your car" beats "you protected money".
+- **Country-matched funds.** Bundled dataset grew to 14 series: Nifty 50 + Reliance + TCS (INR), FTSE 100 (GBP), DAX (EUR), alongside the existing US/world set (`tool/fetch_market_data.py` regenerates it). `fundsFor(currency)` orders: local indices → world → US indices → local stocks → US household names; foreign local indices never appear (no DAX in Delhi, no Nifty in Ohio). **The default selection is always an index in the user's own market** — showing a teen what NVDA "would have made" as the opening number is survivorship bias with a chart on it; single stocks stay one deliberate tap away. Growth math is a ratio, so a fund's quote currency never touches the user's amounts.
+
 ---
 
 ## 5. Tech Stack

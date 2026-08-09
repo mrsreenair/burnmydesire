@@ -30,6 +30,7 @@ class _ShockScreenState extends ConsumerState<ShockScreen> {
   @override
   Widget build(BuildContext context) {
     final market = ref.watch(marketDataProvider).value;
+    final funds = ref.watch(relevantFundsProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('The damage')),
@@ -74,7 +75,8 @@ class _ShockScreenState extends ConsumerState<ShockScreen> {
                             target: widget.target,
                             years: _years,
                             onYearsChanged: (y) => setState(() => _years = y),
-                            market: market,
+                            funds: funds,
+                            asOf: market?.asOfLabel,
                             fundIndex: _fund,
                             onFundChanged: (f) => setState(() => _fund = f),
                           ),

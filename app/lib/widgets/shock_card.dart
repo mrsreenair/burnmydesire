@@ -17,7 +17,8 @@ class ShockCard extends StatelessWidget {
     required this.target,
     required this.years,
     required this.onYearsChanged,
-    this.market,
+    this.funds = const [],
+    this.asOf,
     this.fundIndex = 0,
     this.onFundChanged,
   });
@@ -27,7 +28,15 @@ class ShockCard extends StatelessWidget {
   final BurnTarget target;
   final int years;
   final ValueChanged<int> onYearsChanged;
-  final MarketData? market;
+
+  /// Currency-matched and index-first (see [MarketData.fundsFor]); the
+  /// screen defaults [fundIndex] to 0, so the opening number is always
+  /// the user's own market's index, never a hand-picked winner stock.
+  final List<FundSeries> funds;
+
+  /// Human "data to" label, e.g. "Aug 2026".
+  final String? asOf;
+
   final int fundIndex;
   final ValueChanged<int>? onFundChanged;
 
@@ -35,7 +44,7 @@ class ShockCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final price = target.priceCents;
-    final fund = market?.funds[fundIndex];
+    final fund = fundIndex < funds.length ? funds[fundIndex] : null;
     final targetYear = DateTime.now().year + years;
 
     final int shown;
@@ -91,14 +100,14 @@ class ShockCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          if (market != null && onFundChanged != null) ...[
+          if (funds.isNotEmpty && onFundChanged != null) ...[
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  for (var i = 0; i < market!.funds.length; i++) ...[
+                  for (var i = 0; i < funds.length; i++) ...[
                     ChoiceChip(
-                      label: Text(market!.funds[i].name),
+                      label: Text(funds[i].name),
                       selected: i == fundIndex,
                       showCheckmark: false,
                       labelStyle: TextStyle(
@@ -167,8 +176,9 @@ class ShockCard extends StatelessWidget {
             fund != null
                 ? 'Projection assumes ${fund.name} (${fund.ticker}) repeats '
                       'its real ${fund.yearsAvailable}-year average total '
-                      'return, dividends included, data to '
-                      '${market!.asOfLabel}. Past performance doesn\'t '
+                      'return, dividends included'
+                      '${asOf != null ? ', data to $asOf' : ''}. '
+                      'Past performance doesn\'t '
                       'guarantee future results. Not investment advice.'
                 : 'Assumes ${(kDefaultAnnualRate * 100).toStringAsFixed(0)}% '
                       'avg. annual return (historical market average). Not a '

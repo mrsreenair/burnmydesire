@@ -96,7 +96,7 @@ void main() {
   group('bundled asset', () {
     TestWidgetsFlutterBinding.ensureInitialized();
 
-    test('parses and contains the three launch funds with sane history',
+    test('parses and contains every launch market with sane history',
         () async {
       final data = MarketData.fromJson(jsonDecode(
               await rootBundleLoadString('assets/data/market_returns.json'))
@@ -105,17 +105,59 @@ void main() {
           data.funds.map((f) => f.name),
           containsAll([
             'S&P 500', 'NASDAQ-100', 'MSCI World',
+            'Nifty 50', 'FTSE 100', 'DAX',
             'Apple', 'Microsoft', 'Google', 'Amazon', 'Nvidia', 'Tesla',
+            'Reliance', 'TCS',
           ]));
       for (final fund in data.funds) {
         expect(fund.yearsAvailable, greaterThanOrEqualTo(10),
             reason: '${fund.name} needs at least a decade of history');
         expect(fund.monthly.every((p) => p > 0), isTrue);
-        // Long-run equity multiples should be growth, not noise.
-        expect(fund.multipleOverYears(10), greaterThan(1.5));
+        // Long-run equity multiples should be growth, not noise. The
+        // FTSE is the honest laggard of the set, hence the low bar.
+        expect(fund.multipleOverYears(10), greaterThan(1.2),
+            reason: fund.name);
         // Full-history averages should be sane annual percentages.
-        expect(fund.fullHistoryCagr, inExclusiveRange(0.02, 0.60));
+        expect(fund.fullHistoryCagr, inExclusiveRange(0.02, 0.60),
+            reason: fund.name);
       }
+    });
+
+    test('funds are matched to the market someone actually lives in',
+        () async {
+      final data = MarketData.fromJson(jsonDecode(
+              await rootBundleLoadString('assets/data/market_returns.json'))
+          as Map<String, dynamic>);
+
+      // An Indian teen opens on the Nifty, an index — never on a
+      // hand-picked winner stock.
+      final inr = data.fundsFor('INR');
+      expect(inr.first.id, 'nifty');
+      expect(inr.map((f) => f.id),
+          containsAll(['nifty', 'world', 'sp500', 'reliance', 'tcs']));
+      // Their own companies come before the US household names.
+      expect(inr.indexWhere((f) => f.id == 'reliance'),
+          lessThan(inr.indexWhere((f) => f.id == 'aapl')));
+      // A foreign local index is noise: no DAX in Delhi.
+      expect(inr.map((f) => f.id), isNot(contains('dax')));
+
+      final usd = data.fundsFor('USD');
+      expect(usd.first.id, 'sp500');
+      expect(usd.map((f) => f.id), isNot(contains('nifty')));
+
+      final eur = data.fundsFor('EUR');
+      expect(eur.map((f) => f.id), containsAll(['world', 'dax', 'sp500']));
+      expect(eur.map((f) => f.id), isNot(contains('ftse')));
+
+      final gbp = data.fundsFor('GBP');
+      expect(gbp.first.id, 'ftse');
+
+      // No local market at all: the world index leads, and every fund
+      // is still an index or a global household name.
+      final jpy = data.fundsFor('JPY');
+      expect(jpy.first.id, 'world');
+      expect(jpy, isNotEmpty);
+      expect(jpy.map((f) => f.id), isNot(contains('reliance')));
     });
   });
 }

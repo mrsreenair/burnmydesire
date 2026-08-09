@@ -4,6 +4,7 @@ import '../data/database.dart';
 import '../data/image_store.dart';
 import '../data/market_data.dart';
 import '../data/user_prefs.dart';
+import 'currency_provider.dart';
 
 /// Overridden in main() with the real documents path.
 final imageStoreProvider = Provider<ImageStore>(
@@ -17,6 +18,22 @@ final marketDataProvider = FutureProvider<MarketData>((ref) async {
   final data = await store.load();
   store.refreshIfStale(data).ignore();
   return data;
+});
+
+/// The funds the user should actually see, matched to their currency:
+/// their market's indices first, so the default projection is always a
+/// local index, never a hand-picked winner stock.
+final relevantFundsProvider = Provider<List<FundSeries>>((ref) {
+  final market = ref.watch(marketDataProvider).value;
+  final currency = ref.watch(currencyProvider);
+  return market?.fundsFor(currency.code) ?? const [];
+});
+
+/// The one fund used where there's no picker: dashboards and victory
+/// lines. Null while market data is still loading.
+final defaultFundProvider = Provider<FundSeries?>((ref) {
+  final funds = ref.watch(relevantFundsProvider);
+  return funds.isEmpty ? null : funds.first;
 });
 
 final databaseProvider = Provider<AppDatabase>((ref) {

@@ -99,6 +99,12 @@ class FundSeries {
       (cents * math.pow(1 + fullHistoryCagr, yearsAhead)).round();
 }
 
+/// Broad indices, as opposed to single companies. The app's default
+/// selection must always be one of these: showing a teenager what NVDA
+/// "would have made" as the opening number is survivorship bias with a
+/// chart on it. Single stocks stay available — one deliberate tap away.
+const _indexIds = {'sp500', 'nasdaq', 'world', 'nifty', 'ftse', 'dax'};
+
 class MarketData {
   const MarketData({required this.generated, required this.funds});
 
@@ -118,6 +124,32 @@ class MarketData {
     'generated': generated,
     'funds': [for (final f in funds) f.toJson()],
   };
+
+  /// Funds ordered for someone who pays in [currencyCode], first chip to
+  /// last: their own market's indices, the world index, the US indices
+  /// (famous everywhere), then single stocks — local ones before the
+  /// global household names. Foreign local indices never appear: a DAX
+  /// chip is noise to a teen in Ohio, exactly as Nifty is in Berlin.
+  ///
+  /// The growth math is a ratio, so a fund's quote currency never touches
+  /// the user's amounts — this ordering is about relevance, not units.
+  List<FundSeries> fundsFor(String currencyCode) {
+    bool isIndex(FundSeries f) => _indexIds.contains(f.id);
+    final seen = <String>{};
+    final out = <FundSeries>[];
+    void take(bool Function(FundSeries) test) {
+      for (final f in funds) {
+        if (test(f) && seen.add(f.id)) out.add(f);
+      }
+    }
+
+    take((f) => isIndex(f) && f.currency == currencyCode);
+    take((f) => f.id == 'world');
+    take((f) => isIndex(f) && f.currency == 'USD');
+    take((f) => !isIndex(f) && f.currency == currencyCode);
+    take((f) => !isIndex(f) && f.currency == 'USD');
+    return out;
+  }
 
   /// Human label like "Aug 2026" for "data as of".
   String get asOfLabel {

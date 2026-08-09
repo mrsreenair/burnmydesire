@@ -103,7 +103,6 @@ class _Dashboard extends ConsumerWidget {
     // stack, so nothing else would repaint its amounts.
     ref.watch(currencyProvider);
     final protected = ref.watch(protectedCentsProvider);
-    final market = ref.watch(marketDataProvider).value;
     final categories = ref.watch(spendCategoriesProvider).value ?? const [];
     final goalIds = ref.watch(burnGoalsProvider).value ?? const [];
     final goal = ref.watch(financialGoalProvider).value;
@@ -130,7 +129,7 @@ class _Dashboard extends ConsumerWidget {
       (a, b) => a.resistanceCount >= b.resistanceCount ? a : b,
     );
 
-    final fund = market?.funds.first;
+    final fund = ref.watch(defaultFundProvider);
     final targetYear = DateTime.now().year + kDefaultHorizonYears;
     final projected = fund?.projectedValueCents(
       protected,
