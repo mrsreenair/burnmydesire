@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750" role="img" aria-label="A sheet of paper burning along a glowing front">
+  <defs>
+    <radialGradient id="fglow" cx="0.5" cy="1" r="0.9">
+      <stop offset="0" stop-color="#FFC46B" stop-opacity="0.85"/>
+      <stop offset="0.28" stop-color="#FF7A18" stop-opacity="0.5"/>
+      <stop offset="0.55" stop-color="#FF3B2F" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#0A0709" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="fpaper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7F4EE"/>
+      <stop offset="0.7" stop-color="#E6DFD1"/>
+      <stop offset="1" stop-color="#8C6A4E"/>
+    </linearGradient>
+    <linearGradient id="fedge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFC46B"/>
+      <stop offset="0.5" stop-color="#FF7A18"/>
+      <stop offset="1" stop-color="#A8102A"/>
+    </linearGradient>
+    <filter id="fblur" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+    <filter id="fblur2" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+    <clipPath id="fclip">
+      <path d="M420 120 h360 a26 26 0 0 1 26 26 v352
+               c-40 22 -78 -14 -118 4 c-44 20 -84 -18 -128 -2
+               c-46 17 -84 -16 -128 2 c-14 6 -26 6 -38 2 v-358 a26 26 0 0 1 26 -26 z"/>
+    </clipPath>
+  </defs>
+
+  <rect width="1200" height="750" fill="#0A0709"/>
+  <ellipse cx="600" cy="700" rx="720" ry="560" fill="url(#fglow)"/>
+
+  <!-- the sheet, consumed from the bottom -->
+  <g clip-path="url(#fclip)">
+    <rect x="394" y="120" width="412" height="420" fill="url(#fpaper)"/>
+    <g fill="#161513" opacity="0.16">
+      <rect x="440" y="184" width="240" height="16" rx="8"/>
+      <rect x="440" y="220" width="150" height="12" rx="6"/>
+      <rect x="440" y="286" width="320" height="90" rx="16"/>
+      <rect x="440" y="398" width="200" height="12" rx="6"/>
+    </g>
+  </g>
+
+  <!-- the burning front -->
+  <path d="M394 498 c-40 22 -78 -14 -118 4"
+        transform="translate(146 0)"
+        fill="none" stroke="url(#fedge)" stroke-width="12" stroke-linecap="round" filter="url(#fblur2)"/>
+  <path d="M806 498 c-40 22 -78 -14 -118 4 c-44 20 -84 -18 -128 -2 c-46 17 -84 -16 -128 2 c-14 6 -26 6 -38 2"
+        fill="none" stroke="#FFC46B" stroke-width="7" stroke-linecap="round"/>
+  <path d="M806 498 c-40 22 -78 -14 -118 4 c-44 20 -84 -18 -128 -2 c-46 17 -84 -16 -128 2 c-14 6 -26 6 -38 2"
+        fill="none" stroke="#FF7A18" stroke-width="22" stroke-linecap="round" opacity="0.65" filter="url(#fblur)"/>
+
+  <!-- embers -->
+  <g fill="#FFC46B">
+    <circle cx="470" cy="440" r="3.5" opacity="0.9"/>
+    <circle cx="556" cy="392" r="2.5" opacity="0.7"/>
+    <circle cx="640" cy="428" r="4" opacity="0.85"/>
+    <circle cx="712" cy="356" r="2.5" opacity="0.6"/>
+    <circle cx="392" cy="404" r="3" opacity="0.75"/>
+    <circle cx="836" cy="452" r="3" opacity="0.6"/>
+    <circle cx="602" cy="300" r="2" opacity="0.45"/>
+    <circle cx="760" cy="268" r="2" opacity="0.35"/>
+  </g>
+</svg>

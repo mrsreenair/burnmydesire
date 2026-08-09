@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -8,6 +9,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../data/ai_coach.dart';
 import '../data/backup.dart';
+import '../data/cloud_backup.dart';
 import '../data/document_picker.dart';
 import '../data/encrypted_db.dart';
 import '../data/user_prefs.dart';
@@ -45,6 +47,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /// Whether the database on disk is really encrypted.
   String? _dbSecurity;
 
+  /// iCloud availability and the time of the stored backup.
+  CloudStatus? _cloudStatus;
+  DateTime? _lastCloudBackup;
+
   @override
   void initState() {
     super.initState();
@@ -63,6 +69,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     databaseSecurityReport().then((r) {
       if (mounted) setState(() => _dbSecurity = r);
     });
+    _refreshCloud();
   }
 
   /// Plain-language explanation of the raw platform status code.
@@ -151,6 +158,107 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  CloudBackup _cloud() => CloudBackup(
+        BackupService(
+            ref.read(databaseProvider), ref.read(imageStoreProvider)),
+      );
+
+  Future<void> _refreshCloud() async {
+    final cloud = _cloud();
+    final status = await cloud.status();
+    final last = await cloud.lastBackup();
+    if (mounted) {
+      setState(() {
+        _cloudStatus = status;
+        _lastCloudBackup = last;
+      });
+    }
+  }
+
+  /// What the iCloud row says, in the user's terms.
+  String get _cloudSubtitle {
+    switch (_cloudStatus) {
+      case null:
+        return 'Checking…';
+      case CloudStatus.signedOut:
+        return 'Sign in to iCloud in iOS Settings to back up automatically.';
+      case CloudStatus.noContainer:
+      case CloudStatus.unsupported:
+        return 'iCloud backup isn\'t enabled in this build yet. Use the '
+            'encrypted file backup below.';
+      case CloudStatus.available:
+        final when = _lastCloudBackup;
+        return when == null
+            ? 'Encrypted with your passphrase before it leaves the phone — '
+                'Apple can\'t read it either.'
+            : 'Last backup ${DateFormat.yMMMd().add_jm().format(when)}. '
+                'Encrypted with your passphrase before it leaves the phone.';
+    }
+  }
+
+  Future<void> _backUpToCloud() async {
+    var pass = await cloudPassphrase();
+    pass ??= await _askPassphrase(forExport: true);
+    if (pass == null || !mounted) return;
+    setState(() => _busy = true);
+    try {
+      await saveCloudPassphrase(pass);
+      final ok = await _cloud().backUp(passphrase: pass);
+      _toast(ok
+          ? 'Backed up to iCloud.'
+          : 'iCloud isn\'t available right now.');
+      await _refreshCloud();
+    } on BackupException catch (e) {
+      _toast(e.message);
+    } on Object catch (e) {
+      _toast('iCloud backup failed: $e');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _restoreFromCloud() async {
+    final confirmed = await _confirmReplace();
+    if (confirmed != true || !mounted) return;
+    final pass =
+        await cloudPassphrase() ?? await _askPassphrase(forExport: false);
+    if (pass == null || !mounted) return;
+    setState(() => _busy = true);
+    try {
+      final restored = await _cloud().restore(passphrase: pass);
+      _toast(restored == null
+          ? 'No iCloud backup found yet.'
+          : 'Restored $restored ${restored == 1 ? 'desire' : 'desires'}.');
+    } on BackupException catch (e) {
+      _toast(e.message);
+    } on Object catch (e) {
+      _toast('Restore failed: $e');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<bool?> _confirmReplace() => showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Restore from backup?'),
+          content: const Text(
+            'This replaces every desire currently on this phone with the '
+            'ones in the backup. Your current data is deleted.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Restore'),
+            ),
+          ],
+        ),
+      );
+
   Future<void> _exportBackup() async {
     final passphrase = await _askPassphrase(forExport: true);
     if (passphrase == null || !mounted) return;
@@ -175,26 +283,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _importBackup() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Restore from backup?'),
-        content: const Text(
-          'This replaces every desire currently on this phone with the '
-          'ones in the backup. Your current data is deleted.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Choose file'),
-          ),
-        ],
-      ),
-    );
+    final confirmed = await _confirmReplace();
     if (confirmed != true || !mounted) return;
 
     final path = await DocumentPicker().pickFile();
@@ -279,9 +368,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Erase everything?'),
         content: const Text(
-          'This deletes every burned desire, every photo, your PIN and '
-          'your setup — permanently. Your protected-wealth total goes '
-          'back to zero. This cannot be undone.',
+          'This deletes every burned desire, every photo, your PIN, your '
+          'setup and your iCloud backup — permanently. Your '
+          'protected-wealth total goes back to zero. This cannot be '
+          'undone.',
         ),
         actions: [
           TextButton(
@@ -300,6 +390,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (confirmed != true) return;
 
     final store = ref.read(imageStoreProvider);
+    // Erasing must reach the iCloud copy too, or "erase everything" would
+    // leave a full backup sitting in the cloud.
+    await _cloud().deleteCloudCopy();
+    await clearCloudPassphrase();
     await ref.read(databaseProvider).deleteAllItems();
     final dir = Directory('${store.documentsPath}/item_images');
     if (await dir.exists()) await dir.delete(recursive: true);
@@ -425,6 +519,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 child: _Group(
                   label: 'Backup',
                   children: [
+                    _Row(
+                      icon: Icons.cloud_outlined,
+                      title: 'Back up to iCloud',
+                      subtitle: isPro
+                          ? _cloudSubtitle
+                          : 'Pro: automatic encrypted backup to your iCloud',
+                      trailing: isPro ? null : 'Pro',
+                      onTap: _busy
+                          ? null
+                          : isPro
+                              ? _backUpToCloud
+                              : () => Navigator.of(context)
+                                  .push(emberRoute(const PaywallScreen())),
+                    ),
+                    if (isPro && _cloudStatus == CloudStatus.available)
+                      _Row(
+                        icon: Icons.cloud_download_outlined,
+                        title: 'Restore from iCloud',
+                        subtitle: 'Replaces what\'s on this phone',
+                        onTap: _busy ? null : _restoreFromCloud,
+                      ),
                     _Row(
                       icon: Icons.lock_outline,
                       title: 'Create encrypted backup',

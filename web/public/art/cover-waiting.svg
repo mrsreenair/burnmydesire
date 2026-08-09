@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750" role="img" aria-label="A row of waiting days, struck through">
+  <defs>
+    <linearGradient id="wsky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F2EEE5"/>
+      <stop offset="1" stop-color="#E9E4F2"/>
+    </linearGradient>
+    <filter id="wsoft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="46"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="750" fill="url(#wsky)"/>
+  <circle cx="150" cy="120" r="230" fill="#DCEFE2" opacity="0.75" filter="url(#wsoft)"/>
+  <circle cx="1080" cy="660" r="250" fill="#F9E4D8" opacity="0.8" filter="url(#wsoft)"/>
+
+  <!-- 72 hours of waiting, as tick marks -->
+  <g stroke="#161513" stroke-opacity="0.18" stroke-width="3" stroke-linecap="round">
+    <g>
+      <path d="M180 300v70M228 300v70M276 300v70M324 300v70M372 300v70M420 300v70M468 300v70M516 300v70M564 300v70M612 300v70M660 300v70M708 300v70M756 300v70M804 300v70M852 300v70M900 300v70M948 300v70M996 300v70"/>
+    </g>
+  </g>
+  <g stroke="#161513" stroke-opacity="0.1" stroke-width="3" stroke-linecap="round">
+    <path d="M204 318v34M252 318v34M300 318v34M348 318v34M396 318v34M444 318v34M492 318v34M540 318v34M588 318v34M636 318v34M684 318v34M732 318v34M780 318v34M828 318v34M876 318v34M924 318v34M972 318v34"/>
+  </g>
+
+  <!-- the strike -->
+  <path d="M150 348 L1050 322" stroke="#FF6B2C" stroke-width="9" stroke-linecap="round"/>
+
+  <!-- the one that matters: now -->
+  <g transform="translate(600 470) rotate(-2)">
+    <rect x="-150" y="-46" width="300" height="92" rx="24" fill="#fff"/>
+    <rect x="-150" y="-46" width="300" height="92" rx="24" fill="none" stroke="#161513" stroke-opacity="0.08"/>
+    <circle cx="-104" cy="0" r="17" fill="url(#wfire)"/>
+    <rect x="-70" y="-16" width="150" height="12" rx="6" fill="#161513" opacity="0.72"/>
+    <rect x="-70" y="6" width="96" height="10" rx="5" fill="#161513" opacity="0.25"/>
+  </g>
+  <defs>
+    <linearGradient id="wfire" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF7A18"/>
+      <stop offset="1" stop-color="#FF3B2F"/>
+    </linearGradient>
+  </defs>
+</svg>

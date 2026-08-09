@@ -4,9 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config.dart';
 import '../data/ai_coach.dart';
+import '../data/backup.dart';
+import '../data/cloud_backup.dart';
+import '../data/database.dart';
+import '../data/image_store.dart';
 import '../data/user_prefs.dart';
 import '../models/burn_target.dart';
 import '../providers/db_providers.dart';
+import '../providers/pro_provider.dart';
 import '../theme/app_colors.dart';
 import '../utils/format_utils.dart';
 import '../utils/math_utils.dart';
@@ -97,6 +102,17 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
       if (item.imageFile.isNotEmpty) await store.delete(item.imageFile);
       await db.markDestroyed(id);
     }
+    _syncToCloud(db, store);
+  }
+
+  /// Fire-and-forget iCloud backup once the burn is recorded. Silent by
+  /// design: a failed sync must never intrude on the celebration, and the
+  /// data is already safe on the device.
+  void _syncToCloud(AppDatabase db, ImageStore store) {
+    if (!ref.read(proProvider)) return;
+    CloudBackup(BackupService(db, store))
+        .backUp()
+        .catchError((Object _) => false);
   }
 
   @override

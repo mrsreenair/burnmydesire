@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750" role="img" aria-label="A phone holding its contents, with no connection leaving it">
+  <defs>
+    <linearGradient id="psky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F7F4EE"/>
+      <stop offset="1" stop-color="#E9E4F2"/>
+    </linearGradient>
+    <filter id="psoft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="52"/>
+    </filter>
+    <linearGradient id="pfire" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF7A18"/>
+      <stop offset="1" stop-color="#FF3B2F"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="750" fill="url(#psky)"/>
+  <circle cx="140" cy="640" r="240" fill="#DCEFE2" opacity="0.8" filter="url(#psoft)"/>
+  <circle cx="1070" cy="120" r="230" fill="#F9E4D8" opacity="0.75" filter="url(#psoft)"/>
+
+  <!-- severed connections: dashed lines that stop dead at the device -->
+  <g stroke="#161513" stroke-opacity="0.16" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 22">
+    <path d="M60 200 H430"/>
+    <path d="M60 375 H430"/>
+    <path d="M60 550 H430"/>
+    <path d="M770 200 H1140"/>
+    <path d="M770 375 H1140"/>
+    <path d="M770 550 H1140"/>
+  </g>
+  <g stroke="#FF6B2C" stroke-width="5" stroke-linecap="round" opacity="0.9">
+    <path d="M404 182 l30 36 M434 182 l-30 36"/>
+    <path d="M404 357 l30 36 M434 357 l-30 36"/>
+    <path d="M404 532 l30 36 M434 532 l-30 36"/>
+    <path d="M766 182 l30 36 M796 182 l-30 36"/>
+    <path d="M766 357 l30 36 M796 357 l-30 36"/>
+    <path d="M766 532 l30 36 M796 532 l-30 36"/>
+  </g>
+
+  <!-- the phone, holding everything -->
+  <g transform="translate(600 375) rotate(-2)">
+    <rect x="-116" y="-232" width="232" height="464" rx="42" fill="#161513"/>
+    <rect x="-104" y="-220" width="208" height="440" rx="34" fill="#F7F4EE"/>
+    <rect x="-32" y="-220" width="64" height="15" rx="8" fill="#161513"/>
+
+    <!-- a yellow thought and two white cards, sealed inside -->
+    <g transform="rotate(-3)">
+      <rect x="-78" y="-160" width="156" height="70" rx="16" fill="#F7E8A4"/>
+      <rect x="-58" y="-138" width="104" height="9" rx="4.5" fill="#6B5D2E" opacity="0.55"/>
+      <rect x="-58" y="-120" width="72" height="9" rx="4.5" fill="#6B5D2E" opacity="0.35"/>
+    </g>
+    <g transform="rotate(2)">
+      <rect x="-80" y="-60" width="160" height="94" rx="18" fill="#fff"/>
+      <rect x="-60" y="-38" width="118" height="10" rx="5" fill="#161513" opacity="0.6"/>
+      <rect x="-60" y="-16" width="78" height="9" rx="4.5" fill="#161513" opacity="0.22"/>
+      <rect x="-60" y="6" width="52" height="12" rx="6" fill="#17A567" opacity="0.75"/>
+    </g>
+    <g transform="rotate(-1)">
+      <rect x="-80" y="56" width="160" height="86" rx="18" fill="#fff"/>
+      <rect x="-60" y="76" width="100" height="10" rx="5" fill="#161513" opacity="0.6"/>
+      <rect x="-60" y="98" width="64" height="9" rx="4.5" fill="#161513" opacity="0.22"/>
+    </g>
+
+    <!-- the key stays in the keychain -->
+    <circle cx="0" cy="186" r="26" fill="url(#pfire)"/>
+    <path d="M-9 186 a9 9 0 1 1 18 0 M0 186 v14" stroke="#fff" stroke-width="4" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>

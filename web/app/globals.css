@@ -1,26 +1,925 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   Burn My Desire — "Paper & Fire" web system
+   Mirrors app/lib/theme/app_colors.dart. Warm cream paper, tilted white
+   cards, huge Newsreader serif headlines, one orange accent. The burn ritual
+   is the only dark surface on the whole site.
+   ========================================================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Paper world */
+  --paper: #f7f4ee;
+  --paper-2: #f2eee5;
+  --white: #ffffff;
+  --field: #edeae3;
+  --wash-mint: #dcefe2;
+  --wash-peach: #f9e4d8;
+  --wash-lilac: #e9e4f2;
+  --sticky: #f7e8a4;
+  --sticky-ink: #6b5d2e;
+
+  /* Ink */
+  --ink: #161513;
+  --ink-soft: #43413c;
+  --text-mid: #8a867d;
+  --text-low: #b3afa6;
+  --hair: rgba(22, 21, 19, 0.09);
+  --hair-soft: rgba(22, 21, 19, 0.055);
+
+  /* Fire */
+  --accent: #ff6b2c;
+  --ember: #ff7a18;
+  --flame: #ff3b2f;
+  --spark: #ffc46b;
+  --coal: #a8102a;
+
+  /* Money */
+  --money: #17a567;
+  --money-deep: #0d7a4b;
+  --gold: #b8860b;
+
+  /* The ritual room */
+  --night: #0a0709;
+
+  --card-shadow: 0 10px 24px -4px rgba(58, 52, 42, 0.1),
+    0 1px 4px rgba(58, 52, 42, 0.05);
+  --card-shadow-lg: 0 30px 70px -20px rgba(58, 52, 42, 0.3),
+    0 2px 6px rgba(58, 52, 42, 0.06);
+
+  --shell: 1160px;
+  --gutter: 28px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-newsreader);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* nav height + breathing room, so #anchors don't hide under the bar */
+  scroll-padding-top: 96px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--spark);
+  color: var(--ink);
+}
+
+/* --------------------------------------------------------------------------
+   Layout
+   -------------------------------------------------------------------------- */
+
+.wrap {
+  width: 100%;
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+.wrap-narrow {
+  max-width: 760px;
+}
+
+.section {
+  padding-block: clamp(72px, 9vw, 124px);
+}
+
+.section-tight {
+  padding-block: clamp(52px, 6vw, 82px);
+}
+
+/* --------------------------------------------------------------------------
+   Type
+   -------------------------------------------------------------------------- */
+
+.display {
+  font-family: var(--font-newsreader), "Iowan Old Style", Palatino, Georgia,
+    serif;
+  font-weight: 400;
+  letter-spacing: -0.032em;
+  line-height: 0.96;
+}
+
+.display em,
+.it {
+  font-style: italic;
+}
+
+h1.display {
+  font-size: clamp(46px, 7.6vw, 104px);
+}
+
+h2.display {
+  font-size: clamp(34px, 4.6vw, 62px);
+  line-height: 1.0;
+}
+
+h3.display {
+  font-size: clamp(24px, 2.6vw, 32px);
+  line-height: 1.1;
+}
+
+/* The signature headline treatment: struck-through grey line above the
+   serif answer. The rule is drawn as a pseudo-element so it can be orange
+   and tilted, which a text-decoration cannot do. */
+.struck {
+  position: relative;
+  color: var(--text-low);
+  white-space: nowrap;
+}
+
+.struck::after {
+  content: "";
+  position: absolute;
+  left: -1%;
+  right: -1%;
+  top: 52%;
+  height: 3px;
+  background: var(--accent);
+  transform: rotate(-1.1deg) scaleX(var(--strike, 1));
+  transform-origin: left center;
+  border-radius: 2px;
+}
+
+.kicker {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.kicker-mid {
+  color: var(--text-mid);
+}
+
+.kicker-money {
+  color: var(--money-deep);
+}
+
+.lede {
+  font-size: clamp(17px, 1.4vw, 19px);
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.prose-serif p {
+  font-family: var(--font-newsreader), Georgia, serif;
+  font-size: 20px;
+  line-height: 1.68;
+  color: var(--ink-soft);
+}
+
+.fine {
+  font-size: 13.5px;
+  color: var(--text-mid);
+}
+
+.money-text {
+  background: linear-gradient(135deg, var(--money), var(--money-deep));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.fire-text {
+  background: linear-gradient(135deg, var(--ember), var(--flame));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* --------------------------------------------------------------------------
+   Buttons
+   -------------------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 14px 24px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-dark {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: 0 6px 18px rgba(22, 21, 19, 0.18);
+}
+
+.btn-dark:hover {
+  box-shadow: 0 12px 28px rgba(22, 21, 19, 0.24);
+}
+
+.btn-fire {
+  background: linear-gradient(135deg, var(--ember), var(--flame));
+  color: #fff;
+  box-shadow: 0 10px 26px rgba(255, 72, 30, 0.34);
+}
+
+.btn-fire:hover {
+  box-shadow: 0 16px 38px rgba(255, 72, 30, 0.44);
+}
+
+.btn-ghost {
+  border-color: var(--hair);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.btn-ghost:hover {
+  border-color: var(--ink);
+}
+
+.btn-sm {
+  padding: 10px 18px;
+  font-size: 14px;
+}
+
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.link-arrow svg {
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.link-arrow:hover svg {
+  transform: translateX(4px);
+}
+
+.link-arrow:hover {
+  color: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   Surfaces
+   -------------------------------------------------------------------------- */
+
+.card {
+  background: var(--white);
+  border: 1px solid var(--hair);
+  border-radius: 24px;
+  box-shadow: var(--card-shadow);
+}
+
+.tilt-l {
+  transform: rotate(-1.1deg);
+}
+
+.tilt-r {
+  transform: rotate(1.1deg);
+}
+
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-6px) rotate(-0.4deg);
+  box-shadow: var(--card-shadow-lg);
+}
+
+.sticky-note {
+  background: var(--sticky);
+  color: var(--sticky-ink);
+  font-weight: 650;
+  font-size: 13.5px;
+  padding: 11px 15px;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+}
+
+.hairline {
+  height: 1px;
+  background: var(--hair-soft);
+  border: 0;
+}
+
+/* Soft corner washes behind the paper */
+.wash {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(72px);
+  opacity: 0.85;
+  pointer-events: none;
+  will-change: transform;
+  animation: wash-drift 22s ease-in-out infinite alternate;
+}
+
+.wash-mint {
+  background: var(--wash-mint);
+}
+.wash-peach {
+  background: var(--wash-peach);
+}
+.wash-lilac {
+  background: var(--wash-lilac);
+}
+.wash-delay {
+  animation-delay: -8s;
+}
+.wash-delay-2 {
+  animation-delay: -15s;
+}
+
+/* --------------------------------------------------------------------------
+   The ritual — the one dark surface
+   -------------------------------------------------------------------------- */
+
+.ritual {
+  position: relative;
+  overflow: hidden;
+  background: var(--night);
+  color: #f5efe7;
+  border-radius: 40px;
+}
+
+.ritual-glow {
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  width: 1000px;
+  height: 1000px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    rgba(255, 122, 24, 0.32),
+    rgba(255, 59, 47, 0.11) 40%,
+    transparent 66%
+  );
+  animation: flicker 5.5s ease-in-out infinite;
+}
+
+.ember-line {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--spark),
+    var(--flame),
+    transparent
+  );
+  box-shadow: 0 0 24px rgba(255, 122, 24, 0.8);
+}
+
+.ember {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--spark);
+  box-shadow: 0 0 10px var(--ember);
+  pointer-events: none;
+  animation: ember-rise linear infinite;
+}
+
+/* --------------------------------------------------------------------------
+   Animation primitives
+   -------------------------------------------------------------------------- */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rise-tilt-l {
+  from {
+    opacity: 0;
+    transform: translateY(26px) rotate(-3deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(-1.1deg);
+  }
+}
+
+@keyframes rise-tilt-r {
+  from {
+    opacity: 0;
+    transform: translateY(26px) rotate(3deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(1.1deg);
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+  62% {
+    opacity: 1;
+    transform: scale(1.045);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes strike-draw {
+  from {
+    transform: rotate(-1.1deg) scaleX(0);
+  }
+  to {
+    transform: rotate(-1.1deg) scaleX(1);
+  }
+}
+
+@keyframes wash-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(40px, -30px, 0) scale(1.12);
+  }
+}
+
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 0.92;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  38% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.04);
+  }
+  61% {
+    opacity: 0.84;
+    transform: translate(-50%, -50%) scale(0.985);
+  }
+}
+
+@keyframes ember-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(0) scale(0.7);
+  }
+  14% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-260px) translateX(var(--drift, 30px)) scale(1.1);
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes ash-fall {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) rotate(0deg);
+  }
+  18% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(120px) rotate(180deg);
+  }
+}
+
+/* Scroll reveal — the element starts hidden and is released by Reveal.tsx
+   adding [data-shown]. Without JS the fallback below keeps it visible. */
+.reveal {
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+.reveal[data-shown="true"] {
+  animation: rise 0.72s cubic-bezier(0.2, 0.85, 0.25, 1) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+.reveal[data-variant="tilt-l"][data-shown="true"] {
+  animation-name: rise-tilt-l;
+}
+
+.reveal[data-variant="tilt-r"][data-shown="true"] {
+  animation-name: rise-tilt-r;
+}
+
+.reveal[data-variant="pop"][data-shown="true"] {
+  animation: pop-in 0.62s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+/* Hero pieces animate immediately on load rather than on scroll. */
+.enter {
+  opacity: 0;
+  animation: rise 0.85s cubic-bezier(0.2, 0.85, 0.25, 1) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+.enter-pop {
+  opacity: 0;
+  animation: pop-in 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+/* The orange rule draws itself across the struck word after the line lands. */
+.struck-draw::after {
+  animation: strike-draw 0.62s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  animation-delay: var(--strike-delay, 900ms);
+  transform: rotate(-1.1deg) scaleX(0);
+}
+
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 46s linear infinite;
+}
+
+.marquee-mask {
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 9%,
+    #000 91%,
+    transparent
+  );
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 9%,
+    #000 91%,
+    transparent
+  );
+}
+
+.marquee-mask:hover .marquee {
+  animation-play-state: paused;
+}
+
+/* --------------------------------------------------------------------------
+   Accordion (FAQ)
+   -------------------------------------------------------------------------- */
+
+.acc-item {
+  border-bottom: 1px solid var(--hair-soft);
+}
+
+.acc-trigger {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px 4px;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  color: var(--ink);
+  transition: color 0.2s ease;
+}
+
+.acc-trigger:hover {
+  color: var(--accent);
+}
+
+.acc-sign {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--hair);
+  display: grid;
+  place-items: center;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    background 0.25s ease, border-color 0.25s ease;
+}
+
+.acc-trigger[aria-expanded="true"] .acc-sign {
+  transform: rotate(45deg);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.acc-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.42s cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+
+.acc-panel[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+.acc-panel > div {
+  overflow: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   Forms
+   -------------------------------------------------------------------------- */
+
+.field {
+  width: 100%;
+  background: var(--white);
+  border: 1px solid var(--hair);
+  border-radius: 14px;
+  padding: 14px 16px;
+  font: inherit;
+  font-size: 15.5px;
+  color: var(--ink);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field::placeholder {
+  color: var(--text-low);
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(255, 107, 44, 0.12);
+}
+
+.label {
+  display: block;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+
+/* Visible focus ring for keyboard users everywhere else */
+:where(a, button, summary):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion — everything resolves to its final state instantly
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .reveal,
+  .enter,
+  .enter-pop {
+    opacity: 1 !important;
+  }
+
+  .struck-draw::after {
+    transform: rotate(-1.1deg) scaleX(1);
+  }
+
+  .marquee {
+    animation: none;
+  }
+}
+
+/* No-JS fallback: Reveal never gets to flip [data-shown], so show everything */
+.no-js .reveal {
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Device frame — real app screenshots from /public/screens
+   -------------------------------------------------------------------------- */
+
+.phone {
+  position: relative;
+  border-radius: 46px;
+  background: #101010;
+  padding: 10px;
+  box-shadow: 0 40px 80px -22px rgba(58, 52, 42, 0.42),
+    0 0 0 1px rgba(0, 0, 0, 0.07);
+}
+
+.phone::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 34%;
+  height: 26px;
+  background: #101010;
+  border-radius: 0 0 16px 16px;
+  z-index: 2;
+}
+
+.phone img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 36px;
+}
+
+.phone-dark {
+  box-shadow: 0 40px 90px -20px rgba(255, 90, 25, 0.32),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* --------------------------------------------------------------------------
+   Hold-to-burn — the interactive centrepiece
+   The burn front is a radial gradient sweeping up from the bottom edge; the
+   same geometry drives the paper's mask, the glowing edge and the char.
+   -------------------------------------------------------------------------- */
+
+.burn-stage {
+  --burn: 0;
+  --t: calc(var(--burn) * 1.2%);
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.burn-paper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 26px;
+  -webkit-mask-image: radial-gradient(
+    132% 96% at 50% 116%,
+    transparent 0 calc(var(--t) - 16%),
+    rgba(0, 0, 0, 0.28) calc(var(--t) - 9%),
+    #000 var(--t)
+  );
+  mask-image: radial-gradient(
+    132% 96% at 50% 116%,
+    transparent 0 calc(var(--t) - 16%),
+    rgba(0, 0, 0, 0.28) calc(var(--t) - 9%),
+    #000 var(--t)
+  );
+}
+
+/* charring just ahead of the front */
+.burn-char {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    132% 96% at 50% 116%,
+    transparent 0 calc(var(--t) - 14%),
+    rgba(48, 22, 12, 0.85) calc(var(--t) - 8%),
+    rgba(48, 22, 12, 0.35) calc(var(--t) - 2%),
+    transparent calc(var(--t) + 5%)
+  );
+}
+
+/* the glowing edge itself, outside the mask so it can bleed light */
+.burn-edge {
+  position: absolute;
+  inset: -14px;
+  pointer-events: none;
+  filter: blur(5px);
+  mix-blend-mode: screen;
+  background: radial-gradient(
+    128% 93% at 50% 113%,
+    transparent 0 calc(var(--t) - 14%),
+    rgba(255, 196, 107, 0.95) calc(var(--t) - 9.5%),
+    rgba(255, 122, 24, 0.85) calc(var(--t) - 6%),
+    rgba(255, 59, 47, 0.55) calc(var(--t) - 3%),
+    rgba(168, 16, 42, 0.18) calc(var(--t) - 0.5%),
+    transparent calc(var(--t) + 7%)
+  );
+  opacity: var(--edge-on, 0);
+  transition: opacity 0.25s ease;
+}
+
+.burn-halo {
+  position: absolute;
+  left: 50%;
+  bottom: -10%;
+  width: 150%;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 122, 24, 0.4),
+    rgba(255, 59, 47, 0.14) 38%,
+    transparent 66%
+  );
+  opacity: calc(var(--burn) / 130);
+}
+
+.burn-hold {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 30px;
+  border-radius: 999px;
+  border: 0;
+  font: inherit;
+  font-weight: 650;
+  font-size: 16px;
+  color: #fff;
+  cursor: pointer;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 196, 107, 0.35);
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.burn-hold:active {
+  transform: scale(0.985);
+}
+
+/* fill tracks the hold */
+.burn-hold::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform: scaleX(calc(var(--burn) / 100));
+  background: linear-gradient(135deg, var(--ember), var(--flame));
+  transition: transform 0.06s linear;
+}
+
+.burn-hold > * {
+  position: relative;
+}
+
+.burn-done {
+  text-align: center;
+}
+
+.ash {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 1px;
+  background: rgba(230, 220, 210, 0.5);
+  animation: ash-fall 3.4s linear infinite;
+  pointer-events: none;
 }

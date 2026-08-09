@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Burn My Desire — C · The Ledger</title>
+<style>
+  :root{
+    --paper:#FAF8F3; --paper-2:#F2EEE5; --ink:#12110F; --ink-2:#4A473F;
+    --mid:#8B877C; --low:#BBB6AA; --rule:rgba(18,17,15,.14); --rule-soft:rgba(18,17,15,.07);
+    --accent:#FF5A1F; --money:#0D7A4B; --gold:#B8860B; --night:#0A0709;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);
+       -webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase}
+  .rulehair{height:1px;background:var(--rule-soft)}
+
+  /* ---------- nav ---------- */
+  nav{position:sticky;top:0;z-index:60;background:rgba(250,248,243,.86);
+      backdrop-filter:blur(12px);border-bottom:1px solid var(--rule-soft)}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:70px}
+  .mark{font-family:var(--serif);font-size:20px;letter-spacing:-.01em}
+  .mark b{font-weight:600}
+  .navlinks{display:flex;gap:32px;color:var(--ink-2)}
+  .navlinks a:hover{color:var(--accent)}
+  .btn{display:inline-flex;align-items:center;gap:9px;font-weight:600;font-size:14.5px;
+       padding:13px 24px;border-radius:6px;transition:.18s ease}
+  .btn-ink{background:var(--ink);color:var(--paper)}
+  .btn-ink:hover{background:var(--accent)}
+  .btn-out{border:1px solid var(--rule);color:var(--ink)}
+  .btn-out:hover{border-color:var(--ink)}
+  .btn-sm{padding:9px 18px;font-size:13px}
+
+  /* ---------- hero ---------- */
+  header{padding:96px 0 0;position:relative}
+  .h-grid{display:grid;grid-template-columns:1fr auto;gap:40px;align-items:end;
+          border-bottom:1px solid var(--rule);padding-bottom:38px}
+  h1{font-family:var(--serif);font-size:clamp(52px,8.4vw,116px);line-height:.92;
+     letter-spacing:-.035em;font-weight:400}
+  h1 .it{font-style:italic}
+  h1 .mark-through{position:relative;color:var(--low)}
+  h1 .mark-through::after{content:"";position:absolute;left:-1%;right:-1%;top:52%;height:3px;
+     background:var(--accent);transform:rotate(-1.2deg)}
+  .h-meta{text-align:right;color:var(--mid);line-height:2}
+  .h-body{display:grid;grid-template-columns:repeat(12,1fr);gap:32px;padding:38px 0 90px}
+  .h-body .lede{grid-column:1/6;font-size:19px;line-height:1.6;color:var(--ink-2)}
+  .h-body .actions{grid-column:7/13;display:flex;gap:12px;align-items:flex-start;
+                   justify-content:flex-end;flex-wrap:wrap}
+  .h-fine{grid-column:1/6;margin-top:20px;color:var(--mid)}
+
+  /* receipt hero object */
+  .receipt-band{background:var(--paper-2);border-top:1px solid var(--rule);
+                border-bottom:1px solid var(--rule);padding:70px 0}
+  .receipt{max-width:460px;margin:0 auto;background:#fff;padding:34px 30px 40px;
+           box-shadow:0 24px 60px -18px rgba(58,52,42,.28);position:relative;
+           transform:rotate(-.6deg)}
+  .receipt::after{content:"";position:absolute;left:0;right:0;bottom:-11px;height:12px;
+    background:repeating-linear-gradient(135deg,#fff 0 9px,transparent 9px 18px)}
+  .r-head{text-align:center;border-bottom:1px dashed var(--rule);padding-bottom:18px}
+  .r-head .t{font-family:var(--serif);font-size:22px}
+  .r-head .s{margin-top:6px;color:var(--mid)}
+  .r-line{display:flex;justify-content:space-between;gap:16px;padding:13px 0;
+          border-bottom:1px dashed var(--rule-soft);font-family:var(--mono);
+          font-size:12.5px;letter-spacing:0;text-transform:none}
+  .r-line .lbl{color:var(--ink-2)}
+  .r-line .val{font-weight:600}
+  .r-total{display:flex;justify-content:space-between;align-items:baseline;
+           padding-top:20px;margin-top:6px}
+  .r-total .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.18em;
+                text-transform:uppercase;color:var(--mid)}
+  .r-total .val{font-family:var(--serif);font-size:44px;color:var(--money);letter-spacing:-.02em}
+  .r-stamp{margin-top:24px;text-align:center;border:2px solid var(--accent);color:var(--accent);
+           font-family:var(--mono);font-size:12px;letter-spacing:.24em;padding:10px;
+           transform:rotate(-2deg);display:inline-block;width:100%}
+
+  /* ---------- sections ---------- */
+  section{padding:110px 0}
+  .sec-head{display:grid;grid-template-columns:repeat(12,1fr);gap:32px;
+            border-top:1px solid var(--rule);padding-top:26px}
+  .sec-head .idx{grid-column:1/3;color:var(--mid)}
+  .sec-head .ttl{grid-column:3/9}
+  .sec-head .side{grid-column:9/13;color:var(--ink-2);font-size:15.5px;line-height:1.6}
+  h2{font-family:var(--serif);font-size:clamp(34px,4.4vw,58px);line-height:1.02;
+     letter-spacing:-.03em;font-weight:400}
+  h2 .it{font-style:italic}
+
+  /* three steps as ruled columns */
+  .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:70px;
+        border-top:1px solid var(--rule)}
+  .col{padding:30px 30px 34px;border-right:1px solid var(--rule-soft)}
+  .col:last-child{border-right:0}
+  .col:first-child{padding-left:0}
+  .col .n{color:var(--accent);font-family:var(--mono);font-size:12px;letter-spacing:.2em}
+  .col h3{font-family:var(--serif);font-size:26px;margin-top:16px;font-weight:400}
+  .col p{margin-top:12px;color:var(--ink-2);font-size:15.5px;line-height:1.62}
+  .col .fig{margin-top:26px;height:150px;border:1px solid var(--rule-soft)}
+  .f1{background:
+      repeating-linear-gradient(45deg,var(--paper-2) 0 8px,transparent 8px 16px)}
+  .f2{background:linear-gradient(180deg,rgba(13,122,75,.10),transparent)}
+  .f3{background:var(--night)}
+
+  /* the shock, typographic */
+  .shock{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+         padding:96px 0;background:var(--paper-2)}
+  .shock .wrap{display:grid;grid-template-columns:repeat(12,1fr);gap:32px;align-items:end}
+  .shock .l{grid-column:1/6}
+  .shock .r{grid-column:6/13;text-align:right}
+  .was{font-family:var(--serif);font-size:clamp(28px,3vw,42px);color:var(--low);
+       text-decoration:line-through;text-decoration-thickness:2px}
+  .becomes{font-family:var(--serif);font-size:clamp(66px,11vw,158px);line-height:.86;
+           letter-spacing:-.045em;color:var(--money)}
+  .shock .cap{margin-top:20px;color:var(--ink-2);font-size:16px;max-width:340px}
+
+  /* dark burn plate */
+  .plate{background:var(--night);color:#F7F2EA;padding:118px 0;position:relative;overflow:hidden}
+  .plate::before{content:"";position:absolute;left:50%;bottom:-46%;transform:translateX(-50%);
+    width:1100px;height:1100px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,122,24,.42),rgba(255,59,47,.16) 36%,transparent 64%)}
+  .plate .wrap{position:relative;display:grid;grid-template-columns:repeat(12,1fr);gap:32px}
+  .plate .idx{grid-column:1/3;color:rgba(247,242,234,.42)}
+  .plate .body{grid-column:3/10}
+  .plate h2{color:#FFF6EE}
+  .plate p{margin-top:22px;color:rgba(247,242,234,.66);font-size:17.5px;line-height:1.68;max-width:560px}
+  .plate .em{color:#FFC46B}
+
+  /* ledger table */
+  .table{margin-top:56px;border-top:1px solid var(--rule)}
+  .row{display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr;gap:20px;padding:20px 0;
+       border-bottom:1px solid var(--rule-soft);align-items:baseline}
+  .row.head{color:var(--mid);font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;
+            text-transform:uppercase;padding:12px 0}
+  .row .name{font-size:17px;font-family:var(--serif)}
+  .row .cell{font-family:var(--mono);font-size:13px;color:var(--ink-2)}
+  .row .amt{text-align:right;font-family:var(--serif);font-size:20px;color:var(--money)}
+  .row.total{border-bottom:0;padding-top:26px}
+  .row.total .name{font-family:var(--mono);font-size:11px;letter-spacing:.2em;
+                   text-transform:uppercase;color:var(--mid)}
+  .row.total .amt{font-size:36px;letter-spacing:-.02em}
+  .tag{display:inline-block;border:1px solid var(--rule);border-radius:3px;padding:3px 8px;
+       font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+       color:var(--mid)}
+  .tag.gold{border-color:rgba(184,134,11,.5);color:var(--gold)}
+
+  /* privacy */
+  .priv-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:64px;
+             border-top:1px solid var(--rule)}
+  .priv{padding:30px 30px 0;border-right:1px solid var(--rule-soft)}
+  .priv:first-child{padding-left:0}
+  .priv:last-child{border-right:0}
+  .priv h4{font-family:var(--serif);font-size:21px;font-weight:400}
+  .priv p{margin-top:11px;color:var(--ink-2);font-size:15px;line-height:1.62}
+  .priv .k{color:var(--accent);font-family:var(--mono);font-size:11px;letter-spacing:.2em}
+
+  /* final */
+  .final{text-align:center;padding:130px 0 140px;border-top:1px solid var(--rule)}
+  .final h2{font-size:clamp(40px,6.6vw,90px)}
+  .final p{margin:24px auto 0;max-width:480px;color:var(--ink-2);font-size:18px;line-height:1.6}
+  .final .row-cta{margin-top:40px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .final .fine{margin-top:22px;color:var(--mid)}
+
+  footer{border-top:1px solid var(--rule);padding:34px 0 60px;color:var(--mid);font-size:13px}
+  footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  .flinks{display:flex;gap:26px}
+  footer a:hover{color:var(--accent)}
+
+  @media(max-width:900px){
+    .h-grid{grid-template-columns:1fr}.h-meta{text-align:left}
+    .h-body .lede,.h-body .actions,.h-fine{grid-column:1/13}
+    .h-body .actions{justify-content:flex-start}
+    .cols,.priv-cols{grid-template-columns:1fr}
+    .col,.priv{border-right:0;border-bottom:1px solid var(--rule-soft);padding-left:0}
+    .sec-head .idx,.sec-head .ttl,.sec-head .side,
+    .shock .l,.shock .r,.plate .idx,.plate .body{grid-column:1/13}
+    .shock .r{text-align:left;margin-top:24px}
+    .row{grid-template-columns:1.6fr 1fr}
+    .row .cell:nth-child(3){display:none}
+    .navlinks{display:none}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="mark">Burn <b>My</b> Desire</div>
+    <div class="navlinks mono">
+      <a href="#how">Method</a><a href="#math">Math</a><a href="#ledger">Ledger</a><a href="#privacy">Privacy</a>
+    </div>
+    <a class="btn btn-ink btn-sm" href="#">Get the app</a>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <div class="h-grid">
+      <h1><span class="mark-through">Sleep on it.</span><br><span class="it">Burn it</span> instead.</h1>
+      <div class="h-meta mono">
+        No. 01 — 2026<br>iPhone · Free to start<br>Made without a server
+      </div>
+    </div>
+    <div class="h-body">
+      <p class="lede">Impulse isn't a maths problem, so a waiting timer never fixes it.
+        Burn My Desire prices the craving in twenty-year money, then gives you an ending
+        for it — tonight, not in three days.</p>
+      <div class="actions">
+        <a class="btn btn-ink" href="#"> Download on iPhone</a>
+        <a class="btn btn-out" href="#how">Read the method</a>
+      </div>
+      <p class="h-fine mono">No account · No cloud · Nothing leaves the device</p>
+    </div>
+  </div>
+</header>
+
+<div class="receipt-band">
+  <div class="receipt">
+    <div class="r-head">
+      <div class="t">Receipt for a purchase<br>you didn't make</div>
+      <div class="s mono">03 Aug 2026 · 23:41</div>
+    </div>
+    <div class="r-line"><span class="lbl">Sony WH-1000XM6</span><span class="val">€429.00</span></div>
+    <div class="r-line"><span class="lbl">Years to 65</span><span class="val">24</span></div>
+    <div class="r-line"><span class="lbl">Assumed return</span><span class="val">7.0% / yr</span></div>
+    <div class="r-line"><span class="lbl">Time to decide</span><span class="val">00:41</span></div>
+    <div class="r-total"><span class="lbl">You kept</span><span class="val">€4,180</span></div>
+    <div class="r-stamp">BURNED</div>
+  </div>
+</div>
+
+<section id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="idx mono">01 / Method</div>
+      <div class="ttl">
+        <h2>Two punches,<br><span class="it">forty seconds.</span></h2>
+      </div>
+      <div class="side">One rational, one emotional. Neither of them asks you to be
+        stronger than you were five minutes ago.</div>
+    </div>
+    <div class="cols">
+      <div class="col">
+        <div class="n">01</div>
+        <h3>Name it</h3>
+        <p>A photo, a link, or a sentence. A €429 pair of headphones, or €40 of drinks every
+           Friday — recurring cravings are allowed, and they cost the most.</p>
+        <div class="fig f1"></div>
+      </div>
+      <div class="col">
+        <div class="n">02</div>
+        <h3>Price it properly</h3>
+        <p>The app answers with the compound number: what the money becomes if it stays
+           invested until you're 65. That figure is the shock.</p>
+        <div class="fig f2"></div>
+      </div>
+      <div class="col">
+        <div class="n">03</div>
+        <h3>Destroy it</h3>
+        <p>Hold your thumb down. A real burning front eats across the image, curls the edge,
+           and leaves ash. The craving has somewhere to end.</p>
+        <div class="fig f3"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="shock" id="math">
+  <div class="wrap">
+    <div class="l">
+      <div class="mono" style="color:var(--accent)">The rational shock</div>
+      <div class="was" style="margin-top:20px">€429 today</div>
+      <p class="cap">The price tag is the smallest number in the transaction. It's the only
+        one the shop shows you.</p>
+    </div>
+    <div class="r">
+      <div class="becomes">€4,180</div>
+      <p class="cap mono" style="margin-left:auto">at 65 · 7% annually · 24 years</p>
+    </div>
+  </div>
+</div>
+
+<div class="plate">
+  <div class="wrap">
+    <div class="idx mono">02 / The burn</div>
+    <div class="body">
+      <h2>The one screen where<br>we <span class="it">turn out the lights.</span></h2>
+      <p>Everything else in the app is daylight and paper. The ritual isn't: the room goes
+        dark and the only light is the fire itself, rendered on the GPU at
+        <span class="em">60 frames a second</span> — a burning front with a glowing edge,
+        curling paper and embers that drift.</p>
+      <p>You don't get told the urge will pass. You watch the thing that caused it stop existing.</p>
+    </div>
+  </div>
+</div>
+
+<section id="ledger">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="idx mono">03 / Ledger</div>
+      <div class="ttl"><h2>What you kept,<br><span class="it">line by line.</span></h2></div>
+      <div class="side">Every burn posts to a running total. Green is money you still have —
+        never a button, never a nudge to spend.</div>
+    </div>
+    <div class="table">
+      <div class="row head"><span>Desire</span><span>Burned</span><span>Type</span><span style="text-align:right">20-yr value</span></div>
+      <div class="row">
+        <span class="name">Sony WH-1000XM6</span><span class="cell">03 Aug</span>
+        <span class="cell"><span class="tag">One-off</span></span><span class="amt">€4,180</span>
+      </div>
+      <div class="row">
+        <span class="name">Friday drinks</span><span class="cell">Weekly</span>
+        <span class="cell"><span class="tag">Habit</span></span><span class="amt">€95,400</span>
+      </div>
+      <div class="row">
+        <span class="name">The 1am scroll</span><span class="cell">29 Jul</span>
+        <span class="cell"><span class="tag gold">Final burn</span></span><span class="amt">—</span>
+      </div>
+      <div class="row">
+        <span class="name">Ultralight tent</span><span class="cell">28 Jul</span>
+        <span class="cell"><span class="tag">One-off</span></span><span class="amt">€2,610</span>
+      </div>
+      <div class="row total">
+        <span class="name">Total kept</span><span></span><span></span><span class="amt">€102,190</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="privacy">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="idx mono">04 / Privacy</div>
+      <div class="ttl"><h2>The things you're ashamed of<br><span class="it">never leave the phone.</span></h2></div>
+      <div class="side">This is a health-grade app about money, drink and craving. It is
+        built so that there is nothing to leak.</div>
+    </div>
+    <div class="priv-cols">
+      <div class="priv"><div class="k">No accounts</div>
+        <h4>Nothing to sign into</h4>
+        <p>No email, no password, no sync. There is no backend, so an account would have
+           nothing to unlock.</p></div>
+      <div class="priv"><div class="k">Encrypted</div>
+        <h4>Sealed on the device</h4>
+        <p>The database is encrypted with a key held in the iOS Keychain. Photos and written
+           thoughts use complete data protection — unreadable while the phone is locked.</p></div>
+      <div class="priv"><div class="k">Erasable</div>
+        <h4>Burn the whole thing</h4>
+        <p>One confirmed tap destroys the database, the images, the preferences and the key.
+           Nothing survives, because nothing was copied.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="final">
+  <div class="wrap">
+    <h2>Other apps make you wait.<br><span class="it">We give you closure.</span></h2>
+    <p>Free to start. Nothing to sign up for. The first burn takes under a minute.</p>
+    <div class="row-cta">
+      <a class="btn btn-ink" href="#"> Download on iPhone</a>
+      <a class="btn btn-out" href="#math">Run your own number</a>
+    </div>
+    <p class="fine mono">iOS 17+ · Android later</p>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div>© 2026 Burn My Desire · burnmydesire.com</div>
+    <div class="flinks"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Support</a><a href="#">Press kit</a></div>
+  </div>
+</footer>
+
+</body>
+</html>

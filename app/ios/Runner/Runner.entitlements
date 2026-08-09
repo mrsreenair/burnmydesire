@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  iCloud backup. NOT wired into the build yet: iCloud containers need a
+	  paid Apple Developer Program membership, and adding this to a free
+	  personal-team build breaks signing.
+
+	  To switch on once enrolled:
+	    1. developer.apple.com → Identifiers → enable iCloud for
+	       com.burnmydesire.burnMyDesire, create container
+	       iCloud.com.burnmydesire.burnMyDesire
+	    2. In Xcode: Runner target → Signing & Capabilities → + iCloud →
+	       tick iCloud Documents → select that container
+	       (that sets CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements)
+	  The app already degrades gracefully until then: iCloud reports
+	  unavailable and the share-sheet export keeps working.
+	-->
+	<key>com.apple.developer.icloud-container-identifiers</key>
+	<array>
+		<string>iCloud.com.burnmydesire.burnMyDesire</string>
+	</array>
+	<key>com.apple.developer.icloud-services</key>
+	<array>
+		<string>CloudDocuments</string>
+	</array>
+	<key>com.apple.developer.ubiquity-container-identifiers</key>
+	<array>
+		<string>iCloud.com.burnmydesire.burnMyDesire</string>
+	</array>
+</dict>
+</plist>
