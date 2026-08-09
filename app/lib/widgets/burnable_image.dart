@@ -93,8 +93,13 @@ class _BurnableImageState extends State<BurnableImage>
     if (program == null) {
       return const Center(child: CircularProgressIndicator());
     }
+    // The canvas is deliberately larger than the paper: flames need air
+    // above the burning edge, and a shader can only paint inside its own
+    // quad. Without this margin the fire is clipped flat at the edge.
+    final w = widget.image.width * (1 + _padLeft + _padRight);
+    final h = widget.image.height * (1 + _padTop + _padBottom);
     return AspectRatio(
-      aspectRatio: widget.image.width / widget.image.height,
+      aspectRatio: w / h,
       child: Listener(
         onPointerDown: (_) => _start(),
         onPointerUp: (_) => _stop(),
@@ -112,6 +117,13 @@ class _BurnableImageState extends State<BurnableImage>
   }
 }
 
+/// Head-room around the paper, as fractions of its own size. Generous at
+/// the top because that's where flames climb.
+const double _padTop = 0.34;
+const double _padBottom = 0.06;
+const double _padLeft = 0.12;
+const double _padRight = 0.12;
+
 class _BurnPainter extends CustomPainter {
   _BurnPainter({
     required this.shader,
@@ -127,11 +139,18 @@ class _BurnPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Where the paper sits inside the padded quad, in 0..1 coordinates.
+    final spanX = 1 + _padLeft + _padRight;
+    final spanY = 1 + _padTop + _padBottom;
     shader
       ..setFloat(0, size.width)
       ..setFloat(1, size.height)
       ..setFloat(2, progress.value)
       ..setFloat(3, time.value)
+      ..setFloat(4, _padLeft / spanX)
+      ..setFloat(5, _padTop / spanY)
+      ..setFloat(6, (_padLeft + 1) / spanX)
+      ..setFloat(7, (_padTop + 1) / spanY)
       ..setImageSampler(0, image);
     canvas.drawRect(Offset.zero & size, Paint()..shader = shader);
   }
