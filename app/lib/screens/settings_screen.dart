@@ -2,9 +2,13 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../data/ai_coach.dart';
+import '../data/backup.dart';
+import '../data/document_picker.dart';
 import '../data/encrypted_db.dart';
 import '../data/user_prefs.dart';
 import '../providers/db_providers.dart';
@@ -14,6 +18,7 @@ import '../theme/motion.dart';
 import '../widgets/ember_ui.dart';
 import '../widgets/paper_backdrop.dart';
 import 'lock_screen.dart';
+import 'paywall_screen.dart';
 import 'onboarding_screen.dart';
 
 /// Settings. There is no account to manage — the app has no login by
@@ -84,6 +89,140 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _toggleAi(bool on) async {
     setState(() => _aiOn = on);
     await setAiCoachEnabled(on);
+  }
+
+  /// Asks for a passphrase. The same sheet serves export and import, so
+  /// the wording changes but the rules don't.
+  Future<String?> _askPassphrase({required bool forExport}) async {
+    final controller = TextEditingController();
+    String? error;
+    return showDialog<String>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: Text(forExport ? 'Protect your backup' : 'Unlock backup'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                forExport
+                    ? 'Pick a passphrase. It encrypts the file — without it '
+                        'nobody, including us, can open your backup. If you '
+                        'lose it the backup is gone for good.'
+                    : 'Enter the passphrase you used when you made this '
+                        'backup.',
+                style: Theme.of(dialogContext).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                obscureText: true,
+                decoration: InputDecoration(
+                  hintText: 'Passphrase',
+                  errorText: error,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final value = controller.text;
+                final problem =
+                    forExport ? passphraseProblem(value) : null;
+                if (problem != null || value.isEmpty) {
+                  setDialogState(() =>
+                      error = problem ?? 'Enter your passphrase');
+                  return;
+                }
+                Navigator.pop(dialogContext, value);
+              },
+              child: Text(forExport ? 'Create backup' : 'Restore'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _exportBackup() async {
+    final passphrase = await _askPassphrase(forExport: true);
+    if (passphrase == null || !mounted) return;
+    setState(() => _busy = true);
+    try {
+      final store = ref.read(imageStoreProvider);
+      final dir = await getTemporaryDirectory();
+      final file = await BackupService(ref.read(databaseProvider), store)
+          .export(passphrase: passphrase, destinationDir: dir.path);
+      if (!mounted) return;
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: 'Burn My Desire backup (encrypted)',
+        ),
+      );
+    } on Object catch (e) {
+      _toast('Backup failed: $e');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _importBackup() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Restore from backup?'),
+        content: const Text(
+          'This replaces every desire currently on this phone with the '
+          'ones in the backup. Your current data is deleted.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Choose file'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final path = await DocumentPicker().pickFile();
+    if (path == null || !mounted) return;
+
+    final passphrase = await _askPassphrase(forExport: false);
+    if (passphrase == null || !mounted) return;
+
+    setState(() => _busy = true);
+    try {
+      final restored =
+          await BackupService(ref.read(databaseProvider),
+                  ref.read(imageStoreProvider))
+              .import(path: path, passphrase: passphrase);
+      _toast('Restored $restored ${restored == 1 ? 'desire' : 'desires'}.');
+    } on BackupException catch (e) {
+      _toast(e.message);
+    } on Object catch (e) {
+      _toast('Restore failed: $e');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void _toast(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _editName() async {
@@ -277,6 +416,43 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         title: 'Restore purchases',
                         onTap: _busy ? null : _restore,
                       ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Reveal(
+                delay: const Duration(milliseconds: 210),
+                child: _Group(
+                  label: 'Backup',
+                  children: [
+                    _Row(
+                      icon: Icons.lock_outline,
+                      title: 'Create encrypted backup',
+                      subtitle: isPro
+                          ? 'One file, locked with your own passphrase. '
+                              'Save it to Files, iCloud Drive, anywhere — '
+                              'it stays unreadable without the passphrase.'
+                          : 'Pro: export your desires as one encrypted file',
+                      trailing: isPro ? null : 'Pro',
+                      onTap: _busy
+                          ? null
+                          : isPro
+                              ? _exportBackup
+                              : () => Navigator.of(context)
+                                  .push(emberRoute(const PaywallScreen())),
+                    ),
+                    _Row(
+                      icon: Icons.restore_page_outlined,
+                      title: 'Restore from backup',
+                      subtitle: 'Replaces what\'s on this phone',
+                      trailing: isPro ? null : 'Pro',
+                      onTap: _busy
+                          ? null
+                          : isPro
+                              ? _importBackup
+                              : () => Navigator.of(context)
+                                  .push(emberRoute(const PaywallScreen())),
+                    ),
                   ],
                 ),
               ),

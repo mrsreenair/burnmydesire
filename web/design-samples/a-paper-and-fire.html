@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Burn My Desire — A · Paper &amp; Fire</title>
+<style>
+  :root{
+    --paper:#F7F4EE; --white:#FFFFFF; --field:#EDEAE3;
+    --mint:#DCEFE2; --peach:#F9E4D8; --lilac:#E9E4F2; --sticky:#F7E8A4;
+    --ink:#161513; --ink-soft:#43413C; --mid:#8A867D; --low:#B3AFA6;
+    --hair:rgba(22,21,19,.08);
+    --accent:#FF6B2C; --ember:#FF7A18; --flame:#FF3B2F; --spark:#FFC46B;
+    --money:#17A567; --money-deep:#0D7A4B; --gold:#B8860B; --night:#0A0709;
+    --card-shadow: 0 10px 24px -4px rgba(58,52,42,.10), 0 1px 4px rgba(58,52,42,.05);
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);
+       -webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+  a{color:inherit;text-decoration:none}
+
+  /* ---------- nav ---------- */
+  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
+      background:rgba(247,244,238,.78);border-bottom:1px solid transparent}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:72px}
+  .mark{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em;font-size:17px}
+  .glyph{width:26px;height:26px;border-radius:9px;background:linear-gradient(135deg,var(--ember),var(--flame));
+         box-shadow:0 4px 14px rgba(255,107,44,.4)}
+  .navlinks{display:flex;gap:30px;font-size:14.5px;color:var(--ink-soft);font-weight:500}
+  .navlinks a:hover{color:var(--ink)}
+  .btn{display:inline-flex;align-items:center;gap:9px;border-radius:999px;font-weight:650;
+       font-size:15px;padding:13px 22px;transition:transform .18s ease, box-shadow .18s ease}
+  .btn:hover{transform:translateY(-1px)}
+  .btn-dark{background:var(--ink);color:#fff;box-shadow:0 6px 18px rgba(22,21,19,.18)}
+  .btn-fire{background:linear-gradient(135deg,var(--ember),var(--flame));color:#fff;
+            box-shadow:0 10px 26px rgba(255,72,30,.34)}
+  .btn-sm{padding:10px 18px;font-size:14px}
+
+  /* ---------- hero ---------- */
+  header{position:relative;padding:76px 0 96px;overflow:hidden}
+  .wash{position:absolute;border-radius:50%;filter:blur(70px);opacity:.85;pointer-events:none}
+  .w1{width:520px;height:520px;background:var(--mint);top:-180px;left:-200px}
+  .w2{width:560px;height:560px;background:var(--peach);top:-120px;right:-220px}
+  .w3{width:400px;height:400px;background:var(--lilac);bottom:-220px;left:38%}
+  header .wrap{position:relative;display:grid;grid-template-columns:1.05fr .95fr;
+               gap:56px;align-items:center}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--white);
+           border:1px solid var(--hair);border-radius:999px;padding:7px 14px;font-size:13px;
+           font-weight:600;color:var(--ink-soft);box-shadow:var(--card-shadow);margin-bottom:26px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--money)}
+  h1{font-size:clamp(44px,5.4vw,72px);line-height:.98;letter-spacing:-.035em;font-weight:800}
+  h1 .strike{color:var(--low);text-decoration:line-through;text-decoration-thickness:4px;
+             text-decoration-color:rgba(179,175,166,.55)}
+  h1 .fire{background:linear-gradient(135deg,var(--ember),var(--flame));
+           -webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{margin-top:22px;font-size:19px;line-height:1.55;color:var(--ink-soft);max-width:430px}
+  .cta-row{margin-top:34px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .fineprint{margin-top:18px;font-size:13.5px;color:var(--mid);display:flex;align-items:center;gap:8px}
+
+  /* phone */
+  .phone-stage{position:relative;display:flex;justify-content:center}
+  .phone{width:300px;border-radius:44px;background:#111;padding:10px;
+         box-shadow:0 40px 80px -20px rgba(58,52,42,.35), 0 0 0 1px rgba(0,0,0,.06);
+         transform:rotate(-3deg)}
+  .screen{border-radius:36px;background:var(--paper);overflow:hidden;height:610px;
+          display:flex;flex-direction:column;padding:18px 16px}
+  .notch{width:96px;height:22px;background:#111;border-radius:0 0 14px 14px;
+         margin:-18px auto 14px}
+  .s-title{font-size:12px;font-weight:700;color:var(--mid);letter-spacing:.08em;text-transform:uppercase}
+  .item-card{background:var(--white);border-radius:22px;padding:14px;box-shadow:var(--card-shadow);
+             margin-top:12px;transform:rotate(1.2deg)}
+  .thumb{height:120px;border-radius:16px;background:linear-gradient(140deg,#E8E2D6,#D8D1C2)}
+  .item-name{margin-top:12px;font-weight:750;font-size:16px;letter-spacing:-.01em}
+  .item-price{font-size:13.5px;color:var(--mid);margin-top:2px}
+  .shock{margin-top:16px;background:var(--white);border-radius:22px;padding:18px;
+         box-shadow:var(--card-shadow);transform:rotate(-1deg)}
+  .shock-label{font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--mid);font-weight:700}
+  .shock-num{font-size:40px;font-weight:800;letter-spacing:-.04em;line-height:1.05;margin-top:6px;
+             background:linear-gradient(135deg,var(--money),var(--money-deep));
+             -webkit-background-clip:text;background-clip:text;color:transparent}
+  .shock-sub{font-size:13px;color:var(--ink-soft);margin-top:6px}
+  .burn-btn{margin-top:auto;border-radius:999px;padding:16px;text-align:center;font-weight:750;
+            color:#fff;font-size:16px;background:linear-gradient(135deg,var(--ember),var(--flame));
+            box-shadow:0 12px 30px rgba(255,72,30,.42)}
+  .sticker{position:absolute;background:var(--sticky);color:#6B5D2E;font-weight:700;font-size:13px;
+           padding:10px 14px;border-radius:12px;box-shadow:var(--card-shadow)}
+  .sticker.one{top:34px;left:-6px;transform:rotate(-8deg)}
+  .sticker.two{bottom:70px;right:-14px;transform:rotate(6deg)}
+
+  /* ---------- proof strip ---------- */
+  .proof{border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);
+         background:rgba(255,255,255,.5)}
+  .proof .wrap{display:flex;justify-content:space-between;gap:24px;padding:26px 24px;flex-wrap:wrap}
+  .stat b{display:block;font-size:26px;font-weight:800;letter-spacing:-.03em}
+  .stat span{font-size:13.5px;color:var(--mid)}
+
+  /* ---------- sections ---------- */
+  section{padding:104px 0}
+  .kicker{font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+  h2{font-size:clamp(34px,4vw,52px);line-height:1.02;letter-spacing:-.035em;font-weight:800;margin-top:14px}
+  .sec-lede{margin-top:16px;font-size:18px;color:var(--ink-soft);max-width:560px;line-height:1.55}
+
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:56px}
+  .step{background:var(--white);border-radius:26px;padding:26px;box-shadow:var(--card-shadow);
+        border:1px solid var(--hair);position:relative;overflow:hidden;min-height:320px;
+        display:flex;flex-direction:column}
+  .step-n{width:30px;height:30px;border-radius:10px;background:var(--field);color:var(--ink-soft);
+          font-size:13px;font-weight:750;display:grid;place-items:center}
+  .step h3{margin-top:16px;font-size:21px;font-weight:780;letter-spacing:-.02em}
+  .step p{margin-top:8px;font-size:15px;color:var(--ink-soft);line-height:1.5}
+  .step-art{margin-top:auto;height:120px;border-radius:16px 16px 0 0;margin:24px -8px -26px}
+  .art1{background:linear-gradient(160deg,#E8E2D6,#F1ECE1)}
+  .art2{background:linear-gradient(160deg,#DCEFE2,#EFF8F1)}
+  .art3{background:linear-gradient(160deg,#2A1410,#0A0709)}
+
+  /* money block */
+  .money-block{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+  .ledger{background:var(--white);border-radius:28px;box-shadow:var(--card-shadow);
+          border:1px solid var(--hair);overflow:hidden;transform:rotate(-1deg)}
+  .ledger-row{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;
+              border-bottom:1px solid var(--hair)}
+  .ledger-row:last-child{border-bottom:0;background:rgba(23,165,103,.06)}
+  .lr-name{font-weight:650;font-size:15.5px}
+  .lr-meta{font-size:12.5px;color:var(--mid);margin-top:2px}
+  .lr-amt{font-weight:800;font-size:17px;letter-spacing:-.02em}
+  .green{color:var(--money-deep)}
+
+  /* ---------- the burn (single dark band) ---------- */
+  .ritual{background:var(--night);color:#F5EFE7;position:relative;overflow:hidden;
+          border-radius:40px;margin:0 24px;padding:110px 0}
+  .ritual::before{content:"";position:absolute;width:900px;height:900px;left:50%;top:55%;
+    transform:translate(-50%,-50%);
+    background:radial-gradient(circle,rgba(255,122,24,.34),rgba(255,59,47,.10) 42%,transparent 66%);
+    filter:blur(18px)}
+  .ritual .inner{position:relative;text-align:center;max-width:720px;margin:0 auto;padding:0 24px}
+  .ritual .kicker{color:var(--spark)}
+  .ritual h2{color:#FFF6EE}
+  .ritual p{margin-top:20px;color:rgba(245,239,231,.68);font-size:18px;line-height:1.6}
+  .ember-line{margin:44px auto 0;width:min(520px,100%);height:2px;
+    background:linear-gradient(90deg,transparent,var(--spark),var(--flame),transparent);
+    box-shadow:0 0 24px rgba(255,122,24,.8)}
+  .ash{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--spark);
+       box-shadow:0 0 10px var(--ember);opacity:.8}
+  .a1{left:22%;top:64%} .a2{left:38%;top:76%} .a3{left:61%;top:58%}
+  .a4{left:74%;top:70%} .a5{left:48%;top:44%}
+
+  /* ---------- privacy ---------- */
+  .privacy{text-align:center}
+  .priv-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:34px;margin-top:56px;text-align:left}
+  .priv h4{font-size:18px;font-weight:750;letter-spacing:-.015em}
+  .priv p{margin-top:8px;font-size:15px;color:var(--ink-soft);line-height:1.55}
+  .priv .icn{width:38px;height:38px;border-radius:12px;background:var(--field);display:grid;
+             place-items:center;font-size:17px;margin-bottom:14px}
+
+  /* ---------- final cta ---------- */
+  .final{text-align:center;padding:120px 0 130px;position:relative}
+  .final h2{margin:0 auto}
+  .final .lede{margin:18px auto 0;max-width:520px;text-align:center}
+  .final .cta-row{justify-content:center}
+
+  footer{border-top:1px solid var(--hair);padding:40px 0;font-size:13.5px;color:var(--mid)}
+  footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  footer a:hover{color:var(--ink)}
+  .flinks{display:flex;gap:22px}
+
+  @media(max-width:900px){
+    header .wrap,.money-block{grid-template-columns:1fr}
+    .steps,.priv-cols{grid-template-columns:1fr}
+    .navlinks{display:none}
+    .phone-stage{margin-top:20px}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="mark"><span class="glyph"></span> Burn My Desire</div>
+    <div class="navlinks">
+      <a href="#how">How it works</a><a href="#money">The math</a>
+      <a href="#privacy">Privacy</a><a href="#">Blog</a>
+    </div>
+    <a class="btn btn-dark btn-sm" href="#">Get the app</a>
+  </div>
+</nav>
+
+<header>
+  <div class="wash w1"></div><div class="wash w2"></div><div class="wash w3"></div>
+  <div class="wrap">
+    <div>
+      <div class="eyebrow"><span class="dot"></span> iPhone · free to start</div>
+      <h1><span class="strike">Wait 24 hours.</span><br>Or get <span class="fire">closure</span> right now.</h1>
+      <p class="lede">Every other app asks you to pause. Burn My Desire shows you what
+        the money becomes in 20 years — then lets you set the thing on fire.</p>
+      <div class="cta-row">
+        <a class="btn btn-dark" href="#"> Download on iPhone</a>
+        <a class="btn btn-fire" href="#how">See the ritual</a>
+      </div>
+      <p class="fineprint">No account. No cloud. Your temptations never leave your phone.</p>
+    </div>
+
+    <div class="phone-stage">
+      <div class="sticker one">I don't need this.</div>
+      <div class="sticker two">Day 12 clean 🔥</div>
+      <div class="phone">
+        <div class="screen">
+          <div class="notch"></div>
+          <div class="s-title">Tempted by</div>
+          <div class="item-card">
+            <div class="thumb"></div>
+            <div class="item-name">Sony WH-1000XM6</div>
+            <div class="item-price">€429 · Amazon</div>
+          </div>
+          <div class="shock">
+            <div class="shock-label">If invested instead, at 65</div>
+            <div class="shock-num">€4,180</div>
+            <div class="shock-sub">7% annual return over 24 years.</div>
+          </div>
+          <div class="burn-btn">Hold to burn</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="proof">
+  <div class="wrap">
+    <div class="stat"><b>€2.1M</b><span>desires burned by the beta</span></div>
+    <div class="stat"><b>73%</b><span>never bought the item</span></div>
+    <div class="stat"><b>0</b><span>bytes sent to a server</span></div>
+    <div class="stat"><b>60fps</b><span>real fire, on the GPU</span></div>
+  </div>
+</div>
+
+<section id="how">
+  <div class="wrap">
+    <div class="kicker">The ritual</div>
+    <h2>Three taps between<br>the urge and the ash.</h2>
+    <p class="sec-lede">It takes about forty seconds. That's the whole product.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-n">1</div>
+        <h3>Snap the temptation</h3>
+        <p>Photograph it, paste the link, or share it straight from the shop. Add what it costs.</p>
+        <div class="step-art art1"></div>
+      </div>
+      <div class="step">
+        <div class="step-n">2</div>
+        <h3>See the real price</h3>
+        <p>Not €429. The €4,180 it becomes if it stays invested until you're 65. That's the shock.</p>
+        <div class="step-art art2"></div>
+      </div>
+      <div class="step">
+        <div class="step-n">3</div>
+        <h3>Burn it</h3>
+        <p>Hold your thumb on the photo. It catches, curls and turns to ash. The craving goes with it.</p>
+        <div class="step-art art3"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="ritual">
+  <span class="ash a1"></span><span class="ash a2"></span><span class="ash a3"></span>
+  <span class="ash a4"></span><span class="ash a5"></span>
+  <div class="inner">
+    <div class="kicker">The only dark room in the app</div>
+    <h2>Watching it burn is<br>the part that works.</h2>
+    <p>A real fire shader — a burning front that eats across the paper, curls the edge and
+       leaves embers. Your brain gets the ending it was demanding. Then the lights come back on.</p>
+    <div class="ember-line"></div>
+  </div>
+</div>
+
+<section id="money">
+  <div class="wrap money-block">
+    <div>
+      <div class="kicker">The math</div>
+      <h2>Every burn is money you kept.</h2>
+      <p class="sec-lede">One-offs compound. Habits compound harder — €40 of drinks every
+        weekend is €2,080 a year, and about €95,000 of twenty-year wealth.</p>
+      <div class="cta-row"><a class="btn btn-dark" href="#">Run your own number</a></div>
+    </div>
+    <div class="ledger">
+      <div class="ledger-row">
+        <div><div class="lr-name">Sony WH-1000XM6</div><div class="lr-meta">Burned 3 Aug · 24 yrs @ 7%</div></div>
+        <div class="lr-amt green">+€4,180</div>
+      </div>
+      <div class="ledger-row">
+        <div><div class="lr-name">Friday drinks</div><div class="lr-meta">Recurring · €40/week</div></div>
+        <div class="lr-amt green">+€95,400</div>
+      </div>
+      <div class="ledger-row">
+        <div><div class="lr-name">Ultralight tent</div><div class="lr-meta">Burned 28 Jul · 24 yrs @ 7%</div></div>
+        <div class="lr-amt green">+€2,610</div>
+      </div>
+      <div class="ledger-row">
+        <div><div class="lr-name">Kept, all in</div><div class="lr-meta">Since you started</div></div>
+        <div class="lr-amt green">€102,190</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="privacy" class="privacy">
+  <div class="wrap">
+    <div class="kicker">Privacy</div>
+    <h2>The things you're ashamed of<br>stay on your phone.</h2>
+    <div class="priv-cols">
+      <div class="priv">
+        <div class="icn">🔒</div>
+        <h4>No account, ever</h4>
+        <p>There's no sign-up, no email, no password — because there's no server for one to unlock.</p>
+      </div>
+      <div class="priv">
+        <div class="icn">🗄️</div>
+        <h4>Encrypted on device</h4>
+        <p>The database is encrypted with a key in the iOS Keychain. Photos are locked with complete data protection.</p>
+      </div>
+      <div class="priv">
+        <div class="icn">🔥</div>
+        <h4>Erase means erase</h4>
+        <p>One tap wipes the database, the photos and the key. Nothing to recover, because nothing was copied.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="final">
+  <div class="wrap">
+    <h2>Stop waiting for the urge to pass.</h2>
+    <p class="lede">Give it an ending instead.</p>
+    <div class="cta-row"><a class="btn btn-fire" href="#"> Download on iPhone</a></div>
+    <p class="fineprint" style="justify-content:center">Free to start · No account · iOS 17+</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>© 2026 Burn My Desire</div>
+    <div class="flinks"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Support</a><a href="#">Press</a></div>
+  </div>
+</footer>
+
+</body>
+</html>

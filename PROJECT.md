@@ -171,7 +171,11 @@ Rationale: gating *items* (not burns) puts the paywall where usage pressure actu
 | Extensions (later) | WebExtension (JS + WebGL burn) | Chrome/desktop interception |
 
 ### Backend: **none.**
-All data on-device. No accounts, no servers, no cloud. Restore-on-new-phone comes free via iCloud/Google device backup. Running cost until revenue: ~€99/yr Apple Developer + ~€20/yr domains.
+All data on-device. No accounts, no servers, no cloud.
+
+**Encryption (2026-08-09).** The database is SQLCipher-encrypted with a 256-bit key held in the Keychain (`first_unlock_this_device`, never synced); photos and rendered thought pages carry `NSFileProtectionComplete`. Pre-encryption databases migrate via `sqlcipher_export` and the plaintext file is deleted. The app refuses to open rather than fall back to plaintext, and Settings reports the live status so the claim is checkable. Proven by on-device integration tests: no plaintext header, user content absent from the raw file, unreadable without the key or with a wrong key.
+
+**Backup (Pro).** An encrypted archive — itself a SQLCipher database keyed by a user-chosen passphrase (PBKDF2-HMAC-SHA512) — exported through the share sheet and restored via a native document picker. No server touches it; a lost passphrase means a lost backup, stated plainly in the UI. iCloud device backup already covers same-device restore for free users, so this is the portable, cross-device option. Restore-on-new-phone comes free via iCloud/Google device backup. Running cost until revenue: ~€99/yr Apple Developer + ~€20/yr domains.
 
 **Privacy is a feature:** a list of things someone craves but can't afford is intimate data. *"Your temptations never leave your phone"* is a core marketing line.
 

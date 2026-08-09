@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Burn My Desire — B · The Ritual</title>
+<style>
+  :root{
+    --night:#0A0709; --coal:#140E0D; --smoke:#1E1614;
+    --bone:#F7F2EA; --bone-dim:rgba(247,242,234,.62); --bone-faint:rgba(247,242,234,.34);
+    --ember:#FF7A18; --flame:#FF3B2F; --spark:#FFC46B; --gold:#B8860B;
+    --money:#3FD69A; --paper:#F7F4EE; --ink:#161513;
+    --hair:rgba(247,242,234,.10);
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--night);color:var(--bone);font-family:var(--sans);
+       -webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 28px}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;
+        letter-spacing:.18em;text-transform:uppercase}
+
+  /* ---------- nav ---------- */
+  nav{position:fixed;inset:0 0 auto 0;z-index:60;height:78px;
+      background:linear-gradient(to bottom,rgba(10,7,9,.92),rgba(10,7,9,0))}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:78px}
+  .mark{display:flex;align-items:center;gap:11px;font-weight:700;letter-spacing:.02em;font-size:15px}
+  .glyph{width:11px;height:11px;border-radius:50%;background:var(--ember);
+         box-shadow:0 0 16px var(--ember),0 0 40px rgba(255,59,47,.7)}
+  .navlinks{display:flex;gap:34px;color:var(--bone-dim)}
+  .navlinks a:hover{color:var(--bone)}
+  .btn{display:inline-flex;align-items:center;gap:10px;border-radius:999px;font-weight:600;
+       font-size:15px;padding:14px 26px;transition:transform .2s ease,box-shadow .2s ease}
+  .btn:hover{transform:translateY(-2px)}
+  .btn-fire{background:linear-gradient(135deg,var(--ember),var(--flame));color:#150907;
+            font-weight:700;box-shadow:0 14px 44px rgba(255,90,25,.42)}
+  .btn-ghost{border:1px solid var(--hair);color:var(--bone)}
+  .btn-ghost:hover{border-color:rgba(255,122,24,.6)}
+  .btn-sm{padding:10px 20px;font-size:13.5px}
+
+  /* ---------- hero ---------- */
+  header{position:relative;min-height:100vh;display:grid;place-items:center;
+         text-align:center;padding:140px 0 90px;overflow:hidden}
+  .glow{position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);
+        width:1200px;height:1200px;pointer-events:none;
+        background:radial-gradient(circle,rgba(255,122,24,.30) 0%,rgba(255,59,47,.13) 30%,
+                   rgba(168,16,42,.07) 48%,transparent 68%)}
+  .grain{position:absolute;inset:0;opacity:.5;pointer-events:none;
+    background-image:radial-gradient(rgba(255,196,107,.16) 1px,transparent 1px);
+    background-size:5px 5px;mix-blend-mode:screen}
+  header .wrap{position:relative}
+  h1{font-family:var(--serif);font-size:clamp(56px,10vw,132px);line-height:.9;
+     letter-spacing:-.03em;font-weight:500}
+  h1 em{font-style:italic;
+        background:linear-gradient(120deg,var(--spark),var(--ember) 45%,var(--flame));
+        -webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero-lede{margin:30px auto 0;max-width:520px;font-size:19px;line-height:1.6;color:var(--bone-dim)}
+  .hero-cta{margin-top:42px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .hero-fine{margin-top:24px;color:var(--bone-faint)}
+  .scroll-hint{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);
+               color:var(--bone-faint);display:flex;flex-direction:column;align-items:center;gap:10px}
+  .scroll-line{width:1px;height:44px;background:linear-gradient(var(--ember),transparent)}
+
+  /* floating embers */
+  .ember-dot{position:absolute;border-radius:50%;background:var(--spark);
+             box-shadow:0 0 12px var(--ember);opacity:.75}
+  .e1{width:3px;height:3px;left:18%;top:62%} .e2{width:5px;height:5px;left:31%;top:74%}
+  .e3{width:3px;height:3px;left:69%;top:56%} .e4{width:4px;height:4px;left:81%;top:70%}
+  .e5{width:2px;height:2px;left:47%;top:82%} .e6{width:3px;height:3px;left:58%;top:38%}
+
+  /* ---------- press ---------- */
+  .press{border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+  .press .wrap{display:flex;align-items:center;justify-content:space-between;gap:30px;
+               padding:28px;flex-wrap:wrap;color:var(--bone-faint);font-family:var(--serif);
+               font-size:19px;letter-spacing:.02em}
+  .press .lbl{color:var(--bone-faint)}
+
+  /* ---------- sections ---------- */
+  section{padding:130px 0;position:relative}
+  .kicker{color:var(--ember)}
+  h2{font-family:var(--serif);font-size:clamp(36px,5vw,68px);line-height:1.02;
+     letter-spacing:-.025em;font-weight:500;margin-top:18px}
+  .sec-lede{margin-top:22px;font-size:18px;line-height:1.65;color:var(--bone-dim);max-width:560px}
+
+  /* two-up: problem */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:center}
+  .quote{font-family:var(--serif);font-size:clamp(26px,3vw,40px);line-height:1.25;
+         color:var(--bone);font-style:italic}
+  .quote span{color:var(--bone-faint)}
+
+  /* the shock number */
+  .shock-stage{text-align:center;background:
+      radial-gradient(ellipse at center,rgba(63,214,154,.10),transparent 62%)}
+  .price-was{font-family:var(--serif);font-size:34px;color:var(--bone-faint);
+             text-decoration:line-through;text-decoration-thickness:2px}
+  .arrow{margin:22px 0;color:var(--bone-faint)}
+  .big-num{font-size:clamp(74px,14vw,190px);font-weight:800;letter-spacing:-.05em;line-height:.9;
+           background:linear-gradient(135deg,#7BF0C0,var(--money) 55%,#12A472);
+           -webkit-background-clip:text;background-clip:text;color:transparent}
+  .num-cap{margin-top:20px;color:var(--bone-dim);font-size:17px}
+
+  /* steps as a film strip */
+  .strip{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:64px;
+         border:1px solid var(--hair);border-radius:22px;overflow:hidden;background:var(--hair)}
+  .cell{background:var(--coal);padding:34px 30px 0;min-height:400px;display:flex;flex-direction:column}
+  .cell .n{color:var(--ember);font-family:ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.2em}
+  .cell h3{font-family:var(--serif);font-size:27px;margin-top:16px;font-weight:500;letter-spacing:-.01em}
+  .cell p{margin-top:12px;color:var(--bone-dim);font-size:15.5px;line-height:1.6}
+  .cell-art{margin:30px -30px 0;height:170px;flex-shrink:0}
+  .ca1{background:linear-gradient(180deg,#221A17,#100B0A)}
+  .ca2{background:linear-gradient(180deg,rgba(63,214,154,.16),#0D0B0A)}
+  .ca3{background:radial-gradient(ellipse at 50% 120%,rgba(255,122,24,.55),rgba(168,16,42,.25) 40%,#0A0709 72%)}
+
+  /* full bleed burn */
+  .bleed{position:relative;min-height:78vh;display:grid;place-items:center;text-align:center;
+         overflow:hidden;background:#060405}
+  .bleed .fire{position:absolute;left:50%;bottom:-38%;transform:translateX(-50%);
+    width:min(1300px,150vw);height:1300px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,196,107,.55) 0%,rgba(255,122,24,.38) 22%,
+               rgba(255,59,47,.20) 40%,rgba(168,16,42,.10) 56%,transparent 72%);
+    filter:blur(10px)}
+  .bleed .inner{position:relative;max-width:760px;padding:0 28px}
+  .bleed h2{font-size:clamp(42px,7vw,96px)}
+  .bleed p{margin-top:26px;color:rgba(247,242,234,.72);font-size:19px;line-height:1.65}
+
+  /* privacy — three columns under one line */
+  .priv-head{text-align:center;max-width:860px;margin:0 auto}
+  .priv-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:44px;margin-top:70px}
+  .priv h4{font-size:18px;font-weight:650;letter-spacing:-.01em}
+  .priv p{margin-top:10px;color:var(--bone-dim);font-size:15px;line-height:1.6}
+  .priv .rule{width:26px;height:2px;background:var(--ember);margin-bottom:18px}
+
+  /* ---------- the after: daylight ---------- */
+  .after{background:var(--paper);color:var(--ink);border-radius:44px 44px 0 0;
+         margin-top:0;padding:120px 0 130px;text-align:center}
+  .after h2{color:var(--ink);font-family:var(--serif)}
+  .after .kicker{color:#0D7A4B}
+  .after p{margin:22px auto 0;max-width:520px;color:#43413C;font-size:18px;line-height:1.6}
+  .after .btn-fire{color:#fff}
+  .after-cta{margin-top:38px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .after .fine{margin-top:22px;color:#8A867D}
+  .after .btn-ghost{border-color:rgba(22,21,19,.18);color:var(--ink)}
+
+  footer{background:var(--paper);color:#8A867D;padding:0 0 46px}
+  footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
+               border-top:1px solid rgba(22,21,19,.08);padding-top:30px;font-size:13.5px}
+  .flinks{display:flex;gap:24px}
+  footer a:hover{color:var(--ink)}
+
+  @media(max-width:900px){
+    .split{grid-template-columns:1fr;gap:40px}
+    .strip,.priv-cols{grid-template-columns:1fr}
+    .navlinks{display:none}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="mark"><span class="glyph"></span> BURN MY DESIRE</div>
+    <div class="navlinks mono">
+      <a href="#ritual">Ritual</a><a href="#math">Math</a><a href="#privacy">Privacy</a>
+    </div>
+    <a class="btn btn-ghost btn-sm mono" href="#">Get the app</a>
+  </div>
+</nav>
+
+<header>
+  <div class="glow"></div><div class="grain"></div>
+  <span class="ember-dot e1"></span><span class="ember-dot e2"></span><span class="ember-dot e3"></span>
+  <span class="ember-dot e4"></span><span class="ember-dot e5"></span><span class="ember-dot e6"></span>
+  <div class="wrap">
+    <div class="mono" style="color:var(--spark)">Other apps make you wait</div>
+    <h1>We give you<br><em>closure.</em></h1>
+    <p class="hero-lede">See what the money becomes in twenty years. Then hold your thumb
+      down and watch the thing burn to ash.</p>
+    <div class="hero-cta">
+      <a class="btn btn-fire" href="#"> Download on iPhone</a>
+      <a class="btn btn-ghost" href="#ritual">Watch the burn</a>
+    </div>
+    <p class="hero-fine mono">No account · nothing leaves your phone</p>
+  </div>
+  <div class="scroll-hint"><div class="scroll-line"></div><span class="mono">Scroll</span></div>
+</header>
+
+<div class="press">
+  <div class="wrap">
+    <span class="lbl mono">As seen in</span>
+    <span>WIRED</span><span>The Verge</span><span>Product Hunt</span>
+    <span>Hacker News</span><span>App Store · Apps We Love</span>
+  </div>
+</div>
+
+<section>
+  <div class="wrap split">
+    <div>
+      <div class="kicker mono">The problem</div>
+      <h2>Willpower is not a feature.</h2>
+      <p class="sec-lede">Cooldown timers, 24-hour pauses, "sleep on it" — every one of them
+        asks for the exact discipline the craving just took from you. The urge doesn't want
+        time. It wants an ending.</p>
+    </div>
+    <div class="quote">
+      "I closed the tab.<br><span>Then I opened it again<br>eleven minutes later."</span>
+    </div>
+  </div>
+</section>
+
+<section id="math" class="shock-stage">
+  <div class="wrap">
+    <div class="kicker mono">The rational shock</div>
+    <div style="margin-top:44px" class="price-was">€429</div>
+    <div class="arrow mono">becomes</div>
+    <div class="big-num">€4,180</div>
+    <p class="num-cap">by the time you're 65, at 7% a year. That's the price of the headphones.</p>
+  </div>
+</section>
+
+<section id="ritual">
+  <div class="wrap">
+    <div class="kicker mono">The ritual</div>
+    <h2>Forty seconds,<br>start to ash.</h2>
+    <div class="strip">
+      <div class="cell">
+        <div class="n">01</div>
+        <h3>Name the desire</h3>
+        <p>A photo, a link, or just a sentence. Drinks on Friday counts. So does the thing
+           you keep reopening at 1am.</p>
+        <div class="cell-art ca1"></div>
+      </div>
+      <div class="cell">
+        <div class="n">02</div>
+        <h3>See what it costs you</h3>
+        <p>Not the sticker price — the twenty-year one. Recurring habits compound hardest.</p>
+        <div class="cell-art ca2"></div>
+      </div>
+      <div class="cell">
+        <div class="n">03</div>
+        <h3>Burn it</h3>
+        <p>A real burning front eats across the image at 60fps, curling and glowing at the edge.
+           Then there's nothing left to want.</p>
+        <div class="cell-art ca3"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="bleed">
+  <div class="fire"></div>
+  <div class="inner">
+    <div class="kicker mono">Hold to burn</div>
+    <h2>Your brain wanted an ending.<br>Give it one.</h2>
+    <p>Destruction is closure the way waiting never is. It's why we tear up photographs and
+       delete the number — the ritual finishes something the reasoning couldn't.</p>
+  </div>
+</div>
+
+<section id="privacy">
+  <div class="wrap">
+    <div class="priv-head">
+      <div class="kicker mono">Privacy</div>
+      <h2>Whatever you're burning,<br>nobody else ever sees it.</h2>
+    </div>
+    <div class="priv-cols">
+      <div class="priv"><div class="rule"></div>
+        <h4>No account, by design</h4>
+        <p>No sign-up, no email, no password. There is no server, so there's nothing an
+           account could unlock.</p></div>
+      <div class="priv"><div class="rule"></div>
+        <h4>Encrypted where it lives</h4>
+        <p>The database is encrypted with a key held in the iOS Keychain; photos and notes
+           are sealed with complete data protection.</p></div>
+      <div class="priv"><div class="rule"></div>
+        <h4>Erase is final</h4>
+        <p>One confirmed tap destroys the database, the images and the key. Nothing to
+           recover, because nothing was ever copied.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="after">
+  <div class="wrap">
+    <div class="kicker mono">And then the lights come back on</div>
+    <h2>Wake up with the money<br>still in your account.</h2>
+    <p>The fire is one screen. The rest of the app is daylight — what you kept, what you
+       resisted, and how much of it is quietly compounding.</p>
+    <div class="after-cta">
+      <a class="btn btn-fire" href="#"> Download on iPhone</a>
+      <a class="btn btn-ghost" href="#">See the numbers</a>
+    </div>
+    <p class="fine mono">Free to start · iOS 17+</p>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div>© 2026 Burn My Desire</div>
+    <div class="flinks"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Support</a><a href="#">Press</a></div>
+  </div>
+</footer>
+
+</body>
+</html>

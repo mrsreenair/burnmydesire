@@ -17,6 +17,7 @@ import UIKit
     {
       FoundationModelsChannel.register(with: registrar.messenger())
       FileProtectionChannel.register(with: registrar.messenger())
+      DocumentPickerChannel.register(with: registrar.messenger())
     }
   }
 }
