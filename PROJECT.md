@@ -229,6 +229,20 @@ lib/
 
 ## 7. Monetization Summary
 
+### 7.0 Analytics & growth decisions (2026-08-09)
+
+**Installs and regular use come from App Store Connect, not from us.** Apple already reports units, active devices, sessions and retention, aggregated and privacy-safe. Building our own would be strictly worse and would cost the "Data Not Collected" privacy label, which is itself a marketing asset for this product. TelemetryDeck stays the option if funnel detail is ever needed.
+
+**"Money saved" is an opt-in feature, not tracking.** `counter/` is a self-hosted service (Docker, for Coolify/Dokploy on Hetzner) storing exactly two integers: a running total and a contributor count. The app sends the *delta* since it last contributed, so the server never needs an identifier — no user table, no install id, no IP log, no per-contribution timestamp. Off by default, one tap to revoke. Rate limited and capped so one absurd submission can't distort a public figure. The website labels the figure as self-reported; inflating it would undo the thing the product sells.
+
+**"Move the money" is the missing half of the loop.** The app said "you protected €800" while the money stayed in a current account until next week. The victory screen now offers to move that exact amount to a savings or broker partner, commission disclosed. **Shown only after the burn — never on the shock card**, where the user is mid-craving and in no state to be sold anything. This contextual placement is also why the affiliate economics work at all: a generic "check out DEGIRO" link converts far worse.
+
+**Partner order:** neobanks / high-yield savings first (lowest friction for someone who won't open a brokerage), then brokers and ETF platforms, then meditation apps for the v1.5 addiction goals. **Therapy platforms are excluded** despite the highest payouts — BetterHelp's FTC settlement over health-data sharing makes it a reputational landmine inside an addiction app, and it would make the "see a real professional" disclaimer look monetized rather than sincere.
+
+**Growth loop:** shareable milestone cards ("€X protected") and burn videos. The card deliberately says nothing about *what* was resisted, so sharing a win can never leak that someone is fighting an addiction.
+
+
+
 1. **Pro tier** (RevenueCat, no backend): €2.99/mo · €19.99/yr · €29.99 lifetime.
 2. **Broker affiliate links** (IBKR, DEGIRO referral): outbound URLs only; treated as bonus revenue, never the pillar. No CFD platforms.
 3. **No ads, ever** — conflicts with privacy positioning and the premium calm of the ritual.
