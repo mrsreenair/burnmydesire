@@ -78,8 +78,7 @@ class _BurnableImageState extends State<BurnableImage>
       .._release = _stop;
     _clock = createTicker((elapsed) {
       _time.value = elapsed.inMicroseconds / 1e6;
-    })
-      ..start();
+    })..start();
     _programFuture ??= ui.FragmentProgram.fromAsset('assets/shaders/burn.frag');
     _programFuture!.then((p) {
       if (mounted) setState(() => _program = p);
@@ -139,6 +138,11 @@ class _BurnableImageState extends State<BurnableImage>
         }
 
         return OverflowBox(
+          // Explicit zero minimums: if this ever sits under tight
+          // constraints, an inherited minHeight silently overrides the
+          // quad and the shader's coordinate mapping goes with it.
+          minWidth: 0,
+          minHeight: 0,
           maxWidth: paperW * spanX,
           maxHeight: paperH * spanY,
           child: SizedBox(

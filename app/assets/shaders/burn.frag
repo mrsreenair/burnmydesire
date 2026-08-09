@@ -71,7 +71,9 @@ float ashPoint(vec2 p) {
   vec2 f = fract(p);
   if (hash(i) < 0.88) return 0.0;
   vec2 c = vec2(hash(i + vec2(3.7, 1.3)), hash(i + vec2(9.1, 5.5)));
-  return smoothstep(0.18, 0.0, length(f - c));
+  // NB: edges ascending. smoothstep with edge0 > edge1 is undefined in
+  // GLSL and returns NaN on Metal, which then eats the whole composite.
+  return 1.0 - smoothstep(0.0, 0.18, length(f - c));
 }
 
 // Fire ramp: white-hot core -> yellow -> orange -> deep red at the tips.

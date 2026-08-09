@@ -79,14 +79,18 @@ class _BurnScreenState extends State<BurnScreen> {
         // reads as an object lying in the dark. Run it to the screen edge
         // and it stops being paper and becomes a background. Still no
         // clip — flames must spill past the sheet's bounds.
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          child: BurnableImage(
-            image: widget.target.image,
-            controller: _hold,
-            onProgress: (p) => _progress.value = p,
-            onBurned: () => Navigator.of(context).pushReplacement(
-              fireRoute(VictoryScreen(target: widget.target)),
+        // Center matters: it loosens the Stack's tight constraints, which
+        // the paper's OverflowBox depends on to size itself.
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            child: BurnableImage(
+              image: widget.target.image,
+              controller: _hold,
+              onProgress: (p) => _progress.value = p,
+              onBurned: () => Navigator.of(context).pushReplacement(
+                fireRoute(VictoryScreen(target: widget.target)),
+              ),
             ),
           ),
         ),
@@ -94,4 +98,3 @@ class _BurnScreenState extends State<BurnScreen> {
     );
   }
 }
-
