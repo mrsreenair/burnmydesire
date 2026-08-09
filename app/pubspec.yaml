@@ -24,6 +24,7 @@ dependencies:
   share_plus: ^13.3.0
   shared_preferences: ^2.5.5
   sqlite3: ^3.5.1
+  url_launcher: ^6.3.2
 
 # Swap the bundled SQLite for SQLCipher so the database is encrypted at rest
 # (PROJECT.md §5: temptation data is health-grade private). SQLCipher — not

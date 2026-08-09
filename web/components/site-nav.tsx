@@ -77,7 +77,7 @@ export default function SiteNav() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link href="/#get" className="btn btn-dark btn-sm hidden sm:inline-flex">
+          <Link href="/app" className="btn btn-dark btn-sm hidden sm:inline-flex">
             Get the app
           </Link>
           <button
@@ -128,10 +128,13 @@ export default function SiteNav() {
               {l.label}
             </Link>
           ))}
+          <Link href="/changelog" className="display py-2.5 text-[26px]">
+            Changelog
+          </Link>
           <Link href="/contact" className="display py-2.5 text-[26px]">
             Contact
           </Link>
-          <Link href="/#get" className="btn btn-dark mt-4 self-start">
+          <Link href="/app" className="btn btn-dark mt-4 self-start">
             Get the app
           </Link>
         </div>

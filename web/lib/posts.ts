@@ -44,7 +44,7 @@ export const posts: Post[] = [
       {
         type: "quote",
         text: "I closed the tab. Then I opened it again eleven minutes later.",
-        cite: "Beta tester, Rotterdam",
+        cite: "the sentence we heard, in some form, in nearly every beta interview",
       },
       {
         type: "p",
@@ -66,10 +66,14 @@ export const posts: Post[] = [
         type: "p",
         text: "Destruction as closure is not a novelty we invented. People tear up photographs, delete the number, throw out the box. The ritual finishes something that the reasoning could not. We just gave the ritual sixty frames a second and attached it to your money.",
       },
-      { type: "h2", text: "What we measured" },
+      { type: "h2", text: "What we saw in the closed beta" },
       {
         type: "p",
-        text: "Across the closed beta, roughly three in four logged desires were never bought — and the ones that were bought were, on average, logged more than once first. Resistance was not a single heroic act of willpower. It was the same craving showing up four times and being burned four times.",
+        text: "This is a small, self-selected group and not a study, so treat it as a signal rather than a finding: most logged desires were never bought, and the ones that were had usually been logged more than once first.",
+      },
+      {
+        type: "p",
+        text: "That second half is the part that surprised us. Resistance was rarely a single heroic act of willpower. It was the same craving showing up four times and being burned four times.",
       },
       {
         type: "note",

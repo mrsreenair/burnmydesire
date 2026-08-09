@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../config.dart';
 import '../data/ai_coach.dart';
@@ -9,6 +10,7 @@ import '../data/cloud_backup.dart';
 import '../data/database.dart';
 import '../data/image_store.dart';
 import '../data/user_prefs.dart';
+import '../data/world_counter.dart';
 import '../models/burn_target.dart';
 import '../providers/db_providers.dart';
 import '../providers/pro_provider.dart';
@@ -103,6 +105,10 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
       await db.markDestroyed(id);
     }
     _syncToCloud(db, store);
+    // Opt-in only, and it checks that itself.
+    WorldCounter()
+        .contribute(ref.read(protectedCentsProvider))
+        .catchError((Object _) => null);
   }
 
   /// Fire-and-forget iCloud backup once the burn is recorded. Silent by
@@ -178,6 +184,17 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
                                         future: future,
                                       ),
                           ),
+                          // Only after a money burn, and only once the
+                          // craving has passed — never mid-urge.
+                          if (!target.isEmotion &&
+                              price > 0 &&
+                              kMoveMoneyUrl.isNotEmpty) ...[
+                            const SizedBox(height: 24),
+                            Reveal(
+                              delay: const Duration(milliseconds: 560),
+                              child: _MoveTheMoney(cents: price),
+                            ),
+                          ],
                           if (!target.isEmotion && !again && !_isFinal) ...[
                             const SizedBox(height: 20),
                             Reveal(
@@ -380,6 +397,70 @@ class _ThoughtResult extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The missing half of the loop: the app says "you protected €800", but
+/// the money only really counts once it moves somewhere it grows. Shown
+/// after the burn — never during the craving, when the user is in no
+/// state to be sold anything.
+class _MoveTheMoney extends StatelessWidget {
+  const _MoveTheMoney({required this.cents});
+
+  final int cents;
+
+  Future<void> _open() async {
+    final uri = Uri.parse(kMoveMoneyUrl).replace(
+      queryParameters: {
+        ...Uri.parse(kMoveMoneyUrl).queryParameters,
+        'amount': (cents / 100).toStringAsFixed(2),
+      },
+    );
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.money.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.money.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'Move the ${formatEuros(cents)} somewhere it grows',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleMedium,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Resisting only counts if the money actually moves. '
+            'Opens your provider — we never see your account.',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: AppColors.textLow),
+          ),
+          const SizedBox(height: 14),
+          EmberButton(
+            label: 'Move it now',
+            glow: false,
+            onPressed: _open,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'We may earn a commission. It costs you nothing, and it never '
+            'changes what the app tells you.',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: AppColors.textLow, fontSize: 11),
+          ),
+        ],
+      ),
     );
   }
 }

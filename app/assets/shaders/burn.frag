@@ -30,6 +30,8 @@ const float EMBER_W = 0.028; // white-hot line at the very edge
 const float CHAR_W  = 0.115; // blackened paper behind the ember
 const float WARM_W  = 0.34;  // firelight falling on intact paper
 const float FLAME_H = 0.20;  // tallest tongue, in paper heights
+const float CURL_W  = 0.018; // curled-back lip of char at the burnt edge
+const float ASH_H   = 0.55;  // how far embers drift before they die
 
 float hash(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
@@ -59,6 +61,17 @@ float fbm3(vec2 p) {
     amp *= 0.5;
   }
   return v;
+}
+
+// Sparse rising embers. Cell-based: each cell may hold one point, and
+// most hold none, which is what keeps ash reading as flecks rather than
+// texture.
+float ashPoint(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  if (hash(i) < 0.88) return 0.0;
+  vec2 c = vec2(hash(i + vec2(3.7, 1.3)), hash(i + vec2(9.1, 5.5)));
+  return smoothstep(0.18, 0.0, length(f - c));
 }
 
 // Fire ramp: white-hot core -> yellow -> orange -> deep red at the tips.
@@ -107,7 +120,16 @@ void main() {
 
   // --- Layer 1: the sheet, premultiplied.
   vec4 col;
-  if (!onPaper || d < 0.0) {
+  if (onPaper && d < 0.0 && d > -CURL_W) {
+    // The curled lip. Real paper doesn't end at the ember — it peels back
+    // into a blackened rim that hangs on a moment before it drops. Opaque
+    // and dark, with the heat still showing through its underside.
+    float t = -d / CURL_W; // 0 at the ember, 1 at the outer edge
+    vec3 lip = mix(vec3(0.10, 0.06, 0.05), vec3(0.02, 0.015, 0.015), t);
+    lip += vec3(0.5, 0.14, 0.03) * (1.0 - t) * (1.0 - t) * flicker;
+    float a = 1.0 - smoothstep(0.7, 1.0, t);
+    col = vec4(min(lip, vec3(1.0)) * a, a);
+  } else if (!onPaper || d < 0.0) {
     // Air, or paper already consumed.
     col = vec4(0.0);
   } else if (d >= CHAR_W) {
@@ -115,7 +137,10 @@ void main() {
     // once something is actually alight.
     float warm = (1.0 - smoothstep(CHAR_W, WARM_W, d))
                * step(0.002, uProgress);
-    vec3 lit = tex.rgb + vec3(0.45, 0.20, 0.02) * warm * warm * flicker;
+    // Fibre grain: flat cream reads as a rectangle, not as paper.
+    float grain = 0.972 + 0.028 * noise(uv * vec2(420.0, 300.0));
+    vec3 lit = tex.rgb * grain
+             + vec3(0.45, 0.20, 0.02) * warm * warm * flicker;
     col = vec4(min(lit, vec3(1.0)) * tex.a, tex.a);
   } else if (d >= EMBER_W) {
     // Charred band: paper blackens as it approaches the ember line, with
@@ -183,6 +208,23 @@ void main() {
       a = clamp(a, 0.0, 1.0);
 
       // Premultiplied source-over.
+      col = vec4(c * a, a) + col * (1.0 - a);
+    }
+  }
+
+  // --- Layer 3: ash. Embers lift off the burn line, drift up on the
+  // draught and cool from orange to dead grey. They travel further than
+  // the flames do, which is what sells the fire as something with heat
+  // coming off it rather than a coloured band.
+  if (above > 0.0 && above < ASH_H &&
+      frontY > 0.0 && frontY < 1.0 && uProgress > 0.002) {
+    float drift = sin(uv.y * 7.0 + uTime * 1.3) * 0.35;
+    vec2 ap = vec2(uv.x * 24.0 + drift, uv.y * 24.0 + uTime * 3.2);
+    float fade = 1.0 - above / ASH_H;
+    float a = ashPoint(ap) * fade * fade * (0.55 + 0.45 * flicker);
+    if (a > 0.01) {
+      vec3 c = mix(vec3(0.30, 0.11, 0.05), vec3(1.0, 0.62, 0.20), fade);
+      a = clamp(a, 0.0, 1.0);
       col = vec4(c * a, a) + col * (1.0 - a);
     }
   }

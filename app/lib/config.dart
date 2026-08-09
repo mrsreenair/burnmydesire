@@ -18,3 +18,14 @@ const int kFreeItemLimit = 3;
 /// photo is deleted so it can't re-trigger the craving, while the savings
 /// stay counted. A dead desire that returns is a new fight.
 const int kFinalBurnCount = 3;
+
+/// Base URL of the anonymous world-counter service (self-hosted). Empty
+/// disables the feature entirely — the app then sends nothing, anywhere.
+///   flutter build ios --dart-define=COUNTER_URL=https://counter.example.com
+const String kWorldCounterBaseUrl =
+    String.fromEnvironment('COUNTER_URL', defaultValue: '');
+
+/// Where "move the money" sends people. Placeholder until affiliate
+/// accounts exist; the amount is appended so the partner can pre-fill.
+const String kMoveMoneyUrl =
+    String.fromEnvironment('MOVE_MONEY_URL', defaultValue: '');

@@ -140,8 +140,8 @@ export default function BurnDemo() {
             <Image
               src="/screens/burn.png"
               alt="The burn screen: a photographed purchase, ready to be set on fire"
-              width={590}
-              height={1278}
+              width={1206}
+              height={2622}
               className="h-auto w-full"
               priority={false}
             />

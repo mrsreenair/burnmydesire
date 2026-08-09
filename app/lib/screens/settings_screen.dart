@@ -13,6 +13,8 @@ import '../data/cloud_backup.dart';
 import '../data/document_picker.dart';
 import '../data/encrypted_db.dart';
 import '../data/user_prefs.dart';
+import '../data/world_counter.dart';
+import '../utils/format_utils.dart';
 import '../providers/db_providers.dart';
 import '../providers/pro_provider.dart';
 import '../theme/app_colors.dart';
@@ -51,6 +53,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   CloudStatus? _cloudStatus;
   DateTime? _lastCloudBackup;
 
+  /// Opt-in to the anonymous world counter, and the last totals seen.
+  bool _counterOptIn = false;
+  WorldStats? _worldStats;
+
   @override
   void initState() {
     super.initState();
@@ -70,6 +76,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (mounted) setState(() => _dbSecurity = r);
     });
     _refreshCloud();
+    worldCounterOptIn().then((on) {
+      if (mounted) setState(() => _counterOptIn = on);
+    });
+    WorldCounter().stats().then((s) {
+      if (mounted) setState(() => _worldStats = s);
+    });
+  }
+
+  /// Turning this on sends one number: how much the protected total has
+  /// grown since last time. Turning it off stops all sending; what was
+  /// already counted stays counted, since it can't be traced back.
+  Future<void> _toggleCounter(bool on) async {
+    setState(() => _counterOptIn = on);
+    await setWorldCounterOptIn(on);
+    if (!on) return;
+    final stats =
+        await WorldCounter().contribute(ref.read(protectedCentsProvider));
+    if (mounted && stats != null) setState(() => _worldStats = stats);
   }
 
   /// Plain-language explanation of the raw platform status code.
@@ -471,6 +495,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               'The key lives in the Keychain and never '
                               'leaves this device.',
                     ),
+                    if (WorldCounter().configured)
+                      _SwitchRow(
+                        icon: Icons.public_outlined,
+                        title: 'Add my total to the world counter',
+                        subtitle: _counterOptIn
+                            ? _worldStats == null
+                                ? 'Sends one number: how much your protected '
+                                    'total grew. Nothing else — no name, no '
+                                    'items, nothing traceable.'
+                                : '${formatEuros(_worldStats!.totalCents)} '
+                                    'burned by '
+                                    '${_worldStats!.contributors} people so '
+                                    'far. Only a single number ever leaves '
+                                    'your phone.'
+                            : 'Off. Turn on to add your protected total to '
+                                'the public figure — one number, nothing '
+                                'that identifies you.',
+                        value: _counterOptIn,
+                        onChanged: _toggleCounter,
+                      ),
                     _SwitchRow(
                       icon: Icons.auto_awesome_outlined,
                       title: 'AI encouragement',

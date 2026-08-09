@@ -1,0 +1,23 @@
+# Deploy target for Coolify / Dokploy on Hetzner.
+#
+# Coolify: New Resource → Docker Compose → point at this repo, set the
+# base directory to `counter/`. Dokploy: Compose service, same path.
+# Set ALLOWED_ORIGINS to the site's origin once the domain is live.
+services:
+  counter:
+    build: .
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+      DB_FILE: /data/counter.sqlite
+      # Comma-separated. Leave as * only while testing.
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
+      RATE_LIMIT: ${RATE_LIMIT:-10}
+      RATE_WINDOW_MS: ${RATE_WINDOW_MS:-60000}
+    volumes:
+      - counter-data:/data
+    ports:
+      - "8080:8080"
+
+volumes:
+  counter-data:

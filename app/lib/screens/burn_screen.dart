@@ -75,9 +75,12 @@ class _BurnScreenState extends State<BurnScreen> {
             ),
           ],
         ),
-        // No padding and no clip: the sheet runs edge to edge, and the
-        // flames need to spill past its bounds to read as fire.
-        child: Center(
+        // Inset, not full-bleed: a sheet you can see all four edges of
+        // reads as an object lying in the dark. Run it to the screen edge
+        // and it stops being paper and becomes a background. Still no
+        // clip — flames must spill past the sheet's bounds.
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18),
           child: BurnableImage(
             image: widget.target.image,
             controller: _hold,
