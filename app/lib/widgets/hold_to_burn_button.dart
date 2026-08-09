@@ -66,9 +66,7 @@ class _HoldToBurnButtonState extends State<HoldToBurnButton> {
                 curve: Motion.easeOut,
                 child: Container(
                   height: 58,
-                  alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    gradient: AppColors.emberGradient,
                     borderRadius: BorderRadius.circular(29),
                     boxShadow: AppColors.emberGlow(
                       // The pill glows harder the closer the paper is to
@@ -77,13 +75,59 @@ class _HoldToBurnButtonState extends State<HoldToBurnButton> {
                       blur: 22 + 26 * p,
                     ),
                   ),
-                  child: Text(
-                    _held ? widget.holdingLabel : widget.label,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.2,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(29),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        // Unlit track: the fire the button hasn't reached.
+                        const ColoredBox(color: Color(0xFF3A1206)),
+                        // The progress itself, filling the button left to
+                        // right. Putting it inside the control rather than
+                        // in a separate ring keeps the eye in one place —
+                        // the finger is already here.
+                        FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: p.clamp(0.0, 1.0),
+                          child: const DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: AppColors.emberGradient,
+                            ),
+                          ),
+                        ),
+                        // Hot leading edge, so the boundary reads as fire
+                        // eating along the pill instead of a flat bar.
+                        if (p > 0.001 && p < 0.999)
+                          FractionallySizedBox(
+                            alignment: Alignment.centerLeft,
+                            widthFactor: p.clamp(0.0, 1.0),
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: Container(
+                                width: 14,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppColors.spark.withValues(alpha: 0),
+                                      AppColors.spark,
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        Center(
+                          child: Text(
+                            _held ? widget.holdingLabel : widget.label,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
