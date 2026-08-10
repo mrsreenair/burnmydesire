@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../config.dart';
 import '../data/database.dart';
+import '../data/reflection.dart';
 import '../models/burn_target.dart';
 import '../providers/currency_provider.dart';
 import '../providers/db_providers.dart';
@@ -49,6 +50,9 @@ class HomeScreen extends ConsumerWidget {
       category: item.category,
       burnNumber: item.resistanceCount + 1,
       letGoForever: forever,
+      // Last time's interview answers: the shock screen shows the user
+      // their own words back.
+      reflection: decodeReflection(item.reflectionJson),
     );
     // Thoughts have no price and a forever-burn is a release, not a
     // decision: both skip the shock card and go straight to the fire.

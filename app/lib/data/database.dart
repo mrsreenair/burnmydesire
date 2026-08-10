@@ -21,6 +21,12 @@ class Items extends Table {
   /// the photo is deleted from disk (the craving trigger dies) but the row
   /// survives so "wealth protected" totals stay honest forever.
   DateTimeColumn get destroyedAt => dateTime().nullable()();
+
+  /// The purchase-interview answers, as JSON (see data/reflection.dart).
+  /// Kept so a re-burn can show the user their own words from last time
+  /// — "you said you'd wear it once" lands harder than any message we
+  /// could write.
+  TextColumn get reflectionJson => text().nullable()();
 }
 
 @DriftDatabase(tables: [Items])
@@ -32,12 +38,13 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onUpgrade: (m, from, to) async {
       if (from < 2) await m.addColumn(items, items.destroyedAt);
+      if (from < 3) await m.addColumn(items, items.reflectionJson);
     },
   );
 
@@ -57,6 +64,7 @@ class AppDatabase extends _$AppDatabase {
     int? monthlyCents,
     int? months,
     String category = 'purchase',
+    String? reflectionJson,
   }) {
     final now = DateTime.now();
     return into(items).insert(
@@ -69,6 +77,7 @@ class AppDatabase extends _$AppDatabase {
         resistanceCount: const Value(1),
         createdAt: now,
         lastBurnedAt: Value(now),
+        reflectionJson: Value(reflectionJson),
       ),
     );
   }

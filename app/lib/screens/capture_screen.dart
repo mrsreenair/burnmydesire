@@ -10,7 +10,7 @@ import '../theme/motion.dart';
 import '../utils/format_utils.dart';
 import '../utils/math_utils.dart';
 import '../widgets/ember_ui.dart';
-import 'shock_screen.dart';
+import 'reflection_screen.dart';
 
 class CaptureScreen extends StatefulWidget {
   const CaptureScreen({super.key});
@@ -56,39 +56,17 @@ class _CaptureScreenState extends State<CaptureScreen> {
       }
     }
 
-    // Reflection, not advice (PROJECT.md F10): a genuine tool for growth
-    // deserves a calmer framing than a dopamine hit.
-    final growth = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('One honest question'),
-        content: const Text(
-          'Is this a real investment in your growth — a tool for your '
-          'career or skills you\'ll actually use — or is it an impulse?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('It builds my future'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('It\'s an impulse'),
-          ),
-        ],
-      ),
-    );
-    if (growth == null || !mounted) return;
-
+    // The interview (PROJECT.md F10): three questions, then the user's
+    // own answers mirrored back, then the growth-or-impulse choice —
+    // theirs, always. It replaces the old single-question dialog.
     final target = BurnTarget(
       image: image,
       imageBytes: bytes,
       priceCents: cents,
       plan: plan,
     );
-    Navigator.of(
-      context,
-    ).push(emberRoute(ShockScreen(target: target, forGrowth: growth)));
+    if (!mounted) return;
+    Navigator.of(context).push(emberRoute(ReflectionScreen(target: target)));
   }
 
   @override

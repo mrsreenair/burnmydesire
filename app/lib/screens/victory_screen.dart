@@ -9,6 +9,7 @@ import '../data/backup.dart';
 import '../data/cloud_backup.dart';
 import '../data/database.dart';
 import '../data/image_store.dart';
+import '../data/reflection.dart';
 import '../data/user_prefs.dart';
 import '../data/world_counter.dart';
 import '../models/burn_target.dart';
@@ -96,6 +97,9 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
         monthlyCents: target.plan?.monthlyCents,
         months: target.plan?.months,
         category: target.category,
+        reflectionJson: target.reflection.isEmpty
+            ? null
+            : encodeReflection(target.reflection),
       );
     }
     if (_isFinal) {

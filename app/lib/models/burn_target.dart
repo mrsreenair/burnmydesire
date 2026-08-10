@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import '../data/reflection.dart';
 import '../utils/math_utils.dart';
 
 /// What's about to be burned: either a brand-new temptation from the capture
@@ -16,6 +17,7 @@ class BurnTarget {
     this.burnNumber = 1,
     this.letGoForever = false,
     this.thoughtText,
+    this.reflection = const [],
   });
 
   final int? itemId;
@@ -38,6 +40,12 @@ class BurnTarget {
   /// What was written on the burned page (fresh emotion burns only). Fed
   /// to the on-device AI coach; never persisted, never leaves the device.
   final String? thoughtText;
+
+  /// The purchase-interview answers. For a fresh capture these were given
+  /// minutes ago and get persisted with the item; for a re-burn they're
+  /// the stored answers from last time, shown back as the user's own
+  /// words.
+  final List<ReflectionQA> reflection;
 
   bool get isEmotion => category == 'emotion';
 }

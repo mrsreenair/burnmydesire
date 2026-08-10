@@ -120,6 +120,17 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _reflectionJsonMeta = const VerificationMeta(
+    'reflectionJson',
+  );
+  @override
+  late final GeneratedColumn<String> reflectionJson = GeneratedColumn<String>(
+    'reflection_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -132,6 +143,7 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
     createdAt,
     lastBurnedAt,
     destroyedAt,
+    reflectionJson,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -220,6 +232,15 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
         ),
       );
     }
+    if (data.containsKey('reflection_json')) {
+      context.handle(
+        _reflectionJsonMeta,
+        reflectionJson.isAcceptableOrUnknown(
+          data['reflection_json']!,
+          _reflectionJsonMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -269,6 +290,10 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}destroyed_at'],
       ),
+      reflectionJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reflection_json'],
+      ),
     );
   }
 
@@ -293,6 +318,12 @@ class Item extends DataClass implements Insertable<Item> {
   /// the photo is deleted from disk (the craving trigger dies) but the row
   /// survives so "wealth protected" totals stay honest forever.
   final DateTime? destroyedAt;
+
+  /// The purchase-interview answers, as JSON (see data/reflection.dart).
+  /// Kept so a re-burn can show the user their own words from last time
+  /// — "you said you'd wear it once" lands harder than any message we
+  /// could write.
+  final String? reflectionJson;
   const Item({
     required this.id,
     required this.imageFile,
@@ -304,6 +335,7 @@ class Item extends DataClass implements Insertable<Item> {
     required this.createdAt,
     this.lastBurnedAt,
     this.destroyedAt,
+    this.reflectionJson,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -325,6 +357,9 @@ class Item extends DataClass implements Insertable<Item> {
     }
     if (!nullToAbsent || destroyedAt != null) {
       map['destroyed_at'] = Variable<DateTime>(destroyedAt);
+    }
+    if (!nullToAbsent || reflectionJson != null) {
+      map['reflection_json'] = Variable<String>(reflectionJson);
     }
     return map;
   }
@@ -349,6 +384,9 @@ class Item extends DataClass implements Insertable<Item> {
       destroyedAt: destroyedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(destroyedAt),
+      reflectionJson: reflectionJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reflectionJson),
     );
   }
 
@@ -368,6 +406,7 @@ class Item extends DataClass implements Insertable<Item> {
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       lastBurnedAt: serializer.fromJson<DateTime?>(json['lastBurnedAt']),
       destroyedAt: serializer.fromJson<DateTime?>(json['destroyedAt']),
+      reflectionJson: serializer.fromJson<String?>(json['reflectionJson']),
     );
   }
   @override
@@ -384,6 +423,7 @@ class Item extends DataClass implements Insertable<Item> {
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'lastBurnedAt': serializer.toJson<DateTime?>(lastBurnedAt),
       'destroyedAt': serializer.toJson<DateTime?>(destroyedAt),
+      'reflectionJson': serializer.toJson<String?>(reflectionJson),
     };
   }
 
@@ -398,6 +438,7 @@ class Item extends DataClass implements Insertable<Item> {
     DateTime? createdAt,
     Value<DateTime?> lastBurnedAt = const Value.absent(),
     Value<DateTime?> destroyedAt = const Value.absent(),
+    Value<String?> reflectionJson = const Value.absent(),
   }) => Item(
     id: id ?? this.id,
     imageFile: imageFile ?? this.imageFile,
@@ -409,6 +450,9 @@ class Item extends DataClass implements Insertable<Item> {
     createdAt: createdAt ?? this.createdAt,
     lastBurnedAt: lastBurnedAt.present ? lastBurnedAt.value : this.lastBurnedAt,
     destroyedAt: destroyedAt.present ? destroyedAt.value : this.destroyedAt,
+    reflectionJson: reflectionJson.present
+        ? reflectionJson.value
+        : this.reflectionJson,
   );
   Item copyWithCompanion(ItemsCompanion data) {
     return Item(
@@ -432,6 +476,9 @@ class Item extends DataClass implements Insertable<Item> {
       destroyedAt: data.destroyedAt.present
           ? data.destroyedAt.value
           : this.destroyedAt,
+      reflectionJson: data.reflectionJson.present
+          ? data.reflectionJson.value
+          : this.reflectionJson,
     );
   }
 
@@ -447,7 +494,8 @@ class Item extends DataClass implements Insertable<Item> {
           ..write('resistanceCount: $resistanceCount, ')
           ..write('createdAt: $createdAt, ')
           ..write('lastBurnedAt: $lastBurnedAt, ')
-          ..write('destroyedAt: $destroyedAt')
+          ..write('destroyedAt: $destroyedAt, ')
+          ..write('reflectionJson: $reflectionJson')
           ..write(')'))
         .toString();
   }
@@ -464,6 +512,7 @@ class Item extends DataClass implements Insertable<Item> {
     createdAt,
     lastBurnedAt,
     destroyedAt,
+    reflectionJson,
   );
   @override
   bool operator ==(Object other) =>
@@ -478,7 +527,8 @@ class Item extends DataClass implements Insertable<Item> {
           other.resistanceCount == this.resistanceCount &&
           other.createdAt == this.createdAt &&
           other.lastBurnedAt == this.lastBurnedAt &&
-          other.destroyedAt == this.destroyedAt);
+          other.destroyedAt == this.destroyedAt &&
+          other.reflectionJson == this.reflectionJson);
 }
 
 class ItemsCompanion extends UpdateCompanion<Item> {
@@ -492,6 +542,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
   final Value<DateTime> createdAt;
   final Value<DateTime?> lastBurnedAt;
   final Value<DateTime?> destroyedAt;
+  final Value<String?> reflectionJson;
   const ItemsCompanion({
     this.id = const Value.absent(),
     this.imageFile = const Value.absent(),
@@ -503,6 +554,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     this.createdAt = const Value.absent(),
     this.lastBurnedAt = const Value.absent(),
     this.destroyedAt = const Value.absent(),
+    this.reflectionJson = const Value.absent(),
   });
   ItemsCompanion.insert({
     this.id = const Value.absent(),
@@ -515,6 +567,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     required DateTime createdAt,
     this.lastBurnedAt = const Value.absent(),
     this.destroyedAt = const Value.absent(),
+    this.reflectionJson = const Value.absent(),
   }) : imageFile = Value(imageFile),
        priceCents = Value(priceCents),
        createdAt = Value(createdAt);
@@ -529,6 +582,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     Expression<DateTime>? createdAt,
     Expression<DateTime>? lastBurnedAt,
     Expression<DateTime>? destroyedAt,
+    Expression<String>? reflectionJson,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -541,6 +595,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
       if (createdAt != null) 'created_at': createdAt,
       if (lastBurnedAt != null) 'last_burned_at': lastBurnedAt,
       if (destroyedAt != null) 'destroyed_at': destroyedAt,
+      if (reflectionJson != null) 'reflection_json': reflectionJson,
     });
   }
 
@@ -555,6 +610,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     Value<DateTime>? createdAt,
     Value<DateTime?>? lastBurnedAt,
     Value<DateTime?>? destroyedAt,
+    Value<String?>? reflectionJson,
   }) {
     return ItemsCompanion(
       id: id ?? this.id,
@@ -567,6 +623,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
       createdAt: createdAt ?? this.createdAt,
       lastBurnedAt: lastBurnedAt ?? this.lastBurnedAt,
       destroyedAt: destroyedAt ?? this.destroyedAt,
+      reflectionJson: reflectionJson ?? this.reflectionJson,
     );
   }
 
@@ -603,6 +660,9 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     if (destroyedAt.present) {
       map['destroyed_at'] = Variable<DateTime>(destroyedAt.value);
     }
+    if (reflectionJson.present) {
+      map['reflection_json'] = Variable<String>(reflectionJson.value);
+    }
     return map;
   }
 
@@ -618,7 +678,8 @@ class ItemsCompanion extends UpdateCompanion<Item> {
           ..write('resistanceCount: $resistanceCount, ')
           ..write('createdAt: $createdAt, ')
           ..write('lastBurnedAt: $lastBurnedAt, ')
-          ..write('destroyedAt: $destroyedAt')
+          ..write('destroyedAt: $destroyedAt, ')
+          ..write('reflectionJson: $reflectionJson')
           ..write(')'))
         .toString();
   }
@@ -647,6 +708,7 @@ typedef $$ItemsTableCreateCompanionBuilder =
       required DateTime createdAt,
       Value<DateTime?> lastBurnedAt,
       Value<DateTime?> destroyedAt,
+      Value<String?> reflectionJson,
     });
 typedef $$ItemsTableUpdateCompanionBuilder =
     ItemsCompanion Function({
@@ -660,6 +722,7 @@ typedef $$ItemsTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<DateTime?> lastBurnedAt,
       Value<DateTime?> destroyedAt,
+      Value<String?> reflectionJson,
     });
 
 class $$ItemsTableFilterComposer extends Composer<_$AppDatabase, $ItemsTable> {
@@ -717,6 +780,11 @@ class $$ItemsTableFilterComposer extends Composer<_$AppDatabase, $ItemsTable> {
 
   ColumnFilters<DateTime> get destroyedAt => $composableBuilder(
     column: $table.destroyedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reflectionJson => $composableBuilder(
+    column: $table.reflectionJson,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -779,6 +847,11 @@ class $$ItemsTableOrderingComposer
     column: $table.destroyedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get reflectionJson => $composableBuilder(
+    column: $table.reflectionJson,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ItemsTableAnnotationComposer
@@ -829,6 +902,11 @@ class $$ItemsTableAnnotationComposer
     column: $table.destroyedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get reflectionJson => $composableBuilder(
+    column: $table.reflectionJson,
+    builder: (column) => column,
+  );
 }
 
 class $$ItemsTableTableManager
@@ -869,6 +947,7 @@ class $$ItemsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime?> lastBurnedAt = const Value.absent(),
                 Value<DateTime?> destroyedAt = const Value.absent(),
+                Value<String?> reflectionJson = const Value.absent(),
               }) => ItemsCompanion(
                 id: id,
                 imageFile: imageFile,
@@ -880,6 +959,7 @@ class $$ItemsTableTableManager
                 createdAt: createdAt,
                 lastBurnedAt: lastBurnedAt,
                 destroyedAt: destroyedAt,
+                reflectionJson: reflectionJson,
               ),
           createCompanionCallback:
               ({
@@ -893,6 +973,7 @@ class $$ItemsTableTableManager
                 required DateTime createdAt,
                 Value<DateTime?> lastBurnedAt = const Value.absent(),
                 Value<DateTime?> destroyedAt = const Value.absent(),
+                Value<String?> reflectionJson = const Value.absent(),
               }) => ItemsCompanion.insert(
                 id: id,
                 imageFile: imageFile,
@@ -904,6 +985,7 @@ class $$ItemsTableTableManager
                 createdAt: createdAt,
                 lastBurnedAt: lastBurnedAt,
                 destroyedAt: destroyedAt,
+                reflectionJson: reflectionJson,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

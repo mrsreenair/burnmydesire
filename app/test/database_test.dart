@@ -16,6 +16,20 @@ void main() {
     expect(items.single.lastBurnedAt, isNotNull);
   });
 
+  test('interview answers survive with the item', () async {
+    final id = await db.insertBurnedItem(
+      imageFile: 'a.jpg',
+      priceCents: 80000,
+      reflectionJson: '[{"q":"When?","a":"Once, maybe"}]',
+    );
+    final item = await db.getItem(id);
+    expect(item.reflectionJson, contains('Once, maybe'));
+
+    // An item without an interview stays null, not empty-string.
+    final bare = await db.insertBurnedItem(imageFile: 'b.jpg', priceCents: 1);
+    expect((await db.getItem(bare)).reflectionJson, isNull);
+  });
+
   test('re-burn increments resistance, price counted once', () async {
     final id = await db.insertBurnedItem(imageFile: 'a.jpg', priceCents: 80000);
     await db.recordReBurn(id);

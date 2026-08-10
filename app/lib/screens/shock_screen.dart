@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/reflection.dart';
 import '../models/burn_target.dart';
 import '../providers/db_providers.dart';
 import '../theme/app_colors.dart';
@@ -46,6 +47,18 @@ class _ShockScreenState extends ConsumerState<ShockScreen> {
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
+                        // A re-burn of something they were interviewed
+                        // about: their own words, back. Nobody argues
+                        // with their own words.
+                        if (widget.target.burnNumber > 1 &&
+                            widget.target.reflection.isNotEmpty) ...[
+                          Reveal(
+                            child: _LastTimeCard(
+                              qa: widget.target.reflection.first,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
                         if (widget.forGrowth) ...[
                           Reveal(
                             child: Container(
@@ -101,6 +114,44 @@ class _ShockScreenState extends ConsumerState<ShockScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The user's own interview answer from the last time this urge came.
+class _LastTimeCard extends StatelessWidget {
+  const _LastTimeCard({required this.qa});
+
+  final ReflectionQA qa;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.washPeach.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Last time, asked "${qa.question}", you said:',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textMid,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '"${qa.answer}"',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
       ),
     );
   }

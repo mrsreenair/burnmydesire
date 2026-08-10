@@ -88,26 +88,39 @@ class AiCoach {
     required int burnNumber,
     List<String> goalLabels = const [],
     String? thought,
+  }) => generate(
+        instructions: kCoachInstructions,
+        prompt: buildEncouragementPrompt(
+          isEmotion: isEmotion,
+          burnNumber: burnNumber,
+          goalLabels: goalLabels,
+          thought: thought,
+        ),
+      );
+
+  /// One guarded round-trip to the on-device model. Null on any failure
+  /// or oddity — every caller keeps a curated fallback, so silence is
+  /// always safe.
+  Future<String?> generate({
+    required String instructions,
+    required String prompt,
+    Duration timeout = const Duration(seconds: 8),
+    int maxLength = 240,
   }) async {
     try {
       final raw = await _channel
           .invokeMethod<String>('generate', {
-            'instructions': kCoachInstructions,
-            'prompt': buildEncouragementPrompt(
-              isEmotion: isEmotion,
-              burnNumber: burnNumber,
-              goalLabels: goalLabels,
-              thought: thought,
-            ),
+            'instructions': instructions,
+            'prompt': prompt,
           })
-          .timeout(const Duration(seconds: 8));
+          .timeout(timeout);
       final text = raw?.trim();
       // Sanity bounds: a one-liner, not an essay, not empty.
       if (text == null || text.isEmpty) {
         lastError = 'empty_response';
         return null;
       }
-      if (text.length > 240) {
+      if (text.length > maxLength) {
         lastError = 'too_long:${text.length}';
         return null;
       }
