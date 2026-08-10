@@ -32,7 +32,9 @@ class _RootShellState extends ConsumerState<RootShell> {
       'Desires',
     ),
     (Icons.insights_outlined, Icons.insights, 'Wealth'),
-    (Icons.auto_awesome_outlined, Icons.auto_awesome, 'Ashes'),
+    // History, not sparkles: this tab is the record of what's already
+    // gone, and sparkles read as something new and delightful.
+    (Icons.history_outlined, Icons.history, 'Ashes'),
     (Icons.workspace_premium_outlined, Icons.workspace_premium, 'Pro'),
     (Icons.settings_outlined, Icons.settings, 'Settings'),
   ];

@@ -113,7 +113,14 @@ void main() {
   // Sweep the front past both ends so 0 leaves the sheet whole and 1
   // clears every pixel. The start must clear the field's lowest value by
   // more than CHAR_W, or the first pixels are already charred at rest.
-  float front = mix(-0.34, 1.30, uProgress);
+  //
+  // The end is tight on purpose. `field` peaks at 1.021 (sampled over the
+  // whole sheet — the analytic bound of 1.118 is far too pessimistic), and
+  // the curled lip trails CURL_W behind, so 1.039 clears the last pixel.
+  // 1.08 leaves margin. The old 1.30 finished the sheet at 84% of the hold
+  // and left the user pressing a button against an empty screen for the
+  // last half second.
+  float front = mix(-0.34, 1.08, uProgress);
   float d = field - front; // > 0 intact, < 0 already burned
 
   // Flicker shared by the ember line and the flames.

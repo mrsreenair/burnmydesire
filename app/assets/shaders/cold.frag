@@ -90,7 +90,11 @@ void main() {
   float ragged = fbm3(uv * 11.0) - 0.5;
   float field = base + sweep * 0.26 + ragged * 0.055;
 
-  float front = mix(-0.34, 1.30, uProgress);
+  // Ends at 1.08, not 1.30: `field` peaks at 1.021 across the sheet, and
+  // nothing is drawn behind the front here, so 1.08 clears the last pixel
+  // with margin. Running to 1.30 finished the sheet at 84% of the hold and
+  // left the user pressing against an empty screen (see burn.frag).
+  float front = mix(-0.34, 1.08, uProgress);
   float d = field - front;
 
   // Faster and shallower than the fire's flicker — gas burns steady.
