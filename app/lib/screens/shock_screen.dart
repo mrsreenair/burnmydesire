@@ -102,13 +102,42 @@ class _ShockScreenState extends ConsumerState<ShockScreen> {
               const SizedBox(height: 16),
               Reveal(
                 delay: const Duration(milliseconds: 200),
-                child: EmberButton(
-                  label: 'Burn this desire',
-                  icon: Icons.local_fire_department,
-                  kind: PillKind.fire,
-                  onPressed: () => Navigator.of(
-                    context,
-                  ).push(fireRoute(BurnScreen(target: widget.target))),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    EmberButton(
+                      label: widget.forGrowth
+                          ? 'Burn it anyway'
+                          : 'Burn this desire',
+                      icon: Icons.local_fire_department,
+                      kind: PillKind.fire,
+                      onPressed: () => Navigator.of(
+                        context,
+                      ).push(fireRoute(BurnScreen(target: widget.target))),
+                    ),
+                    // They said it builds their future, so the honest
+                    // exit gets a real button — not just the back arrow.
+                    // The app shows the cost; it never makes the call.
+                    if (widget.forGrowth) ...[
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Kept. Bought with a clear head beats '
+                                'bought on impulse.',
+                              ),
+                            ),
+                          );
+                          Navigator.of(context).popUntil((r) => r.isFirst);
+                        },
+                        child: const Text(
+                          'Keep it — I decided with a clear head',
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ],
