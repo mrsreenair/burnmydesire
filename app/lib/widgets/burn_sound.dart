@@ -15,6 +15,14 @@ import '../data/user_prefs.dart';
 /// through the switch, with `mixWithOthers` so it never stops someone's
 /// music — and a Settings toggle for anyone who wants the old silence.
 ///
+/// The loops are ~12s for a 3s ritual, and that length is load-bearing.
+/// audioplayers on iOS doesn't loop gaplessly: it waits for the
+/// end-of-item notification, awaits a seek back to zero, then calls play
+/// again (audioplayers_darwin, WrappedMediaPlayer.onSoundComplete), and
+/// that round trip is an audible break. A 2s loop broke in the middle of
+/// every burn. Nothing inside the file can fix it — the clip simply has
+/// to outlast any plausible hold. Don't shorten them.
+///
 /// Every failure is swallowed; the ritual must never break because audio
 /// is unavailable.
 class BurnSound {
