@@ -99,6 +99,22 @@ class HomeScreen extends ConsumerWidget {
     }
   }
 
+  /// The capture gate. Blocked users land on the paywall with an opener
+  /// that names their win, not their limit — capping never blocks
+  /// re-burns, only NEW captures (PROJECT.md §4.5).
+  Widget _gateOr(WidgetRef ref, Widget destination) {
+    return switch (ref.read(addBlockProvider)) {
+      AddBlock.none => destination,
+      AddBlock.liveLimit => const PaywallScreen(
+          headline: 'Three desires in the fight.\nGo unlimited?',
+        ),
+      AddBlock.monthlyLimit => PaywallScreen(
+          headline: 'You let go of $kFreeMonthlyNewItems desires '
+              'this month.',
+        ),
+    };
+  }
+
   void _chooseBurnType(BuildContext context, WidgetRef ref) {
     showModalBottomSheet<void>(
       context: context,
@@ -133,11 +149,7 @@ class HomeScreen extends ConsumerWidget {
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   Navigator.of(context).push(
-                    emberRoute(
-                      ref.read(canAddItemProvider)
-                          ? const CaptureScreen()
-                          : const PaywallScreen(),
-                    ),
+                    emberRoute(_gateOr(ref, const CaptureScreen())),
                   );
                 },
               ),
@@ -149,11 +161,7 @@ class HomeScreen extends ConsumerWidget {
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   Navigator.of(context).push(
-                    emberRoute(
-                      ref.read(canAddItemProvider)
-                          ? const WriteScreen()
-                          : const PaywallScreen(),
-                    ),
+                    emberRoute(_gateOr(ref, const WriteScreen())),
                   );
                 },
               ),

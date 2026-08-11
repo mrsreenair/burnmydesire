@@ -62,6 +62,21 @@ final destroyedItemsProvider = Provider<List<Item>>(
       .toList(),
 );
 
+/// Now, as a provider so tests can freeze the calendar.
+final nowProvider = Provider<DateTime>((ref) => DateTime.now());
+
+/// Desires captured this calendar month — including destroyed ones,
+/// whose rows survive as tombstones, so a final burn can't be farmed to
+/// refill the month's allowance.
+final newItemsThisMonthProvider = Provider<int>((ref) {
+  final now = ref.watch(nowProvider);
+  final items = ref.watch(itemsProvider).value ?? const <Item>[];
+  return items
+      .where((i) =>
+          i.createdAt.year == now.year && i.createdAt.month == now.month)
+      .length;
+});
+
 /// Total wealth protected: each unique item counted once, no matter how
 /// often it was re-burned (PROJECT.md F4).
 final protectedCentsProvider = Provider<int>((ref) {

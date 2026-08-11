@@ -16,6 +16,12 @@ const String kProEntitlementId = 'pro';
 /// Destroyed items don't count — finishing a desire frees a slot.
 const int kFreeItemLimit = 3;
 
+/// New desires (photos + thoughts combined) a free user may capture per
+/// calendar month. Deliberately caps CAPTURE, never burns: re-burning
+/// what's already here stays free forever, so the ritual is never held
+/// hostage mid-craving (PROJECT.md §4.5).
+const int kFreeMonthlyNewItems = 5;
+
 /// Burns before a temptation is destroyed forever (the Final Burn): the
 /// photo is deleted so it can't re-trigger the craving, while the savings
 /// stay counted. A dead desire that returns is a new fight.

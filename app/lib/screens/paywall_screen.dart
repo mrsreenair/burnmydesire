@@ -9,10 +9,15 @@ import '../widgets/paper_backdrop.dart';
 import '../widgets/ember_ui.dart';
 
 class PaywallScreen extends ConsumerStatefulWidget {
-  const PaywallScreen({super.key, this.embedded = false});
+  const PaywallScreen({super.key, this.embedded = false, this.headline});
 
   /// True when shown as a tab: no close button, and room for the tab bar.
   final bool embedded;
+
+  /// Contextual opener ("You let go of 5 desires this month.") shown
+  /// instead of the generic one when the paywall was reached by hitting
+  /// a limit — the moment should acknowledge the win, not scold.
+  final String? headline;
 
   @override
   ConsumerState<PaywallScreen> createState() => _PaywallScreenState();
@@ -95,13 +100,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 Reveal(
                   delay: const Duration(milliseconds: 80),
                   child: GradientText(
-                    'Burn without limits',
+                    widget.headline ?? 'Burn without limits',
                     style: theme.textTheme.headlineMedium,
                   ),
                 ),
                 const SizedBox(height: 24),
                 for (final (i, f) in const [
-                  ('♾️', 'Unlimited temptations'),
+                  ('♾️', 'Unlimited desires, every month'),
                   ('📈', 'Custom return rates & horizons'),
                   ('📊', 'Wealth-protected analytics'),
                   ('🔥', 'Every future destruction effect'),

@@ -39,9 +39,22 @@ final dashboardUnlockedProvider = Provider<bool>(
   (ref) => ref.watch(proUnlockedProvider),
 );
 
-/// Free users may add a new temptation only below the item limit. Only
-/// live items count — destroying a desire forever frees the slot.
-final canAddItemProvider = Provider<bool>((ref) {
-  if (ref.watch(proProvider)) return true;
-  return ref.watch(liveItemsProvider).length < kFreeItemLimit;
+/// Why a free user can't capture right now — or [none] when they can.
+/// Capture only: re-burning what's already here is never gated, so the
+/// ritual can't be held hostage mid-craving (PROJECT.md §4.5).
+enum AddBlock { none, liveLimit, monthlyLimit }
+
+final addBlockProvider = Provider<AddBlock>((ref) {
+  if (ref.watch(proProvider)) return AddBlock.none;
+  if (ref.watch(liveItemsProvider).length >= kFreeItemLimit) {
+    return AddBlock.liveLimit;
+  }
+  if (ref.watch(newItemsThisMonthProvider) >= kFreeMonthlyNewItems) {
+    return AddBlock.monthlyLimit;
+  }
+  return AddBlock.none;
 });
+
+final canAddItemProvider = Provider<bool>(
+  (ref) => ref.watch(addBlockProvider) == AddBlock.none,
+);

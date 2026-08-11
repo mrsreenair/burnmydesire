@@ -147,12 +147,15 @@ Every item record carries a `category` from day one:
 | | Free | Pro |
 |---|---|---|
 | Active temptation items | 3 | Unlimited |
-| Burns per item | Unlimited | Unlimited |
+| New desires per month (photos + thoughts) | 5 | Unlimited |
+| Burns / re-burns per item | Unlimited | Unlimited |
 | Return rate / horizon | Fixed 8% / 20y | Adjustable |
 | Dashboard & analytics | — | ✓ |
 | Price | — | €2.99/mo · €19.99/yr · **€29.99 lifetime** |
 
-Rationale: gating *items* (not burns) puts the paywall where usage pressure actually is. Lifetime option matters — privacy-minded users prefer pay-once.
+Rationale: gating *capture* (not burns) puts the paywall where usage pressure actually is while never holding the ritual hostage — re-burning an existing struggle is free forever, because "pay €2.99 to resist your urge" is the one-star review that writes itself. The monthly count includes tombstones, so a final burn can't be farmed to refill the allowance. The paywall moment acknowledges the win ("You let go of 5 desires this month"), never scolds. Lifetime option matters — privacy-minded users prefer pay-once.
+
+**Ads: rejected (2026-08-11).** An ad SDK would end the "Data Not Collected" label, put trackers inside an app holding addiction data, serve shopping ads to people mid-craving (the product's exact antithesis), and earn pocket change (~€2 blended eCPM on a low-session utility) while suppressing Pro conversion and affiliate revenue — both larger. The only ad-shaped thing ever worth considering: a self-served static "sponsored by" card from one aligned brand, no SDK, no tracking. Not before v3.
 
 ### 4.6 Going global (founder decision 2026-08-09) ✅ *built*
 
