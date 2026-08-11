@@ -12,6 +12,7 @@ import '../utils/math_utils.dart';
 import '../widgets/paper_backdrop.dart';
 import '../widgets/ember_ui.dart';
 import '../widgets/goal_damage_card.dart';
+import '../widgets/invest_instead_card.dart';
 import '../widgets/shock_card.dart';
 import 'burn_screen.dart';
 import 'financial_goal_screen.dart';
@@ -64,7 +65,12 @@ class _ShockScreenState extends ConsumerState<ShockScreen> {
     final funds = ref.watch(relevantFundsProvider);
     final goal = ref.watch(financialGoalProvider).value;
     final protected = ref.watch(protectedCentsProvider);
-    final fund = _fund < funds.length ? funds[_fund] : null;
+    // The headline card always quotes the index, never whatever the user
+    // is poking at in the picker below. Selecting Nvidia there must not
+    // make the summary line say €95,536 — that number is a fantasy, and
+    // the card above the fold is the one people believe. `funds` is
+    // index-first (MarketData.fundsFor), so first is always a fund.
+    final headlineFund = funds.isNotEmpty ? funds.first : null;
 
     return Scaffold(
       appBar: AppBar(title: const Text('The damage')),
@@ -127,7 +133,7 @@ class _ShockScreenState extends ConsumerState<ShockScreen> {
                                   goal: goal,
                                   protectedCents: protected,
                                   years: _years,
-                                  fund: fund,
+                                  fund: headlineFund,
                                   onDetails: () => _showAssumptions(
                                     funds,
                                     market?.asOfLabel,
@@ -145,6 +151,27 @@ class _ShockScreenState extends ConsumerState<ShockScreen> {
                                       setState(() => _fund = f),
                                 ),
                         ),
+                        // The other half of the argument: what the same
+                        // money is capable of. Only under the goal card —
+                        // the fallback ShockCard already carries the
+                        // market, and two pickers would just compete.
+                        if (goal != null && funds.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          Reveal(
+                            delay: const Duration(milliseconds: 140),
+                            child: InvestInsteadCard(
+                              priceCents: widget.target.priceCents,
+                              years: _years,
+                              onYearsChanged: (y) => setState(() => _years = y),
+                              maxYears: ShockCard.maxYears,
+                              funds: funds,
+                              selected: _fund,
+                              onSelect: (i) => setState(() => _fund = i),
+                              onDetails: () =>
+                                  _showAssumptions(funds, market?.asOfLabel),
+                            ),
+                          ),
+                        ],
                         if (goal == null) ...[
                           const SizedBox(height: 4),
                           TextButton(
