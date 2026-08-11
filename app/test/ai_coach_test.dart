@@ -13,7 +13,7 @@ void main() {
         thought: 'I keep texting my ex',
       );
       expect(p, contains('I keep texting my ex'));
-      expect(p, contains('first burn'));
+      expect(p, contains('first time they let this desire go'));
     });
 
     test('long thoughts are clipped', () {

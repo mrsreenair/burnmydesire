@@ -79,8 +79,8 @@ String curatedQuestion(int index, List<String> alreadyAsked) {
 /// Instructions for generating the NEXT question. The hard rules mirror
 /// the coach's: no verdicts, no advice, no shame.
 const kInterviewInstructions =
-    'You help someone pause before an impulse purchase inside the app '
-    'Burn My Desire. They photographed something they want to buy and are '
+    'You help someone pause before an impulse purchase inside a '
+    'mindful-spending app. They photographed something they want to buy and are '
     'answering a short interview about it. Your job is to ask exactly ONE '
     'next question — short (under 90 characters), concrete, curious and '
     'warm, answerable in a phrase. Build on their previous answers. Never '
@@ -111,8 +111,8 @@ String buildQuestionPrompt({
 /// Instructions for the mirror — the end of the interview. Reflect,
 /// never conclude: the last word has to be the user's.
 const kMirrorInstructions =
-    'You help someone pause before an impulse purchase inside the app '
-    'Burn My Desire. They answered a short interview about the thing they '
+    'You help someone pause before an impulse purchase inside a '
+    'mindful-spending app. They answered a short interview about the thing they '
     'want to buy. Reflect their own answers back to them in second '
     'person: at most two sentences and 200 characters, quoting or closely '
     'paraphrasing their words. Do NOT conclude anything, do NOT recommend '
