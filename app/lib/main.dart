@@ -6,6 +6,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'config.dart';
 import 'data/currencies.dart';
 import 'data/encrypted_db.dart';
+import 'data/notification_service.dart';
 import 'data/image_store.dart';
 import 'data/user_prefs.dart';
 import 'providers/db_providers.dart';
@@ -27,6 +28,7 @@ Future<void> main() async {
   setActiveCurrency(
     currencyByCode(await savedCurrencyCode()) ?? detectCurrency(),
   );
+  await NotificationService().init();
   final setupDone = await hasCompletedSetup();
   final locked = setupDone && await hasPin();
   if (kRevenueCatIosApiKey.isNotEmpty) {

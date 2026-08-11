@@ -13,6 +13,7 @@ import '../data/burn_effects.dart';
 import '../data/cloud_backup.dart';
 import '../data/currencies.dart';
 import '../data/document_picker.dart';
+import '../data/notification_prefs.dart';
 import '../data/encrypted_db.dart';
 import '../data/user_prefs.dart';
 import '../data/world_counter.dart';
@@ -20,6 +21,7 @@ import '../utils/format_utils.dart';
 import '../providers/burn_effect_provider.dart';
 import '../providers/currency_provider.dart';
 import '../providers/financial_goal_provider.dart';
+import '../providers/notification_provider.dart';
 import '../providers/db_providers.dart';
 import '../providers/pro_provider.dart';
 import '../theme/app_colors.dart';
@@ -65,6 +67,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _counterOptIn = false;
   WorldStats? _worldStats;
 
+  /// Notification settings (NOTIFICATIONS.md).
+  NotificationPrefs _notifPrefs = const NotificationPrefs();
+
   @override
   void initState() {
     super.initState();
@@ -93,6 +98,111 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     WorldCounter().stats().then((s) {
       if (mounted) setState(() => _worldStats = s);
     });
+    loadNotificationPrefs().then((p) {
+      if (mounted) setState(() => _notifPrefs = p);
+    });
+  }
+
+  Future<void> _saveNotifPrefs(NotificationPrefs prefs) async {
+    setState(() => _notifPrefs = prefs);
+    await saveNotificationPrefs(prefs);
+    if (mounted) await replanNotifications(ref);
+  }
+
+  /// Master switch. Turning on re-asks iOS if needed; a system-level
+  /// denial gets an honest pointer instead of a switch that lies.
+  Future<void> _toggleNotifications(bool on) async {
+    if (!on) {
+      await _saveNotifPrefs(_notifPrefs.copyWith(enabled: false));
+      await ref.read(notificationServiceProvider).cancelAll();
+      return;
+    }
+    final granted =
+        await ref.read(notificationServiceProvider).requestPermission();
+    if (!granted) {
+      _toast(
+        'iOS is blocking notifications for this app. Allow them in '
+        'Settings → Notifications → Burn My Desire.',
+      );
+      return;
+    }
+    await markNotificationAskShown(); // settings opt-in supersedes the ask
+    await _saveNotifPrefs(_notifPrefs.copyWith(enabled: true));
+  }
+
+  /// One sheet for the check-in cadence: frequency chips + hour picker.
+  Future<void> _editCheckinSchedule() async {
+    final result = await showModalBottomSheet<(CheckinFrequency, int)>(
+      context: context,
+      builder: (sheetContext) {
+        var freq = _notifPrefs.checkinFrequency;
+        var hour = _notifPrefs.checkinHour;
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) => SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Check-in schedule',
+                      style: Theme.of(sheetContext).textTheme.headlineSmall),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      ChoiceChip(
+                        label: const Text('3× a week'),
+                        selected: freq == CheckinFrequency.fewTimesAWeek,
+                        onSelected: (_) => setSheetState(
+                          () => freq = CheckinFrequency.fewTimesAWeek,
+                        ),
+                      ),
+                      ChoiceChip(
+                        label: const Text('Daily'),
+                        selected: freq == CheckinFrequency.daily,
+                        onSelected: (_) => setSheetState(
+                          () => freq = CheckinFrequency.daily,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Quiet hours bound the choices, so the picker only
+                  // offers hours that can actually fire.
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final h in [9, 12, 15, 18, 20, 21, 22])
+                        ChoiceChip(
+                          label: Text('$h:00'),
+                          selected: hour == h,
+                          onSelected: (_) => setSheetState(() => hour = h),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () =>
+                          Navigator.pop(sheetContext, (freq, hour)),
+                      child: const Text('Save'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+    if (result == null) return;
+    await _saveNotifPrefs(_notifPrefs.copyWith(
+      checkinFrequency: result.$1,
+      checkinHour: result.$2,
+    ));
   }
 
   /// Turning this on sends one number: how much the protected total has
@@ -443,6 +553,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final dir = Directory('${store.documentsPath}/item_images');
     if (await dir.exists()) await dir.delete(recursive: true);
     await clearAllPrefs();
+    // A reminder about erased data would be a haunting.
+    await ref.read(notificationServiceProvider).cancelAll();
 
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
@@ -602,6 +714,67 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       value: _soundOn,
                       onChanged: _toggleSound,
                     ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Reveal(
+                delay: const Duration(milliseconds: 160),
+                child: _Group(
+                  label: 'Reminders',
+                  children: [
+                    _SwitchRow(
+                      icon: Icons.notifications_outlined,
+                      title: 'Notifications',
+                      subtitle: _notifPrefs.enabled
+                          ? 'At most one a day, always between 9:00 and '
+                                '22:30 — and never a word about what '
+                                'you\'re resisting.'
+                          : 'Off. Nothing will ever ping you.',
+                      value: _notifPrefs.enabled,
+                      onChanged: _toggleNotifications,
+                    ),
+                    if (_notifPrefs.enabled) ...[
+                      _SwitchRow(
+                        icon: Icons.self_improvement_outlined,
+                        title: 'Check-ins',
+                        subtitle: 'A gentle "anything pulling at you?" '
+                            'at your chosen hour.',
+                        value: _notifPrefs.checkinEnabled,
+                        onChanged: (on) => _saveNotifPrefs(
+                          _notifPrefs.copyWith(checkinEnabled: on),
+                        ),
+                      ),
+                      if (_notifPrefs.checkinEnabled)
+                        _Row(
+                          icon: Icons.schedule_outlined,
+                          title: 'When',
+                          trailing: _notifPrefs.checkinFrequency ==
+                                  CheckinFrequency.daily
+                              ? 'Daily · ${_notifPrefs.checkinHour}:00'
+                              : '3×/week · ${_notifPrefs.checkinHour}:00',
+                          onTap: _editCheckinSchedule,
+                        ),
+                      _SwitchRow(
+                        icon: Icons.local_fire_department_outlined,
+                        title: 'Streak reminders',
+                        subtitle: 'When a resisted desire is about to '
+                            'reach a longer streak.',
+                        value: _notifPrefs.streakEnabled,
+                        onChanged: (on) => _saveNotifPrefs(
+                          _notifPrefs.copyWith(streakEnabled: on),
+                        ),
+                      ),
+                      _SwitchRow(
+                        icon: Icons.savings_outlined,
+                        title: 'Monthly total',
+                        subtitle: 'Once a month: how much is still yours.',
+                        value: _notifPrefs.milestoneEnabled,
+                        onChanged: (on) => _saveNotifPrefs(
+                          _notifPrefs.copyWith(milestoneEnabled: on),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

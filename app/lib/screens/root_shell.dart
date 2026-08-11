@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/notification_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/motion.dart';
 import 'ashes_screen.dart';
@@ -22,8 +23,29 @@ class RootShell extends ConsumerStatefulWidget {
   ConsumerState<RootShell> createState() => _RootShellState();
 }
 
-class _RootShellState extends ConsumerState<RootShell> {
+class _RootShellState extends ConsumerState<RootShell>
+    with WidgetsBindingObserver {
   late int _index = widget.initialIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Launch-time replan: the schedule is a pure function of state, so
+    // rebuilding it whenever the app comes to life keeps it honest.
+    replanNotifications(ref);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) replanNotifications(ref);
+  }
 
   static const _tabs = [
     (

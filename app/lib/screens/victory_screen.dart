@@ -9,12 +9,14 @@ import '../data/backup.dart';
 import '../data/cloud_backup.dart';
 import '../data/database.dart';
 import '../data/image_store.dart';
+import '../data/notification_prefs.dart';
 import '../data/reflection.dart';
 import '../data/user_prefs.dart';
 import '../data/world_counter.dart';
 import '../models/burn_target.dart';
 import '../providers/db_providers.dart';
 import '../providers/financial_goal_provider.dart';
+import '../providers/notification_provider.dart';
 import '../providers/pro_provider.dart';
 import '../theme/app_colors.dart';
 import '../utils/format_utils.dart';
@@ -47,12 +49,35 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
   bool get _isFinal =>
       widget.target.letGoForever || widget.target.burnNumber >= kFinalBurnCount;
 
+  /// Whether to show the one-time notification ask on this victory.
+  bool _offerNotifications = false;
+
   @override
   void initState() {
     super.initState();
     _persistBurn();
     _celebrate();
     if (widget.target.isEmotion && !_isFinal) _loadAiMessage();
+    _checkNotificationAsk();
+  }
+
+  /// The permission ask happens here — right after a win, never at
+  /// launch (NOTIFICATIONS.md §5). Shown once, ever.
+  Future<void> _checkNotificationAsk() async {
+    if (await notificationAskShown()) return;
+    if (mounted) setState(() => _offerNotifications = true);
+  }
+
+  Future<void> _answerNotificationAsk(bool wantsThem) async {
+    await markNotificationAskShown();
+    if (mounted) setState(() => _offerNotifications = false);
+    if (!wantsThem) return;
+    final granted =
+        await ref.read(notificationServiceProvider).requestPermission();
+    if (!granted) return;
+    final prefs = await loadNotificationPrefs();
+    await saveNotificationPrefs(prefs.copyWith(enabled: true));
+    if (mounted) await replanNotifications(ref);
   }
 
   /// Fire-and-forget: the curated message shows instantly; if Apple's
@@ -114,6 +139,8 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
     WorldCounter()
         .contribute(ref.read(protectedCentsProvider))
         .catchError((Object _) => null);
+    // Streaks and totals just changed; the pending schedule follows.
+    if (mounted) await replanNotifications(ref);
   }
 
   /// Fire-and-forget iCloud backup once the burn is recorded. Silent by
@@ -202,6 +229,15 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
                               child: GoalProgress(
                                 goal: goal,
                                 protectedCents: protected,
+                              ),
+                            ),
+                          ],
+                          if (_offerNotifications) ...[
+                            const SizedBox(height: 24),
+                            Reveal(
+                              delay: const Duration(milliseconds: 520),
+                              child: _NotificationAsk(
+                                onAnswer: _answerNotificationAsk,
                               ),
                             ),
                           ],
@@ -424,6 +460,64 @@ class _ThoughtResult extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The one-time notification ask, placed right after a win. Both answers
+/// are final: declining is remembered, and Settings remains the way in.
+class _NotificationAsk extends StatelessWidget {
+  const _NotificationAsk({required this.onAnswer});
+
+  final ValueChanged<bool> onAnswer;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.washPeach.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'Want a nudge when your streak is at risk?',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'A quiet reminder now and then. It never names what you\'re '
+            'resisting — nothing anyone could read into over your shoulder.',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textMid,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => onAnswer(false),
+                  child: const Text('No thanks'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => onAnswer(true),
+                  child: const Text('Remind me'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
