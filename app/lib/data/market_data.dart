@@ -174,7 +174,16 @@ class MarketData {
 
 const _kAssetPath = 'assets/data/market_returns.json';
 const _kCacheFile = 'market_cache.json';
-const _kRefreshAfter = Duration(days: 30);
+/// How stale the data may get before the app refreshes it itself.
+///
+/// Weekly, not daily. What's displayed is a multi-decade average annual
+/// return over monthly closes — one more day moves a 30-year CAGR by
+/// about a thousandth of a percentage point, so daily fetching would
+/// spend 14 requests per user per day to change a number nobody can see,
+/// while multiplying the chance of being rate-limited off a free,
+/// undocumented endpoint. A weekly build refresh (.github/workflows/
+/// refresh-market-data.yml) keeps the bundled copy current regardless.
+const _kRefreshAfter = Duration(days: 7);
 
 /// Yahoo Finance chart endpoint (free, no key). Used only to refresh public
 /// price history — no user data is ever sent.
