@@ -12,6 +12,28 @@ const String kRevenueCatIosApiKey = String.fromEnvironment(
 /// RevenueCat entitlement identifier that unlocks Pro.
 const String kProEntitlementId = 'pro';
 
+/// Terms of Use and Privacy Policy, linked from the paywall.
+///
+/// Not optional. App Review guideline 3.1.2 requires a functional link to
+/// both from any screen selling a subscription, and "we'll add it later"
+/// is one of the most common rejection reasons there is. Injected so the
+/// URLs can change without a code edit:
+///   flutter build ios --dart-define=TERMS_URL=https://…
+///
+/// Apple's standard EULA is a valid Terms link if you don't have your own:
+/// https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+const String kTermsUrl = String.fromEnvironment(
+  'TERMS_URL',
+  defaultValue:
+      'https://www.apple.com/legal/internet-services/itunes/dev/'
+      'stdeula/',
+);
+
+const String kPrivacyUrl = String.fromEnvironment(
+  'PRIVACY_URL',
+  defaultValue: '',
+);
+
 /// Free tier: up to this many active temptation items (PROJECT.md §4.5).
 /// Destroyed items don't count — finishing a desire frees a slot.
 const int kFreeItemLimit = 3;
