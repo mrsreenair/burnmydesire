@@ -14,6 +14,7 @@ import '../utils/format_utils.dart';
 /// nothing that could identify them or what they burned. Off by default.
 const _kOptInKey = 'world_counter_opt_in';
 const _kContributedKey = 'world_counter_contributed_cents';
+const _kAskShownKey = 'world_counter_ask_shown';
 
 class WorldStats {
   const WorldStats({required this.totalCents, required this.contributors});
@@ -32,6 +33,16 @@ Future<bool> worldCounterOptIn() async =>
 
 Future<void> setWorldCounterOptIn(bool on) async =>
     (await SharedPreferences.getInstance()).setBool(_kOptInKey, on);
+
+/// Whether the one-time ask has already been put to this person.
+///
+/// Asked once, after a burn, and never again either way — a second ask
+/// after a "no" would be nagging for something they gain nothing from.
+Future<bool> worldCounterAskShown() async =>
+    (await SharedPreferences.getInstance()).getBool(_kAskShownKey) ?? false;
+
+Future<void> markWorldCounterAskShown() async =>
+    (await SharedPreferences.getInstance()).setBool(_kAskShownKey, true);
 
 /// How much of the user's total has already been counted, so we only ever
 /// send the difference.

@@ -31,7 +31,7 @@ const SECTIONS = [
   {
     h: "Your data is yours, and only yours",
     p: [
-      "Everything you create stays on your device. We cannot access it, restore it, migrate it or recover it — including if you lose or reset the phone without a backup. That is the trade for having no server, and it is the design we intend to keep.",
+      "Everything you create stays on your device. We cannot access it, restore it, migrate it or recover it — including if you lose or reset the phone without a backup. That is the trade for having no server. If a future feature ever needs that to change, the privacy policy will say so before it does, and it will be yours to opt into.",
     ],
   },
   {

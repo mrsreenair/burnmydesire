@@ -664,8 +664,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   : '${formatWorldEuros(_worldStats!.totalCents)} '
                                         'burned by '
                                         '${_worldStats!.contributors} people so '
-                                        'far. Only a single number ever leaves '
-                                        'your phone.'
+                                        'far. A single number is all this sends.'
                             : 'Off. Turn on to add your protected total to '
                                   'the public figure — one number, nothing '
                                   'that identifies you.',
@@ -677,8 +676,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       title: 'AI encouragement',
                       subtitle:
                           'Personal messages from Apple\'s on-device '
-                          'model. Runs on your phone — nothing is sent '
-                          'anywhere.',
+                          'model. It runs on your phone, so your words '
+                          'stay here.',
                       value: _aiOn,
                       onChanged: _toggleAi,
                     ),

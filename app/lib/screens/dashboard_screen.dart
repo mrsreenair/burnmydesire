@@ -1,7 +1,3 @@
-import 'dart:io';
-
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -15,8 +11,8 @@ import '../providers/pro_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/motion.dart';
 import '../utils/format_utils.dart';
-import '../utils/milestone_card.dart';
 import '../widgets/ember_ui.dart';
+import '../widgets/share_milestone.dart';
 import '../widgets/goal_progress.dart';
 import '../utils/math_utils.dart';
 import 'financial_goal_screen.dart';
@@ -176,16 +172,16 @@ class _Dashboard extends ConsumerWidget {
           ),
         if (protected > 0) ...[
           const SizedBox(height: 12),
-          _ShareMilestone(protectedCents: protected, burns: items.length),
+          ShareMilestone(protectedCents: protected, burns: items.length),
         ],
         if (goal != null) ...[
           const SizedBox(height: 16),
           GoalProgress(
             goal: goal,
             protectedCents: protected,
-            onTap: () => Navigator.of(context).push(
-              emberRoute(const FinancialGoalScreen(inSetup: false)),
-            ),
+            onTap: () => Navigator.of(
+              context,
+            ).push(emberRoute(const FinancialGoalScreen(inSetup: false))),
           ),
         ] else ...[
           const SizedBox(height: 8),
@@ -194,9 +190,9 @@ class _Dashboard extends ConsumerWidget {
           TextButton.icon(
             icon: const Icon(Icons.flag_outlined, size: 18),
             label: const Text('Set a savings goal'),
-            onPressed: () => Navigator.of(context).push(
-              emberRoute(const FinancialGoalScreen(inSetup: false)),
-            ),
+            onPressed: () => Navigator.of(
+              context,
+            ).push(emberRoute(const FinancialGoalScreen(inSetup: false))),
           ),
         ],
         const SizedBox(height: 16),
@@ -350,61 +346,6 @@ class _ItemTile extends ConsumerWidget {
           '${DateFormat.yMMMd().format(when)}',
         ),
       ),
-    );
-  }
-}
-
-/// The viral loop: the effect is the ad, so make the win trivially
-/// shareable — without ever revealing what was resisted.
-class _ShareMilestone extends StatefulWidget {
-  const _ShareMilestone({required this.protectedCents, required this.burns});
-
-  final int protectedCents;
-  final int burns;
-
-  @override
-  State<_ShareMilestone> createState() => _ShareMilestoneState();
-}
-
-class _ShareMilestoneState extends State<_ShareMilestone> {
-  bool _busy = false;
-
-  Future<void> _share() async {
-    setState(() => _busy = true);
-    try {
-      final bytes = await renderMilestoneCard(
-        protectedCents: widget.protectedCents,
-        burns: widget.burns,
-      );
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/burn-my-desire-milestone.png');
-      await file.writeAsBytes(bytes);
-      if (!mounted) return;
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path)],
-          text:
-              'I protected ${formatMoney(widget.protectedCents)} by '
-              'burning what I wanted instead of buying it.',
-        ),
-      );
-    } on Object {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Couldn\'t create the card.')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TextButton.icon(
-      onPressed: _busy ? null : _share,
-      icon: const Icon(Icons.ios_share, size: 18),
-      label: Text(_busy ? 'Preparing…' : 'Share this win'),
     );
   }
 }

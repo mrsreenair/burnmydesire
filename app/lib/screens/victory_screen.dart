@@ -21,10 +21,12 @@ import '../providers/pro_provider.dart';
 import '../theme/app_colors.dart';
 import '../utils/format_utils.dart';
 import '../utils/math_utils.dart';
+import '../utils/milestone_card.dart';
 import '../utils/motivation.dart';
 import '../widgets/confetti.dart';
 import '../widgets/ember_ui.dart';
 import '../widgets/goal_progress.dart';
+import '../widgets/share_milestone.dart';
 import '../widgets/paper_backdrop.dart';
 
 /// The payoff. Structured like a proper achievement screen: hero, earned
@@ -52,28 +54,62 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
   /// Whether to show the one-time notification ask on this victory.
   bool _offerNotifications = false;
 
+  /// Whether to show the one-time world-counter ask on this victory.
+  bool _offerCounter = false;
+
   @override
   void initState() {
     super.initState();
     _persistBurn();
     _celebrate();
     if (widget.target.isEmotion && !_isFinal) _loadAiMessage();
-    _checkNotificationAsk();
+    _checkAsks();
+  }
+
+  /// At most one ask per victory, notifications first.
+  ///
+  /// Two cards stacked under a win turns a celebration into a consent
+  /// form; the counter simply waits for the next burn.
+  Future<void> _checkAsks() async {
+    if (!await notificationAskShown()) {
+      if (mounted) setState(() => _offerNotifications = true);
+      return;
+    }
+    await _checkCounterAsk();
+  }
+
+  /// The counter ask, put at the only moment it makes sense: just after
+  /// someone protected money, when the number they'd be adding is real
+  /// and in front of them. Never at launch, never in a settings list
+  /// nobody scrolls to. Money burns only — a thought burned contributes
+  /// nothing to a euro total, so asking would be noise.
+  Future<void> _checkCounterAsk() async {
+    if (!WorldCounter().configured) return;
+    if (widget.target.isEmotion || widget.target.priceCents <= 0) return;
+    if (await worldCounterOptIn()) return;
+    if (await worldCounterAskShown()) return;
+    if (mounted) setState(() => _offerCounter = true);
+  }
+
+  Future<void> _answerCounterAsk(bool wantsIn) async {
+    await markWorldCounterAskShown();
+    if (mounted) setState(() => _offerCounter = false);
+    if (!wantsIn) return;
+    await setWorldCounterOptIn(true);
+    await WorldCounter()
+        .contribute(ref.read(protectedCentsProvider))
+        .catchError((Object _) => null);
   }
 
   /// The permission ask happens here — right after a win, never at
   /// launch (NOTIFICATIONS.md §5). Shown once, ever.
-  Future<void> _checkNotificationAsk() async {
-    if (await notificationAskShown()) return;
-    if (mounted) setState(() => _offerNotifications = true);
-  }
-
   Future<void> _answerNotificationAsk(bool wantsThem) async {
     await markNotificationAskShown();
     if (mounted) setState(() => _offerNotifications = false);
     if (!wantsThem) return;
-    final granted =
-        await ref.read(notificationServiceProvider).requestPermission();
+    final granted = await ref
+        .read(notificationServiceProvider)
+        .requestPermission();
     if (!granted) return;
     final prefs = await loadNotificationPrefs();
     await saveNotificationPrefs(prefs.copyWith(enabled: true));
@@ -222,7 +258,9 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
                           // The destination. Money burns only — telling
                           // someone their breakup burn brought a MacBook
                           // closer would be exactly the wrong note.
-                          if (!target.isEmotion && price > 0 && goal != null) ...[
+                          if (!target.isEmotion &&
+                              price > 0 &&
+                              goal != null) ...[
                             const SizedBox(height: 24),
                             Reveal(
                               delay: const Duration(milliseconds: 480),
@@ -232,12 +270,39 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
                               ),
                             ),
                           ],
+                          // The share sits with the celebration, above
+                          // the asks: this is the win, the rest is
+                          // housekeeping. Free as well as Pro — the card
+                          // is the advertisement.
+                          if (protected > 0) ...[
+                            const SizedBox(height: 24),
+                            Reveal(
+                              delay: const Duration(milliseconds: 500),
+                              child: ShareMilestone(
+                                protectedCents: protected,
+                                burns:
+                                    ref.watch(itemsProvider).value?.length ?? 1,
+                                format: CardFormat.story,
+                                label: 'Share this win',
+                              ),
+                            ),
+                          ],
                           if (_offerNotifications) ...[
                             const SizedBox(height: 24),
                             Reveal(
                               delay: const Duration(milliseconds: 520),
                               child: _NotificationAsk(
                                 onAnswer: _answerNotificationAsk,
+                              ),
+                            ),
+                          ],
+                          if (_offerCounter) ...[
+                            const SizedBox(height: 24),
+                            Reveal(
+                              delay: const Duration(milliseconds: 520),
+                              child: _CounterAsk(
+                                protectedCents: protected,
+                                onAnswer: _answerCounterAsk,
                               ),
                             ),
                           ],
@@ -512,6 +577,71 @@ class _NotificationAsk extends StatelessWidget {
                 child: FilledButton(
                   onPressed: () => onAnswer(true),
                   child: const Text('Remind me'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The world-counter ask.
+///
+/// Opt-in, asked once, and phrased so the answer is informed: it names
+/// the exact number that would leave the phone and what does not go with
+/// it. A default-on counter would collect more and mean less — the
+/// figure is worth something precisely because everyone in it chose to
+/// be there.
+class _CounterAsk extends StatelessWidget {
+  const _CounterAsk({required this.protectedCents, required this.onAnswer});
+
+  final int protectedCents;
+  final ValueChanged<bool> onAnswer;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.washPeach.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'Add your ${formatMoney(protectedCents)} to the world total?',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'One number joins a public figure of what people have burned '
+            'instead of bought. No name, no items, nothing that points '
+            'back to you. You can turn it off in Settings.',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textMid,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => onAnswer(false),
+                  child: const Text('Keep it private'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => onAnswer(true),
+                  child: const Text('Count mine'),
                 ),
               ),
             ],
