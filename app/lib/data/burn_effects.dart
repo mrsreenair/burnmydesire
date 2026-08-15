@@ -1,4 +1,4 @@
-import 'dart:ui' show Color;
+import 'package:flutter/material.dart' show Color, IconData, Icons;
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,6 +16,7 @@ class BurnEffect {
     required this.asset,
     required this.sound,
     required this.glow,
+    required this.icon,
     this.verb = 'burn',
     this.pro = true,
   });
@@ -46,6 +47,12 @@ class BurnEffect {
   /// the app's word for the act.
   final String verb;
 
+  /// What the effect looks like in one glyph. Four coloured dots in a
+  /// picker make the user read four paragraphs to tell them apart; a
+  /// flame, a snowflake and a pair of blades are legible before the words
+  /// are.
+  final IconData icon;
+
   /// The light this burn throws into the dark room around the paper. The
   /// glow is half the effect — an orange room under a grey crumble would
   /// undo the whole point of offering a flameless option.
@@ -67,6 +74,7 @@ const burnEffects = <BurnEffect>[
     blurb: 'The original. A ragged orange front eats the page.',
     asset: 'assets/shaders/burn.frag',
     sound: 'audio/fire.wav',
+    icon: Icons.local_fire_department,
     glow: Color(0xFFA8102A), // AppColors.coal
     pro: false,
   ),
@@ -76,6 +84,8 @@ const burnEffects = <BurnEffect>[
     blurb: 'No flame. The page cools, greys and crumbles away.',
     asset: 'assets/shaders/ash.frag',
     sound: 'audio/fire.wav',
+    // Scattered specks: what's left when there was never a flame.
+    icon: Icons.grain,
     glow: Color(0xFF3A3630),
   ),
   BurnEffect(
@@ -84,6 +94,7 @@ const burnEffects = <BurnEffect>[
     blurb: 'A gas-blue burn that bleaches the page instead of charring it.',
     asset: 'assets/shaders/cold.frag',
     sound: 'audio/fire.wav',
+    icon: Icons.ac_unit,
     glow: Color(0xFF0E2C86),
   ),
   BurnEffect(
@@ -92,6 +103,7 @@ const burnEffects = <BurnEffect>[
     blurb: 'Steel teeth take the page and give back ribbons.',
     asset: 'assets/shaders/shred.frag',
     sound: 'audio/shred.wav',
+    icon: Icons.content_cut,
     verb: 'shred',
     // Machine light, not firelight — the room should look like an office
     // at night, which is exactly the unsentimental register this is for.

@@ -51,6 +51,12 @@ void main() {
     }
   });
 
+  test('every effect has its own glyph', () {
+    // Four identical dots would make the picker unreadable; the icon is
+    // what tells them apart before the words are read.
+    expect(burnEffects.map((e) => e.icon).toSet().length, burnEffects.length);
+  });
+
   test('an unknown or missing id falls back to fire', () {
     // A Pro effect dropped in a later version must not leave someone
     // unable to burn at all.

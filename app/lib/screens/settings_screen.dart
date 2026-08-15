@@ -117,8 +117,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await ref.read(notificationServiceProvider).cancelAll();
       return;
     }
-    final granted =
-        await ref.read(notificationServiceProvider).requestPermission();
+    final granted = await ref
+        .read(notificationServiceProvider)
+        .requestPermission();
     if (!granted) {
       _toast(
         'iOS is blocking notifications for this app. Allow them in '
@@ -145,8 +146,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Check-in schedule',
-                      style: Theme.of(sheetContext).textTheme.headlineSmall),
+                  Text(
+                    'Check-in schedule',
+                    style: Theme.of(sheetContext).textTheme.headlineSmall,
+                  ),
                   const SizedBox(height: 16),
                   Wrap(
                     spacing: 8,
@@ -161,9 +164,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ChoiceChip(
                         label: const Text('Daily'),
                         selected: freq == CheckinFrequency.daily,
-                        onSelected: (_) => setSheetState(
-                          () => freq = CheckinFrequency.daily,
-                        ),
+                        onSelected: (_) =>
+                            setSheetState(() => freq = CheckinFrequency.daily),
                       ),
                     ],
                   ),
@@ -199,10 +201,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       },
     );
     if (result == null) return;
-    await _saveNotifPrefs(_notifPrefs.copyWith(
-      checkinFrequency: result.$1,
-      checkinHour: result.$2,
-    ));
+    await _saveNotifPrefs(
+      _notifPrefs.copyWith(checkinFrequency: result.$1, checkinHour: result.$2),
+    );
   }
 
   /// Turning this on sends one number: how much the protected total has
@@ -608,18 +609,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ? 'Not set'
                           : '${financialGoal.emoji} ${financialGoal.name}',
                       onTap: () => Navigator.of(context).push(
-                        emberRoute(
-                          const FinancialGoalScreen(inSetup: false),
-                        ),
+                        emberRoute(const FinancialGoalScreen(inSetup: false)),
                       ),
                     ),
                     _Row(
                       icon: Icons.currency_exchange_outlined,
                       title: 'Currency',
-                      subtitle: 'Changes how amounts are written. Your '
+                      subtitle:
+                          'Changes how amounts are written. Your '
                           'saved numbers stay as they are.',
-                      trailing:
-                          '${currency.flag} ${currency.code}',
+                      trailing: '${currency.flag} ${currency.code}',
                       onTap: _showCurrencies,
                     ),
                   ],
@@ -737,7 +736,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       _SwitchRow(
                         icon: Icons.self_improvement_outlined,
                         title: 'Check-ins',
-                        subtitle: 'A gentle "anything pulling at you?" '
+                        subtitle:
+                            'A gentle "anything pulling at you?" '
                             'at your chosen hour.',
                         value: _notifPrefs.checkinEnabled,
                         onChanged: (on) => _saveNotifPrefs(
@@ -748,7 +748,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         _Row(
                           icon: Icons.schedule_outlined,
                           title: 'When',
-                          trailing: _notifPrefs.checkinFrequency ==
+                          trailing:
+                              _notifPrefs.checkinFrequency ==
                                   CheckinFrequency.daily
                               ? 'Daily · ${_notifPrefs.checkinHour}:00'
                               : '3×/week · ${_notifPrefs.checkinHour}:00',
@@ -757,7 +758,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       _SwitchRow(
                         icon: Icons.local_fire_department_outlined,
                         title: 'Streak reminders',
-                        subtitle: 'When a resisted desire is about to '
+                        subtitle:
+                            'When a resisted desire is about to '
                             'reach a longer streak.',
                         value: _notifPrefs.streakEnabled,
                         onChanged: (on) => _saveNotifPrefs(
@@ -789,7 +791,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       trailing: isPro ? 'Active' : 'Free',
                     ),
                     _Row(
-                      icon: Icons.whatshot_outlined,
+                      // The row wears whatever is selected, so the choice
+                      // is visible without opening the sheet.
+                      icon: effect.icon,
                       title: 'Burn effect',
                       subtitle: effect.blurb,
                       trailing: effect.name,
@@ -939,8 +943,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Currency',
-                  style: Theme.of(sheetContext).textTheme.headlineSmall),
+              Text(
+                'Currency',
+                style: Theme.of(sheetContext).textTheme.headlineSmall,
+              ),
               const SizedBox(height: 12),
               Flexible(
                 child: ListView.separated(
@@ -997,13 +1003,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               for (final e in burnEffects)
                 ListTile(
                   contentPadding: EdgeInsets.zero,
+                  // The disc still carries the glow this effect throws
+                  // into the room; the glyph says what it does.
                   leading: Container(
                     width: 40,
                     height: 40,
+                    alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: e.glow,
                       shape: BoxShape.circle,
                     ),
+                    child: Icon(e.icon, size: 20, color: Colors.white),
                   ),
                   title: Text(e.name),
                   subtitle: Text(e.blurb),
