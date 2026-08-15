@@ -1,0 +1,4 @@
+node_modules/
+# Miniflare's local D1 and Worker state, rebuilt on demand.
+.wrangler/
+.dev.vars

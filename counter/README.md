@@ -1,6 +1,7 @@
 # Burn My Desire — world counter
 
 The anonymous aggregate behind the website's "€X burned" headline.
+A Cloudflare Worker with a D1 database behind it.
 
 ## What it stores
 
@@ -14,30 +15,62 @@ a number that is already published.
 
 | Method | Path                 | Purpose                                    |
 | ------ | -------------------- | ------------------------------------------ |
-| GET    | `/health`            | Container health check                      |
 | GET    | `/api/stats`         | `{ totalCents, contributors, updatedAt }`   |
 | POST   | `/api/contributions` | `{ deltaCents, firstTime }` → updated stats |
 
-Contributions are rate limited per client (hashed with a per-process salt
-that dies with the process) and capped at €1,000,000 each, so one absurd
+Contributions are rate limited to ten a minute per address, via the
+Workers rate-limiting binding — the key is handed over per request and
+never stored. Each contribution is capped at €1,000,000, so one absurd
 submission can't permanently distort a public figure.
 
-## Deploying (Coolify / Dokploy on Hetzner)
+There is no `/health`: Cloudflare has no container to probe.
 
-1. New resource → **Docker Compose**, point at this repo, set the base
-   directory to `counter/`.
-2. Set `ALLOWED_ORIGINS` to the site origin (e.g. `https://burnmydesire.com`).
-   Leave `*` only while testing.
-3. Attach a persistent volume at `/data` — Compose already declares it.
-4. Point the app and website at the resulting URL.
+## Layout
 
-## Local
+    src/validate.js   the rules, with no database in sight
+    src/store.js      the two D1 queries
+    src/index.js      routing, CORS, rate limiting
+    migrations/       the schema, applied by wrangler
+
+The split exists so the interesting logic stays testable without a
+Worker running.
+
+## First deploy
 
 ```bash
 npm install
-npm test
-DB_FILE=./counter.sqlite npm start
+npx wrangler d1 create burnmydesire-counter   # prints a database_id
 ```
+
+Paste that id into `wrangler.jsonc` (it replaces `PLACEHOLDER_RUN_D1_CREATE`),
+then:
+
+```bash
+npm run migrate     # applies migrations/ to the remote database
+npm run deploy
+```
+
+Point `counter.burnmydesire.com` at **this** Worker, not the website one —
+a custom domain is only an address, and attaching it to the site Worker
+serves the site's HTML on `/api/stats`.
+
+Finally, build the app with the URL compiled in, or the counter UI stays
+hidden by design:
+
+```bash
+flutter build ios --release --dart-define=COUNTER_URL=https://counter.burnmydesire.com
+```
+
+## Tests
+
+```bash
+npm test
+```
+
+`node --test` covers the pure rules; `vitest` runs the Worker against a
+real local D1, migrated from the same files production uses. The rate
+limiter is live in those tests, so a case that reuses a key across tests
+will starve — pass a distinct key per contribution.
 
 ## Honesty note
 

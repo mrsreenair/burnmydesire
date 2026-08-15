@@ -1,6 +1,4 @@
-import Database from 'better-sqlite3';
-import { mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { validateContribution } from './validate.js';
 
 /**
  * The entire dataset is two integers.
@@ -10,53 +8,40 @@ import { dirname } from 'node:path';
  * could identify who sent it. A breach here would leak "people have
  * burned N euros", which is already published on the website.
  */
-export function openStore(file) {
-  if (file !== ':memory:') mkdirSync(dirname(file), { recursive: true });
-  const db = new Database(file);
-  db.pragma('journal_mode = WAL');
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS totals (
-      id INTEGER PRIMARY KEY CHECK (id = 1),
-      total_cents INTEGER NOT NULL DEFAULT 0,
-      contributors INTEGER NOT NULL DEFAULT 0,
-      updated_at TEXT
-    );
-    INSERT OR IGNORE INTO totals (id, total_cents, contributors)
-      VALUES (1, 0, 0);
-  `);
-  return db;
-}
 
-/** Largest single contribution accepted, in cents (€1,000,000). */
-export const MAX_DELTA_CENTS = 100_000_000;
+export async function addContribution(db, { deltaCents, firstTime }) {
+  const check = validateContribution({ deltaCents });
+  if (!check.ok) return check;
 
-export function addContribution(db, { deltaCents, firstTime }) {
-  if (!Number.isInteger(deltaCents) || deltaCents <= 0) {
-    return { ok: false, reason: 'delta_cents must be a positive integer' };
-  }
-  if (deltaCents > MAX_DELTA_CENTS) {
-    // A single absurd number would distort a public figure permanently.
-    return { ok: false, reason: 'delta_cents exceeds the accepted maximum' };
-  }
-  db.prepare(
-    `UPDATE totals
-        SET total_cents = total_cents + ?,
-            contributors = contributors + ?,
-            updated_at = ?
-      WHERE id = 1`,
-  ).run(deltaCents, firstTime ? 1 : 0, new Date().toISOString());
+  // One statement, so the increment is atomic: no SELECT-then-UPDATE, and
+  // therefore no lost update when two people burn at the same moment.
+  // Do not "helpfully" split this into a read and a write.
+  await db
+    .prepare(
+      `UPDATE totals
+          SET total_cents = total_cents + ?1,
+              contributors = contributors + ?2,
+              updated_at = ?3
+        WHERE id = 1`,
+    )
+    .bind(deltaCents, firstTime ? 1 : 0, new Date().toISOString())
+    .run();
+
   return { ok: true };
 }
 
-export function readStats(db) {
-  const row = db
+export async function readStats(db) {
+  const row = await db
     .prepare(
       'SELECT total_cents, contributors, updated_at FROM totals WHERE id = 1',
     )
-    .get();
+    .first();
+
+  // A missing row means the migration has not run. Report zero rather
+  // than throwing: a stat block that does not render beats a 500.
   return {
-    totalCents: row.total_cents,
-    contributors: row.contributors,
-    updatedAt: row.updated_at,
+    totalCents: row?.total_cents ?? 0,
+    contributors: row?.contributors ?? 0,
+    updatedAt: row?.updated_at ?? null,
   };
 }

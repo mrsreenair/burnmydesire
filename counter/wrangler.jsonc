@@ -1,0 +1,33 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "burnmydesire-counter",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-15",
+  "observability": { "enabled": true },
+
+  "vars": {
+    // The site's own origins. Leave "*" only while testing — this is what
+    // stops an arbitrary page from reading the figure as its own.
+    "ALLOWED_ORIGINS": "https://burnmydesire.com,https://www.burnmydesire.com"
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "burnmydesire-counter",
+      // Filled in by `wrangler d1 create burnmydesire-counter`.
+      "database_id": "PLACEHOLDER_RUN_D1_CREATE",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // Ten writes a minute per address, matching the Node version's
+  // RATE_LIMIT/RATE_WINDOW_MS defaults. `period` accepts only 10 or 60.
+  "ratelimits": [
+    {
+      "name": "CONTRIBUTION_LIMIT",
+      "namespace_id": "1001",
+      "simple": { "limit": 10, "period": 60 }
+    }
+  ]
+}
