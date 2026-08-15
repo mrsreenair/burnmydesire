@@ -6,13 +6,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config.dart';
 import '../utils/format_utils.dart';
 
-/// The opt-in global counter.
+/// The global counter.
 ///
 /// This is the only thing the app ever sends anywhere, and it sends two
 /// numbers: how much the user's protected total has grown since they last
 /// contributed, and how many thoughts they have burned. No install id, no
 /// categories, no goals, no timestamps, no text of any thought — nothing
-/// that could identify them or what they burned. Off by default.
+/// that could identify them or what they burned.
+///
+/// On by default, and said out loud: a notice appears after the first
+/// burn explaining what is sent, with the switch to stop it. Nothing
+/// leaves the phone before that notice has been shown.
 const _kOptInKey = 'world_counter_opt_in';
 const _kContributedKey = 'world_counter_contributed_cents';
 const _kContributedThoughtsKey = 'world_counter_contributed_thoughts';
@@ -36,8 +40,15 @@ class WorldStats {
   );
 }
 
+/// On unless someone has turned it off.
+///
+/// The default changed: nobody had to find a switch to be counted. What
+/// did not change is that the switch still exists — anyone who reads the
+/// notice after their first burn and would rather not be in the figure
+/// can leave it, and anyone who already turned it off stays off, because
+/// a stored `false` still wins over the default.
 Future<bool> worldCounterOptIn() async =>
-    (await SharedPreferences.getInstance()).getBool(_kOptInKey) ?? false;
+    (await SharedPreferences.getInstance()).getBool(_kOptInKey) ?? true;
 
 Future<void> setWorldCounterOptIn(bool on) async =>
     (await SharedPreferences.getInstance()).setBool(_kOptInKey, on);

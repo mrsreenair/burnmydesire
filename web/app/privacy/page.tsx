@@ -14,7 +14,7 @@ const SECTIONS = [
     p: [
       "Photos you capture or pick, item prices, installment details, written thoughts and your burn history are saved in the app's private storage on your phone.",
       "The database is encrypted at rest with SQLCipher, using a key generated on first launch and held in the iOS Keychain — not in the app bundle. Photos and thought pages are written with complete data protection, which means they are unreadable while the device is locked.",
-      "This data is included in your device backup (iCloud or local) under Apple's standard mechanisms. As the app works today, none of it is sent to us or to any third party.",
+      "This data is included in your device backup (iCloud or local) under Apple's standard mechanisms. None of it is sent to us or to any third party — the only thing that leaves the phone is the pair of anonymous figures described under the world counter below.",
     ],
   },
   {
@@ -34,7 +34,7 @@ const SECTIONS = [
     h: "Erasing everything",
     p: [
       "\"Erase everything\" in Settings destroys the database, the stored images, your preferences and the encryption key. Because the app keeps no copy anywhere else, there is nothing left afterwards — including with us.",
-      "The one exception is the world counter below, if you switched it on. That number is already part of a public total and cannot be picked back out of it, because nothing recorded which part of the total was yours.",
+      "The one exception is the world counter below, unless you switched it off. Whatever it already sent is part of a public total and cannot be picked back out, because nothing recorded which part of the total was yours.",
     ],
   },
   {
@@ -50,9 +50,10 @@ const SECTIONS = [
     ],
   },
   {
-    h: "The world counter, if you turn it on",
+    h: "The world counter",
     p: [
-      "One optional feature does send something: the world counter, which adds your protected total to the public figure on this site. It is off unless you switch it on, it sends a single number and nothing else, and the server it reaches stores only a running total and a count of contributors — no identifier, no timestamp, nothing that could be traced back to a person or a phone.",
+      "One feature does send something: the world counter, which adds your totals to the public figure on this site. It is on by default. It sends two numbers and nothing else — how much your protected total grew, and how many thoughts you burned — and the server it reaches stores only those running sums and a count of contributors. No identifier, no timestamp of yours, not a word of anything you wrote, nothing that could be traced back to a person or a phone.",
+      "The app says so before it sends anything: a notice appears after your first burn explaining exactly what goes, with a button to stop it there. You can also switch it off at any time in Settings.",
       "Turning it off stops any further sending. What was already counted stays in the total, because nothing links it to you well enough to take it out again.",
     ],
   },
@@ -60,7 +61,7 @@ const SECTIONS = [
     h: "If this changes",
     p: [
       "The description above is what the app does today, not a promise about every version of it forever. Features we are considering — richer AI, for instance — could need data to leave the device to work at all.",
-      "If that day comes, we will update this page with a new date, say plainly what is sent and why, and tell you inside the app before it starts. Anything new of that kind will be opt-in, the way the world counter is. What we will not do is quietly widen what we collect and leave this page saying otherwise.",
+      "If that day comes, we will update this page with a new date, say plainly what is sent and why, and tell you inside the app before it starts — the way the world counter announces itself after your first burn. What we will not do is quietly widen what we collect and leave this page saying otherwise.",
     ],
   },
   {
@@ -81,7 +82,7 @@ export default function Privacy() {
             It stays on your phone, and we <em>can&rsquo;t</em> read it.
           </>
         }
-        lede="Burn My Desire has no accounts, no analytics and nowhere to sign in. Everything you do in the app — photos, prices, thoughts, burn history — is stored on your device, encrypted, and we cannot read it. One optional feature sends a single number, and only if you ask it to."
+        lede="Burn My Desire has no accounts, no analytics and nowhere to sign in. Everything you do in the app — photos, prices, thoughts, burn history — is stored on your device, encrypted, and we cannot read it. One feature sends two anonymous numbers to the public counter, and you can switch it off."
       >
         <p className="fine mt-8">Last updated: 15 August 2026</p>
       </PageHero>

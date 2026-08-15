@@ -667,9 +667,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                         'burned by '
                                         '${_worldStats!.contributors} people so '
                                         'far. Two numbers are all this sends.'
-                            : 'Off. Turn on to add your totals to the public '
-                                  'figure — two numbers, nothing that '
-                                  'identifies you.',
+                            : 'Off. Nothing is being sent. Turn it back on to '
+                                  'add your totals to the public figure — two '
+                                  'numbers, nothing that identifies you.',
                         value: _counterOptIn,
                         onChanged: _toggleCounter,
                       ),

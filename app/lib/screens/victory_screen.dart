@@ -75,30 +75,30 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
       if (mounted) setState(() => _offerNotifications = true);
       return;
     }
-    await _checkCounterAsk();
+    await _checkCounterNotice();
   }
 
-  /// The counter ask, put at the only moment it makes sense: just after
-  /// a burn, when the number they'd be adding is real and in front of
-  /// them. Never at launch, never in a settings list nobody scrolls to.
+  /// The counter notice, put at the only moment it makes sense: just
+  /// after a burn, when the number being counted is real and in front of
+  /// them. Never at launch, never buried in a settings list.
   ///
-  /// Thought burns count now too, so they can ask as well — a thought has
-  /// no price, but the counter keeps a tally of them beside the money.
-  Future<void> _checkCounterAsk() async {
+  /// The counter is on by default now, so this is a disclosure rather
+  /// than a request — but it is shown before anything is sent, and it
+  /// carries the switch to stop it. Shown once, ever.
+  Future<void> _checkCounterNotice() async {
     if (!WorldCounter().configured) return;
     final hasSomethingToAdd =
         widget.target.priceCents > 0 || widget.target.isEmotion;
     if (!hasSomethingToAdd) return;
-    if (await worldCounterOptIn()) return;
     if (await worldCounterAskShown()) return;
     if (mounted) setState(() => _offerCounter = true);
   }
 
-  Future<void> _answerCounterAsk(bool wantsIn) async {
+  Future<void> _answerCounterAsk(bool stayIn) async {
     await markWorldCounterAskShown();
     if (mounted) setState(() => _offerCounter = false);
-    if (!wantsIn) return;
-    await setWorldCounterOptIn(true);
+    await setWorldCounterOptIn(stayIn);
+    if (!stayIn) return;
     await WorldCounter()
         .contribute(
           ref.read(protectedCentsProvider),
@@ -177,13 +177,17 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
       await db.markDestroyed(id);
     }
     _syncToCloud(db, store);
-    // Opt-in only, and it checks that itself.
-    WorldCounter()
-        .contribute(
-          ref.read(protectedCentsProvider),
-          ref.read(thoughtsBurnedProvider),
-        )
-        .catchError((Object _) => null);
+    // Nothing goes anywhere before the notice has been put in front of
+    // them. On the very first burn the notice card does the sending
+    // itself, once they have seen what it says.
+    if (await worldCounterAskShown()) {
+      WorldCounter()
+          .contribute(
+            ref.read(protectedCentsProvider),
+            ref.read(thoughtsBurnedProvider),
+          )
+          .catchError((Object _) => null);
+    }
     // Streaks and totals just changed; the pending schedule follows.
     if (mounted) await replanNotifications(ref);
   }
@@ -597,13 +601,12 @@ class _NotificationAsk extends StatelessWidget {
   }
 }
 
-/// The world-counter ask.
+/// The world-counter notice.
 ///
-/// Opt-in, asked once, and phrased so the answer is informed: it names
-/// the exact number that would leave the phone and what does not go with
-/// it. A default-on counter would collect more and mean less — the
-/// figure is worth something precisely because everyone in it chose to
-/// be there.
+/// The counter is on by default, so this tells rather than asks — but it
+/// tells before anything is sent, it names the exact numbers that will
+/// leave the phone and what does not go with them, and the way out is a
+/// button rather than a settings expedition.
 class _CounterAsk extends StatelessWidget {
   const _CounterAsk({
     required this.protectedCents,
@@ -616,15 +619,15 @@ class _CounterAsk extends StatelessWidget {
   final ValueChanged<bool> onAnswer;
 
   /// Names whichever of the two totals the person actually has, so the
-  /// ask never offers up a figure that is zero.
+  /// notice never reports a figure that is zero.
   String get _headline {
     final money = formatMoney(protectedCents);
     final count = thoughts == 1 ? '1 thought' : '$thoughts thoughts';
     if (protectedCents > 0 && thoughts > 0) {
-      return 'Add your $money and $count to the world total?';
+      return 'Your $money and $count join the world total';
     }
-    if (thoughts > 0) return 'Add your $count to the world total?';
-    return 'Add your $money to the world total?';
+    if (thoughts > 0) return 'Your $count joins the world total';
+    return 'Your $money joins the world total';
   }
 
   @override
@@ -661,7 +664,7 @@ class _CounterAsk extends StatelessWidget {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => onAnswer(false),
-                  child: const Text('Keep it private'),
+                  child: const Text('Leave me out'),
                 ),
               ),
               const SizedBox(width: 10),

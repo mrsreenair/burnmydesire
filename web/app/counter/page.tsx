@@ -27,8 +27,8 @@ const NOTES = [
   {
     h: "How your total gets here",
     p: [
-      "It doesn't, unless you ask. The app never sends anything by default. After a burn it offers once — \"add your total to the world counter?\" — and you can say no and never see it again, or turn it on later in Settings.",
-      "When it is on, the app sends one number: how much your protected total has grown since last time. No name, no device id, no timestamp of your own, nothing that could be traced back to you. The server adds it to the running sum and forgets everything else, because there is nothing else to forget.",
+      "Automatically, unless you stop it. After your first burn the app shows a notice saying exactly what will be sent, with a button to leave the counter there and then — and nothing goes anywhere before you have seen it. Settings has the same switch, permanently.",
+      "When it is on, the app sends two numbers: how much your protected total has grown since last time, and how many thoughts you have burned. No name, no device id, no timestamp of your own, not a word of anything you wrote. The server adds them to the running sums and forgets everything else, because there is nothing else to forget.",
     ],
   },
   {
