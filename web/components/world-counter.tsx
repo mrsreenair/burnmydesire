@@ -1,22 +1,16 @@
-import CountUp from "@/components/count-up";
-import Reveal from "@/components/reveal";
-
-type Stats = {
-  totalCents: number;
-  contributors: number;
-};
+import WorldCounterLive, { type Stats } from "@/components/world-counter-live";
 
 /**
- * The public total, fetched server-side so the page ships with the number
- * already in it. Renders nothing when the counter isn't configured or is
- * unreachable — a broken stat block is worse than no stat block.
+ * The build-time half of the counter.
+ *
+ * Fetched here so the page ships with the number already in it. The
+ * browser half, in WorldCounterLive, brings it up to date on load —
+ * necessary because a static export bakes this in whenever the site last
+ * built, which may be a while ago.
  */
-async function fetchStats(): Promise<Stats | null> {
-  const base = process.env.COUNTER_URL;
-  if (!base) return null;
+async function fetchStats(base: string): Promise<Stats | null> {
   try {
     const res = await fetch(`${base}/api/stats`, {
-      // Fresh enough to feel alive, cached enough to survive a front page.
       next: { revalidate: 300 },
     });
     if (!res.ok) return null;
@@ -32,33 +26,8 @@ async function fetchStats(): Promise<Stats | null> {
 }
 
 export default async function WorldCounter() {
-  const stats = await fetchStats();
-  if (!stats || stats.totalCents <= 0) return null;
+  const base = process.env.COUNTER_URL ?? null;
+  const stats = base ? await fetchStats(base) : null;
 
-  const euros = Math.floor(stats.totalCents / 100);
-
-  return (
-    <section className="section-tight" id="counter">
-      <div className="wrap">
-        <Reveal>
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="kicker">Burned so far</p>
-            <p className="display mt-4 text-[56px] sm:text-[86px]">
-              <CountUp to={euros} prefix="€" />
-            </p>
-            <p className="mt-4 text-lg">
-              protected by {stats.contributors.toLocaleString("en-US")}{" "}
-              {stats.contributors === 1 ? "person" : "people"} who burned
-              what they wanted instead of buying it.
-            </p>
-            <p className="fine mx-auto mt-6 max-w-xl">
-              Self-reported by people who chose to add their total. The app
-              sends one number and nothing else — no account, no
-              identifiers, nothing that could point back to anyone.
-            </p>
-          </div>
-        </Reveal>
-      </div>
-    </section>
-  );
+  return <WorldCounterLive initial={stats} endpoint={base} />;
 }

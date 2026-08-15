@@ -5,6 +5,11 @@
   "compatibility_date": "2026-08-15",
   "observability": { "enabled": true },
 
+  // The app and the website both talk to this hostname. It must be
+  // attached here and nowhere else — bound to the website Worker it
+  // serves the site's HTML on /api/stats, which is what it did before.
+  "routes": [{ "pattern": "counter.burnmydesire.com", "custom_domain": true }],
+
   "vars": {
     // The site's own origins. Leave "*" only while testing — this is what
     // stops an arbitrary page from reading the figure as its own.

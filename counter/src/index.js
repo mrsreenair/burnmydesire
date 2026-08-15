@@ -42,12 +42,16 @@ function corsHeaders(env, origin) {
   };
 }
 
-function json(env, origin, status, body) {
+function json(env, origin, status, body, { cacheSeconds = 0 } = {}) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
       'content-type': 'application/json; charset=utf-8',
-      'cache-control': 'no-store',
+      // A public aggregate is worth caching at the edge; anything that
+      // reflects a specific request is not.
+      'cache-control': cacheSeconds
+        ? `public, max-age=${cacheSeconds}, s-maxage=${cacheSeconds}`
+        : 'no-store',
       ...corsHeaders(env, origin),
     },
   });
@@ -100,7 +104,13 @@ export default {
     }
 
     if (request.method === 'GET' && url.pathname === '/api/stats') {
-      return json(env, origin, 200, await readStats(env.DB));
+      // Five minutes, matching what the website used to ask of ISR. Every
+      // visitor's browser reads this now, so an uncached read per page
+      // view would be a Worker invocation and a D1 query for a number
+      // that changes a few times a day.
+      return json(env, origin, 200, await readStats(env.DB), {
+        cacheSeconds: 300,
+      });
     }
 
     if (request.method === 'POST' && url.pathname === '/api/contributions') {
