@@ -15,8 +15,7 @@
     {
       "binding": "DB",
       "database_name": "burnmydesire-counter",
-      // Filled in by `wrangler d1 create burnmydesire-counter`.
-      "database_id": "PLACEHOLDER_RUN_D1_CREATE",
+      "database_id": "0971cb0a-7629-425d-aa37-26f20da1bace",
       "migrations_dir": "migrations"
     }
   ],
