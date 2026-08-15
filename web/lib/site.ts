@@ -5,6 +5,7 @@ export const STATIC_ROUTES = [
   { path: "/", priority: 1, changeFrequency: "monthly" as const },
   { path: "/how-it-works", priority: 0.9, changeFrequency: "monthly" as const },
   { path: "/app", priority: 0.8, changeFrequency: "monthly" as const },
+  { path: "/counter", priority: 0.8, changeFrequency: "daily" as const },
   { path: "/manifesto", priority: 0.7, changeFrequency: "yearly" as const },
   { path: "/blog", priority: 0.8, changeFrequency: "weekly" as const },
   { path: "/faq", priority: 0.7, changeFrequency: "monthly" as const },

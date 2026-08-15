@@ -212,6 +212,12 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ---------------------------------------------------- world counter */}
+      <WorldCounter />
+
+      {/* Announces a real increase in the world total, nothing else. */}
+      <BurnToast endpoint={process.env.COUNTER_URL ?? null} />
+
       {/* -------------------------------------------------------- how it works */}
       <section className="section" id="how">
         <div className="wrap">
@@ -441,12 +447,6 @@ export default function Home() {
           </Reveal>
         </div>
       </section>
-
-      {/* ---------------------------------------------------- world counter */}
-      <WorldCounter />
-
-      {/* Announces a real increase in the world total, nothing else. */}
-      <BurnToast endpoint={process.env.COUNTER_URL ?? null} />
 
       {/* ------------------------------------------------------------- blog */}
       <section className="section-tight">

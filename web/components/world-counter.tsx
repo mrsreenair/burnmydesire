@@ -19,15 +19,26 @@ async function fetchStats(base: string): Promise<Stats | null> {
     return {
       totalCents: json.totalCents,
       contributors: json.contributors ?? 0,
+      updatedAt: json.updatedAt ?? null,
     };
   } catch {
     return null;
   }
 }
 
-export default async function WorldCounter() {
+export default async function WorldCounter({
+  standalone = false,
+}: {
+  standalone?: boolean;
+}) {
   const base = process.env.COUNTER_URL ?? null;
   const stats = base ? await fetchStats(base) : null;
 
-  return <WorldCounterLive initial={stats} endpoint={base} />;
+  return (
+    <WorldCounterLive
+      initial={stats}
+      endpoint={base}
+      standalone={standalone}
+    />
+  );
 }
