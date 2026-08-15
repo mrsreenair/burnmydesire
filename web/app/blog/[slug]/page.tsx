@@ -11,6 +11,10 @@ export function generateStaticParams() {
   return posts.map((p) => ({ slug: p.slug }));
 }
 
+// The posts are a fixed list in the repo; anything else is a 404 at build time
+// rather than a page nobody can render on a static host.
+export const dynamicParams = false;
+
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const post = getPost(slug);

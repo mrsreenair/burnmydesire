@@ -10,6 +10,11 @@ export function generateStaticParams() {
   return posts.map((p) => ({ slug: p.slug }));
 }
 
+export const dynamicParams = false;
+
+// Rendered to a file at build time; static hosting serves it as a plain image.
+export const dynamic = "force-static";
+
 export default async function Image({
   params,
 }: {

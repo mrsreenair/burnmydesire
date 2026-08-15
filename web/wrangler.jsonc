@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "burnmydesire",
+  "compatibility_date": "2026-08-15",
+
+  // A Worker with no script at all — just the folder `next build` produces.
+  // Nothing runs on a request; Cloudflare serves the file from its edge.
+  "assets": {
+    "directory": "./out",
+    "not_found_handling": "404-page"
+  }
+}

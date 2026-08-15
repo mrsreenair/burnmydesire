@@ -35,9 +35,24 @@ const SECTIONS = [
     ],
   },
   {
-    h: "Payments",
+    h: "What Pro costs",
     p: [
-      "Paid tiers are sold through the App Store and are governed by Apple's terms. Refunds are handled by Apple; if something has gone wrong, write to support@burnmydesire.com and we will help you get it sorted.",
+      "Pro is sold three ways: Burn My Desire Pro Monthly at €2.99 a month, Burn My Desire Pro Yearly at €19.99 a year with the first week free, or a one-time Lifetime unlock at €29.99. The App Store shows the price in your own currency, and that figure — not this page — is the one you pay.",
+      "All three unlock exactly the same app. The only difference is how long you pay for and how often.",
+    ],
+  },
+  {
+    h: "How the subscriptions renew, and how to stop them",
+    p: [
+      "The monthly and yearly plans renew automatically for the same length of time until you stop them. Apple charges your Apple ID within the 24 hours before the current period ends. The Lifetime unlock never renews, because there is nothing to renew.",
+      "You cancel on your own phone, not here: Settings, then your name, then Subscriptions, then turn off renewal at least 24 hours before the period ends. Pro stays on for the time you have already paid for. We cannot cancel it for you, and we would rather not have the ability.",
+      "If you start the free week and then buy a subscription before it is up, the rest of the trial is forfeited. That is Apple's rule everywhere, not ours.",
+    ],
+  },
+  {
+    h: "Payments and refunds",
+    p: [
+      "Everything is sold through the App Store and governed by Apple's terms; we never see a card number and hold no billing record of yours. Refunds are Apple's to give, but if something has gone wrong, write to support@burnmydesire.com and we will help you get it sorted.",
     ],
   },
   {
@@ -64,9 +79,9 @@ export default function Terms() {
             Short terms, because there is <em>little to govern</em>.
           </>
         }
-        lede="No account, no subscription trap, and no data of yours in our hands. What's left is mostly telling you honestly what this app is and isn't."
+        lede="No account, no data of yours in our hands, and a subscription you can end from your own phone in fifteen seconds. What's left is mostly telling you honestly what this app is and isn't."
       >
-        <p className="fine mt-8">Last updated: 8 August 2026</p>
+        <p className="fine mt-8">Last updated: 15 August 2026</p>
       </PageHero>
 
       <section className="section-tight pb-28">

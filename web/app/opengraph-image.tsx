@@ -5,6 +5,9 @@ export const alt = "Burn My Desire — other apps make you wait, we give you clo
 export const size = OG.size;
 export const contentType = OG.contentType;
 
+// Rendered to a file at build time; static hosting serves it as a plain image.
+export const dynamic = "force-static";
+
 const STRUCK = "Sleep on it.";
 
 export default async function Image() {
