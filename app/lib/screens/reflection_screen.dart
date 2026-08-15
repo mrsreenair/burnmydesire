@@ -175,21 +175,21 @@ class _ReflectionScreenState extends State<ReflectionScreen> {
                     duration: Motion.base,
                     child: switch (_stage) {
                       _Stage.thinking => const Center(
-                          key: ValueKey('thinking'),
-                          child: CircularProgressIndicator(),
-                        ),
+                        key: ValueKey('thinking'),
+                        child: CircularProgressIndicator(),
+                      ),
                       _Stage.asking => _QuestionView(
-                          key: ValueKey('q$step-$_question'),
-                          step: step,
-                          question: _question,
-                          controller: _answer,
-                          onSubmit: _next,
-                        ),
+                        key: ValueKey('q$step-$_question'),
+                        step: step,
+                        question: _question,
+                        controller: _answer,
+                        onSubmit: _next,
+                      ),
                       _Stage.mirror => _MirrorView(
-                          key: const ValueKey('mirror'),
-                          qa: _qa,
-                          aiMirror: _mirror,
-                        ),
+                        key: const ValueKey('mirror'),
+                        qa: _qa,
+                        aiMirror: _mirror,
+                      ),
                     },
                   ),
                 ),
@@ -213,7 +213,9 @@ class _ReflectionScreenState extends State<ReflectionScreen> {
                     onPressed: () => _go(growth: false),
                     child: Text(
                       'Just burn it',
-                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],
@@ -240,7 +242,12 @@ class _ItemStrip extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          child: RawImage(image: image, width: 56, height: 56, fit: BoxFit.cover),
+          child: RawImage(
+            image: image,
+            width: 56,
+            height: 56,
+            fit: BoxFit.cover,
+          ),
         ),
         const SizedBox(width: 14),
         Text(

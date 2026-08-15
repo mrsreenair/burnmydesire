@@ -37,16 +37,15 @@ class NotificationPrefs {
     bool? streakEnabled,
     bool? milestoneEnabled,
     bool? backupEnabled,
-  }) =>
-      NotificationPrefs(
-        enabled: enabled ?? this.enabled,
-        checkinEnabled: checkinEnabled ?? this.checkinEnabled,
-        checkinFrequency: checkinFrequency ?? this.checkinFrequency,
-        checkinHour: checkinHour ?? this.checkinHour,
-        streakEnabled: streakEnabled ?? this.streakEnabled,
-        milestoneEnabled: milestoneEnabled ?? this.milestoneEnabled,
-        backupEnabled: backupEnabled ?? this.backupEnabled,
-      );
+  }) => NotificationPrefs(
+    enabled: enabled ?? this.enabled,
+    checkinEnabled: checkinEnabled ?? this.checkinEnabled,
+    checkinFrequency: checkinFrequency ?? this.checkinFrequency,
+    checkinHour: checkinHour ?? this.checkinHour,
+    streakEnabled: streakEnabled ?? this.streakEnabled,
+    milestoneEnabled: milestoneEnabled ?? this.milestoneEnabled,
+    backupEnabled: backupEnabled ?? this.backupEnabled,
+  );
 }
 
 const _kEnabled = 'notif_enabled';

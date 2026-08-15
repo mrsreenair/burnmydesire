@@ -14,7 +14,7 @@ import 'notification_planner.dart';
 /// a far-future one-shot, and only until the next app open.
 class NotificationService {
   NotificationService([FlutterLocalNotificationsPlugin? plugin])
-      : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
+    : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
 
   final FlutterLocalNotificationsPlugin _plugin;
   static bool _tzReady = false;
@@ -40,8 +40,10 @@ class NotificationService {
   /// Asks iOS for permission. True when granted (alert only — no badge:
   /// a permanent red dot is a tiny anxiety machine).
   Future<bool> requestPermission() async {
-    final ios = _plugin.resolvePlatformSpecificImplementation<
-        IOSFlutterLocalNotificationsPlugin>();
+    final ios = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
     if (ios == null) return false;
     final granted = await ios.requestPermissions(alert: true, sound: true);
     return granted ?? false;

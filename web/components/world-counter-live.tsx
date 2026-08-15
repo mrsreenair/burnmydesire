@@ -6,6 +6,7 @@ import Reveal from "@/components/reveal";
 
 export type Stats = {
   totalCents: number;
+  thoughts: number;
   contributors: number;
   updatedAt?: string | null;
 };
@@ -66,6 +67,7 @@ export default function WorldCounterLive({
         if (cancelled || typeof json.totalCents !== "number") return;
         setStats({
           totalCents: json.totalCents,
+          thoughts: json.thoughts ?? 0,
           contributors: json.contributors ?? 0,
           updatedAt: json.updatedAt ?? null,
         });
@@ -94,7 +96,7 @@ export default function WorldCounterLive({
     return () => clearInterval(timer);
   }, [stats?.updatedAt]);
 
-  if (!stats || stats.totalCents <= 0) {
+  if (!stats || (stats.totalCents <= 0 && stats.thoughts <= 0)) {
     if (!standalone) return null;
     return (
       <section className="section-tight" id="counter">
@@ -128,15 +130,23 @@ export default function WorldCounterLive({
               {stats.contributors === 1 ? "person" : "people"} who burned what
               they wanted instead of buying it.
             </p>
+            {stats.thoughts > 0 && (
+              <p className="mt-2 text-lg">
+                and {stats.thoughts.toLocaleString("en-US")}{" "}
+                {stats.thoughts === 1 ? "thought" : "thoughts"} let go, which
+                had no price at all.
+              </p>
+            )}
             {ago && (
               <p className="kicker-mid mt-5" aria-live="polite">
                 Last burn {ago}
               </p>
             )}
             <p className="fine mx-auto mt-6 max-w-xl">
-              Self-reported by people who chose to add their total. The app
-              sends one number and nothing else — no account, no identifiers,
-              nothing that could point back to anyone.
+              Self-reported by people who chose to add their totals. The app
+              sends two numbers and nothing else — no account, no identifiers,
+              not a word of any thought, nothing that could point back to
+              anyone.
             </p>
           </div>
         </Reveal>

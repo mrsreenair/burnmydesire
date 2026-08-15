@@ -6,7 +6,7 @@ import { MAX_DELTA_CENTS } from '../src/validate.js';
 /** Back to an empty world between cases; the schema itself stays. */
 beforeEach(async () => {
   await env.DB.prepare(
-    'UPDATE totals SET total_cents = 0, contributors = 0, updated_at = NULL WHERE id = 1',
+    'UPDATE totals SET total_cents = 0, thoughts = 0, contributors = 0, updated_at = NULL WHERE id = 1',
   ).run();
 });
 
@@ -116,6 +116,36 @@ describe('rate limiting', () => {
     const after = await (await SELF.fetch('https://counter.test/api/stats')).json();
     // Ten got through, not forty.
     expect(after.totalCents - before.totalCents).toBe(10 * 100000);
+  });
+});
+
+describe('thoughts', () => {
+  it('counts thoughts alongside money', async () => {
+    await contribute({ deltaCents: 4000, deltaThoughts: 2, firstTime: true });
+    const res = await contribute({ deltaThoughts: 1 });
+    const body = await res.json();
+    expect(body.totalCents).toBe(4000);
+    expect(body.thoughts).toBe(3);
+  });
+
+  it('accepts a thought-only burn, which has no price', async () => {
+    const res = await contribute({ deltaThoughts: 1, firstTime: true });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.thoughts).toBe(1);
+    expect(body.totalCents).toBe(0);
+    // Someone who only ever burns thoughts is still a contributor.
+    expect(body.contributors).toBe(1);
+  });
+
+  it('refuses a contribution that adds nothing', async () => {
+    expect((await contribute({ deltaCents: 0, deltaThoughts: 0 })).status).toBe(400);
+  });
+
+  it('still accepts money-only, as older app builds send it', async () => {
+    const res = await contribute({ deltaCents: 2500 });
+    expect(res.status).toBe(200);
+    expect((await res.json()).thoughts).toBe(0);
   });
 });
 

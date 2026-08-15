@@ -215,6 +215,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (!on) return;
     final stats = await WorldCounter().contribute(
       ref.read(protectedCentsProvider),
+      ref.read(thoughtsBurnedProvider),
     );
     if (mounted && stats != null) setState(() => _worldStats = stats);
   }
@@ -657,16 +658,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         title: 'Add my total to the world counter',
                         subtitle: _counterOptIn
                             ? _worldStats == null
-                                  ? 'Sends one number: how much your protected '
-                                        'total grew. Nothing else — no name, no '
+                                  ? 'Sends two numbers: how much your protected '
+                                        'total grew, and how many thoughts you '
+                                        'burned. Nothing else — no name, no '
                                         'items, nothing traceable.'
                                   : '${formatWorldEuros(_worldStats!.totalCents)} '
+                                        'and ${_worldStats!.thoughts} thoughts '
                                         'burned by '
                                         '${_worldStats!.contributors} people so '
-                                        'far. A single number is all this sends.'
-                            : 'Off. Turn on to add your protected total to '
-                                  'the public figure — one number, nothing '
-                                  'that identifies you.',
+                                        'far. Two numbers are all this sends.'
+                            : 'Off. Turn on to add your totals to the public '
+                                  'figure — two numbers, nothing that '
+                                  'identifies you.',
                         value: _counterOptIn,
                         onChanged: _toggleCounter,
                       ),

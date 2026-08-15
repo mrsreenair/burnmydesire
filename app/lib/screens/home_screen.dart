@@ -106,12 +106,13 @@ class HomeScreen extends ConsumerWidget {
     return switch (ref.read(addBlockProvider)) {
       AddBlock.none => destination,
       AddBlock.liveLimit => const PaywallScreen(
-          headline: 'Three desires in the fight.\nGo unlimited?',
-        ),
+        headline: 'Three desires in the fight.\nGo unlimited?',
+      ),
       AddBlock.monthlyLimit => PaywallScreen(
-          headline: 'You let go of $kFreeMonthlyNewItems desires '
-              'this month.',
-        ),
+        headline:
+            'You let go of $kFreeMonthlyNewItems desires '
+            'this month.',
+      ),
     };
   }
 
@@ -148,9 +149,9 @@ class HomeScreen extends ConsumerWidget {
                 subtitle: 'Photo + price — see the real damage',
                 onTap: () {
                   Navigator.of(sheetContext).pop();
-                  Navigator.of(context).push(
-                    emberRoute(_gateOr(ref, const CaptureScreen())),
-                  );
+                  Navigator.of(
+                    context,
+                  ).push(emberRoute(_gateOr(ref, const CaptureScreen())));
                 },
               ),
               const SizedBox(height: 12),
@@ -160,9 +161,9 @@ class HomeScreen extends ConsumerWidget {
                 subtitle: 'Write the craving or feeling — burn the paper',
                 onTap: () {
                   Navigator.of(sheetContext).pop();
-                  Navigator.of(context).push(
-                    emberRoute(_gateOr(ref, const WriteScreen())),
-                  );
+                  Navigator.of(
+                    context,
+                  ).push(emberRoute(_gateOr(ref, const WriteScreen())));
                 },
               ),
             ],

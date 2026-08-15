@@ -24,7 +24,9 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   Future<void> _finish() async {
     await saveSpendCategories(_selected.toList());
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(emberRoute(const FinancialGoalScreen()));
+    Navigator.of(
+      context,
+    ).pushReplacement(emberRoute(const FinancialGoalScreen()));
   }
 
   @override

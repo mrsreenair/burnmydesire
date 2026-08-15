@@ -4,5 +4,6 @@ import '../data/financial_goal.dart';
 
 /// The saved goal, null when none was set. Invalidate after saving or
 /// clearing.
-final financialGoalProvider =
-    FutureProvider<FinancialGoal?>((ref) => savedFinancialGoal());
+final financialGoalProvider = FutureProvider<FinancialGoal?>(
+  (ref) => savedFinancialGoal(),
+);

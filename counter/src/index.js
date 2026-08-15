@@ -127,6 +127,7 @@ export default {
 
       const result = await addContribution(env.DB, {
         deltaCents: body.deltaCents,
+        deltaThoughts: body.deltaThoughts,
         firstTime: body.firstTime === true,
       });
       if (!result.ok) {

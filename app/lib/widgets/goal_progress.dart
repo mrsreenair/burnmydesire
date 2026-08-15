@@ -34,9 +34,7 @@ class GoalProgress extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: AppColors.money.withValues(alpha: 0.25),
-            ),
+            border: Border.all(color: AppColors.money.withValues(alpha: 0.25)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,17 +67,18 @@ class GoalProgress extends StatelessWidget {
                   value: (protectedCents / goal.targetCents).clamp(0.0, 1.0),
                   minHeight: 8,
                   backgroundColor: AppColors.money.withValues(alpha: 0.15),
-                  valueColor:
-                      const AlwaysStoppedAnimation<Color>(AppColors.money),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppColors.money,
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 reached
                     ? 'You protected your way to it — '
-                        '${formatMoney(goal.targetCents)} and past.'
+                          '${formatMoney(goal.targetCents)} and past.'
                     : '${formatMoney(protectedCents)} of '
-                        '${formatMoney(goal.targetCents)} protected',
+                          '${formatMoney(goal.targetCents)} protected',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: AppColors.textMid,
                 ),

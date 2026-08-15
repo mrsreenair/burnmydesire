@@ -8,8 +8,9 @@ import '../data/notification_service.dart';
 import 'db_providers.dart';
 import 'pro_provider.dart';
 
-final notificationServiceProvider =
-    Provider<NotificationService>((ref) => NotificationService());
+final notificationServiceProvider = Provider<NotificationService>(
+  (ref) => NotificationService(),
+);
 
 /// Rebuilds the entire pending schedule from current state
 /// (NOTIFICATIONS.md §4). Cheap and idempotent — called after every

@@ -18,6 +18,7 @@ async function fetchStats(base: string): Promise<Stats | null> {
     if (typeof json.totalCents !== "number") return null;
     return {
       totalCents: json.totalCents,
+      thoughts: json.thoughts ?? 0,
       contributors: json.contributors ?? 0,
       updatedAt: json.updatedAt ?? null,
     };

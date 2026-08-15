@@ -25,9 +25,9 @@ class _CurrencyScreenState extends ConsumerState<CurrencyScreen> {
   Future<void> _finish() async {
     await ref.read(currencyProvider.notifier).change(_selected);
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      emberRoute(const GoalSelectionScreen()),
-    );
+    Navigator.of(
+      context,
+    ).pushReplacement(emberRoute(const GoalSelectionScreen()));
   }
 
   @override

@@ -79,13 +79,16 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
   }
 
   /// The counter ask, put at the only moment it makes sense: just after
-  /// someone protected money, when the number they'd be adding is real
-  /// and in front of them. Never at launch, never in a settings list
-  /// nobody scrolls to. Money burns only — a thought burned contributes
-  /// nothing to a euro total, so asking would be noise.
+  /// a burn, when the number they'd be adding is real and in front of
+  /// them. Never at launch, never in a settings list nobody scrolls to.
+  ///
+  /// Thought burns count now too, so they can ask as well — a thought has
+  /// no price, but the counter keeps a tally of them beside the money.
   Future<void> _checkCounterAsk() async {
     if (!WorldCounter().configured) return;
-    if (widget.target.isEmotion || widget.target.priceCents <= 0) return;
+    final hasSomethingToAdd =
+        widget.target.priceCents > 0 || widget.target.isEmotion;
+    if (!hasSomethingToAdd) return;
     if (await worldCounterOptIn()) return;
     if (await worldCounterAskShown()) return;
     if (mounted) setState(() => _offerCounter = true);
@@ -97,7 +100,10 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
     if (!wantsIn) return;
     await setWorldCounterOptIn(true);
     await WorldCounter()
-        .contribute(ref.read(protectedCentsProvider))
+        .contribute(
+          ref.read(protectedCentsProvider),
+          ref.read(thoughtsBurnedProvider),
+        )
         .catchError((Object _) => null);
   }
 
@@ -173,7 +179,10 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
     _syncToCloud(db, store);
     // Opt-in only, and it checks that itself.
     WorldCounter()
-        .contribute(ref.read(protectedCentsProvider))
+        .contribute(
+          ref.read(protectedCentsProvider),
+          ref.read(thoughtsBurnedProvider),
+        )
         .catchError((Object _) => null);
     // Streaks and totals just changed; the pending schedule follows.
     if (mounted) await replanNotifications(ref);
@@ -302,6 +311,7 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
                               delay: const Duration(milliseconds: 520),
                               child: _CounterAsk(
                                 protectedCents: protected,
+                                thoughts: ref.watch(thoughtsBurnedProvider),
                                 onAnswer: _answerCounterAsk,
                               ),
                             ),
@@ -595,10 +605,27 @@ class _NotificationAsk extends StatelessWidget {
 /// figure is worth something precisely because everyone in it chose to
 /// be there.
 class _CounterAsk extends StatelessWidget {
-  const _CounterAsk({required this.protectedCents, required this.onAnswer});
+  const _CounterAsk({
+    required this.protectedCents,
+    required this.thoughts,
+    required this.onAnswer,
+  });
 
   final int protectedCents;
+  final int thoughts;
   final ValueChanged<bool> onAnswer;
+
+  /// Names whichever of the two totals the person actually has, so the
+  /// ask never offers up a figure that is zero.
+  String get _headline {
+    final money = formatMoney(protectedCents);
+    final count = thoughts == 1 ? '1 thought' : '$thoughts thoughts';
+    if (protectedCents > 0 && thoughts > 0) {
+      return 'Add your $money and $count to the world total?';
+    }
+    if (thoughts > 0) return 'Add your $count to the world total?';
+    return 'Add your $money to the world total?';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -612,7 +639,7 @@ class _CounterAsk extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'Add your ${formatMoney(protectedCents)} to the world total?',
+            _headline,
             textAlign: TextAlign.center,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
@@ -620,9 +647,9 @@ class _CounterAsk extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'One number joins a public figure of what people have burned '
-            'instead of bought. No name, no items, nothing that points '
-            'back to you. You can turn it off in Settings.',
+            'It joins a public tally of what people have burned instead of '
+            'bought. No name, no items, nothing that points back to you. '
+            'You can turn it off in Settings.',
             textAlign: TextAlign.center,
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppColors.textMid,

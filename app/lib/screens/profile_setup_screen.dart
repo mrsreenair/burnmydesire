@@ -54,9 +54,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       await saveProfileName(_nameController.text);
       await savePin(_entry);
       if (!mounted) return;
-      Navigator.of(
-        context,
-      ).pushReplacement(emberRoute(const CurrencyScreen()));
+      Navigator.of(context).pushReplacement(emberRoute(const CurrencyScreen()));
     } else {
       setState(() {
         _stage = _Stage.createPin;

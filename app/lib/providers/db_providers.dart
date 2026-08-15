@@ -72,8 +72,9 @@ final newItemsThisMonthProvider = Provider<int>((ref) {
   final now = ref.watch(nowProvider);
   final items = ref.watch(itemsProvider).value ?? const <Item>[];
   return items
-      .where((i) =>
-          i.createdAt.year == now.year && i.createdAt.month == now.month)
+      .where(
+        (i) => i.createdAt.year == now.year && i.createdAt.month == now.month,
+      )
       .length;
 });
 
@@ -82,6 +83,13 @@ final newItemsThisMonthProvider = Provider<int>((ref) {
 final protectedCentsProvider = Provider<int>((ref) {
   final items = ref.watch(itemsProvider).value ?? const [];
   return items.fold(0, (sum, item) => sum + item.priceCents);
+});
+
+/// Thoughts burned: items with no price, counted once each however often
+/// they were re-burned. The world counter's second number.
+final thoughtsBurnedProvider = Provider<int>((ref) {
+  final items = ref.watch(itemsProvider).value ?? const [];
+  return items.where((i) => i.category == 'emotion').length;
 });
 
 /// The spending weaknesses picked during setup (labels from

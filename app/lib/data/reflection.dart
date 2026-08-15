@@ -25,9 +25,9 @@ class ReflectionQA {
   Map<String, dynamic> toJson() => {'q': question, 'a': answer};
 
   factory ReflectionQA.fromJson(Map<String, dynamic> json) => ReflectionQA(
-        question: json['q'] as String? ?? '',
-        answer: json['a'] as String? ?? '',
-      );
+    question: json['q'] as String? ?? '',
+    answer: json['a'] as String? ?? '',
+  );
 }
 
 String encodeReflection(List<ReflectionQA> qa) =>
@@ -94,12 +94,12 @@ String buildQuestionPrompt({
   required List<ReflectionQA> soFar,
   List<String> weakSpots = const [],
 }) {
-  final b = StringBuffer(
-    'They want to buy something that costs $priceLabel.',
-  );
+  final b = StringBuffer('They want to buy something that costs $priceLabel.');
   if (weakSpots.isNotEmpty) {
-    b.write(' Their self-declared spending weak spots: '
-        '${weakSpots.join(', ')}.');
+    b.write(
+      ' Their self-declared spending weak spots: '
+      '${weakSpots.join(', ')}.',
+    );
   }
   for (final qa in soFar) {
     b.write(' Asked: "${qa.question}" They answered: "${_clip(qa.answer)}".');
@@ -124,9 +124,7 @@ String buildMirrorPrompt({
   required String priceLabel,
   required List<ReflectionQA> answered,
 }) {
-  final b = StringBuffer(
-    'The thing costs $priceLabel. Their interview:',
-  );
+  final b = StringBuffer('The thing costs $priceLabel. Their interview:');
   for (final qa in answered) {
     b.write(' "${qa.question}" — "${_clip(qa.answer)}".');
   }

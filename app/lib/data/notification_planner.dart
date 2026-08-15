@@ -94,7 +94,10 @@ List<PlannedNotification> planNotifications({
   if (!prefs.enabled) return const [];
 
   final candidates = <_Candidate>[];
-  final live = [for (final i in items) if (i.destroyedAt == null) i];
+  final live = [
+    for (final i in items)
+      if (i.destroyedAt == null) i,
+  ];
   final burnedToday = items.any((i) {
     final t = i.lastBurnedAt;
     return t != null && _sameDay(t, now);
@@ -106,20 +109,25 @@ List<PlannedNotification> planNotifications({
     for (var d = 0; d <= _horizonDays; d++) {
       final day = DateTime(now.year, now.month, now.day + d);
       if (prefs.checkinFrequency == CheckinFrequency.fewTimesAWeek &&
-          ![DateTime.monday, DateTime.wednesday, DateTime.friday]
-              .contains(day.weekday)) {
+          ![
+            DateTime.monday,
+            DateTime.wednesday,
+            DateTime.friday,
+          ].contains(day.weekday)) {
         continue;
       }
       // A burn today already was the check-in.
       if (d == 0 && burnedToday) continue;
       final when = DateTime(day.year, day.month, day.day, hour);
       if (when.isBefore(now)) continue;
-      candidates.add(_Candidate(
-        _Kind.checkin,
-        when,
-        _title,
-        _checkinLines[day.day % _checkinLines.length],
-      ));
+      candidates.add(
+        _Candidate(
+          _Kind.checkin,
+          when,
+          _title,
+          _checkinLines[day.day % _checkinLines.length],
+        ),
+      );
     }
   }
 
@@ -131,12 +139,14 @@ List<PlannedNotification> planNotifications({
         final target = base.add(Duration(days: days));
         final when = _morning(target);
         if (when.isBefore(now)) continue;
-        candidates.add(_Candidate(
-          _Kind.streak,
-          when,
-          _title,
-          _streakLines[when.day % _streakLines.length],
-        ));
+        candidates.add(
+          _Candidate(
+            _Kind.streak,
+            when,
+            _title,
+            _streakLines[when.day % _streakLines.length],
+          ),
+        );
       }
     }
   }
@@ -150,12 +160,14 @@ List<PlannedNotification> planNotifications({
       final anniversary = DateTime(first.year, first.month + m, first.day);
       final when = _morning(anniversary);
       if (when.isBefore(now)) continue;
-      candidates.add(_Candidate(
-        _Kind.milestone,
-        when,
-        _title,
-        _milestoneLine(protectedCents, m),
-      ));
+      candidates.add(
+        _Candidate(
+          _Kind.milestone,
+          when,
+          _title,
+          _milestoneLine(protectedCents, m),
+        ),
+      );
       break; // only the next one — totals in later months will differ
     }
   }
@@ -164,12 +176,9 @@ List<PlannedNotification> planNotifications({
   if (prefs.streakEnabled &&
       live.any((i) => i.resistanceCount >= kFinalBurnCount - 1)) {
     final tomorrow = _morning(now.add(const Duration(days: 1)));
-    candidates.add(_Candidate(
-      _Kind.finalBurn,
-      tomorrow,
-      _title,
-      _finalBurnLines.first,
-    ));
+    candidates.add(
+      _Candidate(_Kind.finalBurn, tomorrow, _title, _finalBurnLines.first),
+    );
   }
 
   // --- Backup nudge (Pro): last backup older than 30 days.
@@ -177,7 +186,9 @@ List<PlannedNotification> planNotifications({
     final due = lastBackupAt == null
         ? now.add(const Duration(days: 30))
         : lastBackupAt.add(const Duration(days: 30));
-    final when = _morning(due.isBefore(now) ? now.add(const Duration(days: 1)) : due);
+    final when = _morning(
+      due.isBefore(now) ? now.add(const Duration(days: 1)) : due,
+    );
     if (!when.isBefore(now)) {
       candidates.add(_Candidate(_Kind.backup, when, _title, _backupLine));
     }
@@ -198,7 +209,12 @@ List<PlannedNotification> planNotifications({
     ..sort((a, b) => a.when.compareTo(b.when));
   return [
     for (final (i, c) in chosen.take(min(_maxScheduled, chosen.length)).indexed)
-      PlannedNotification(id: i + 1, when: c.when, title: c.title, body: c.body),
+      PlannedNotification(
+        id: i + 1,
+        when: c.when,
+        title: c.title,
+        body: c.body,
+      ),
   ];
 }
 

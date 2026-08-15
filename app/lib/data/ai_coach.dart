@@ -96,14 +96,14 @@ class AiCoach {
     List<String> goalLabels = const [],
     String? thought,
   }) => generate(
-        instructions: kCoachInstructions,
-        prompt: buildEncouragementPrompt(
-          isEmotion: isEmotion,
-          burnNumber: burnNumber,
-          goalLabels: goalLabels,
-          thought: thought,
-        ),
-      );
+    instructions: kCoachInstructions,
+    prompt: buildEncouragementPrompt(
+      isEmotion: isEmotion,
+      burnNumber: burnNumber,
+      goalLabels: goalLabels,
+      thought: thought,
+    ),
+  );
 
   /// One guarded round-trip to the on-device model. Null on any failure
   /// or oddity — every caller keeps a curated fallback, so silence is

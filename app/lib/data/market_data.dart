@@ -174,6 +174,7 @@ class MarketData {
 
 const _kAssetPath = 'assets/data/market_returns.json';
 const _kCacheFile = 'market_cache.json';
+
 /// How stale the data may get before the app refreshes it itself.
 ///
 /// Weekly, not daily. What's displayed is a multi-decade average annual

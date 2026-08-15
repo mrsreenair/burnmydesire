@@ -68,9 +68,9 @@ class _FinancialGoalScreenState extends ConsumerState<FinancialGoalScreen> {
 
   void _leave() {
     if (widget.inSetup) {
-      Navigator.of(context).pushReplacement(
-        emberRoute(const DisclaimerScreen()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(emberRoute(const DisclaimerScreen()));
     } else {
       Navigator.of(context).pop();
     }
@@ -148,8 +148,7 @@ class _FinancialGoalScreenState extends ConsumerState<FinancialGoalScreen> {
                           delay: const Duration(milliseconds: 200),
                           child: TextField(
                             controller: _name,
-                            textCapitalization:
-                                TextCapitalization.sentences,
+                            textCapitalization: TextCapitalization.sentences,
                             decoration: const InputDecoration(
                               labelText: 'Your goal, in your words',
                               border: OutlineInputBorder(),
@@ -162,14 +161,12 @@ class _FinancialGoalScreenState extends ConsumerState<FinancialGoalScreen> {
                           delay: const Duration(milliseconds: 240),
                           child: TextField(
                             controller: _amount,
-                            keyboardType:
-                                const TextInputType.numberWithOptions(
+                            keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
                             ),
                             decoration: InputDecoration(
                               labelText: 'What it costs',
-                              prefixText:
-                                  '${activeCurrency.symbol.trim()} ',
+                              prefixText: '${activeCurrency.symbol.trim()} ',
                               border: const OutlineInputBorder(),
                             ),
                             onChanged: (_) => setState(() {}),

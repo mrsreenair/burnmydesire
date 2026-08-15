@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageHero from "@/components/page-hero";
 import Reveal from "@/components/reveal";
+import BurnToast from "@/components/burn-toast";
 import WorldCounter from "@/components/world-counter";
 
 export const metadata: Metadata = {
@@ -52,6 +53,9 @@ export default function Counter() {
       />
 
       <WorldCounter standalone />
+
+      {/* The page someone watches; it should react while they watch. */}
+      <BurnToast endpoint={process.env.COUNTER_URL ?? null} />
 
       <section className="section-tight pb-28">
         <div className="wrap wrap-narrow">

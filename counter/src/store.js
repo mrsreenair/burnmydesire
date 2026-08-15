@@ -1,16 +1,16 @@
 import { validateContribution } from './validate.js';
 
 /**
- * The entire dataset is two integers.
+ * The entire dataset is three integers.
  *
  * There is deliberately no user table, no install id, no IP log, no
- * timestamps per contribution — the app sends a delta and nothing that
- * could identify who sent it. A breach here would leak "people have
- * burned N euros", which is already published on the website.
+ * timestamps per contribution — the app sends deltas and nothing that
+ * could identify who sent them. A breach here would leak "people have
+ * burned N euros and M thoughts", which is already published.
  */
 
-export async function addContribution(db, { deltaCents, firstTime }) {
-  const check = validateContribution({ deltaCents });
+export async function addContribution(db, { deltaCents, firstTime, deltaThoughts }) {
+  const check = validateContribution({ deltaCents, deltaThoughts });
   if (!check.ok) return check;
 
   // One statement, so the increment is atomic: no SELECT-then-UPDATE, and
@@ -20,11 +20,17 @@ export async function addContribution(db, { deltaCents, firstTime }) {
     .prepare(
       `UPDATE totals
           SET total_cents = total_cents + ?1,
-              contributors = contributors + ?2,
-              updated_at = ?3
+              thoughts = thoughts + ?2,
+              contributors = contributors + ?3,
+              updated_at = ?4
         WHERE id = 1`,
     )
-    .bind(deltaCents, firstTime ? 1 : 0, new Date().toISOString())
+    .bind(
+      check.deltaCents,
+      check.deltaThoughts,
+      firstTime ? 1 : 0,
+      new Date().toISOString(),
+    )
     .run();
 
   return { ok: true };
@@ -33,7 +39,7 @@ export async function addContribution(db, { deltaCents, firstTime }) {
 export async function readStats(db) {
   const row = await db
     .prepare(
-      'SELECT total_cents, contributors, updated_at FROM totals WHERE id = 1',
+      'SELECT total_cents, thoughts, contributors, updated_at FROM totals WHERE id = 1',
     )
     .first();
 
@@ -41,6 +47,7 @@ export async function readStats(db) {
   // than throwing: a stat block that does not render beats a 500.
   return {
     totalCents: row?.total_cents ?? 0,
+    thoughts: row?.thoughts ?? 0,
     contributors: row?.contributors ?? 0,
     updatedAt: row?.updated_at ?? null,
   };
