@@ -104,12 +104,12 @@ export default {
     }
 
     if (request.method === 'GET' && url.pathname === '/api/stats') {
-      // Five minutes, matching what the website used to ask of ISR. Every
-      // visitor's browser reads this now, so an uncached read per page
-      // view would be a Worker invocation and a D1 query for a number
-      // that changes a few times a day.
+      // A minute. Long enough that a page view is nearly always served
+      // from the edge rather than costing a Worker invocation and a D1
+      // query, short enough that the site's toast can notice a burn
+      // while someone is still on the page.
       return json(env, origin, 200, await readStats(env.DB), {
-        cacheSeconds: 300,
+        cacheSeconds: 60,
       });
     }
 
