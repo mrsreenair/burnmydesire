@@ -21,7 +21,7 @@ const CHAPTERS = [
       "One-off or recurring",
       "Emotional desires with no price tag are allowed too",
     ],
-    src: "/screens/home.png",
+    src: "/screens/home.webp",
     alt: "The home screen listing logged desires and total wealth kept",
   },
   {
@@ -34,7 +34,7 @@ const CHAPTERS = [
       "Installment plans included, interest and all",
       "Recurring habits priced across the whole horizon",
     ],
-    src: "/screens/shock.png",
+    src: "/screens/shock.webp",
     alt: "The shock screen showing the compound cost of a purchase",
   },
   {
@@ -47,7 +47,7 @@ const CHAPTERS = [
       "Press-and-hold, so the ending is something you did",
       "Re-burn the same desire as often as it comes back",
     ],
-    src: "/screens/burn.png",
+    src: "/screens/burn.webp",
     alt: "The burn screen with a photo being consumed by fire",
   },
 ];

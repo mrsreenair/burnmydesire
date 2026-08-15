@@ -29,9 +29,9 @@ const SWATCHES = [
 ];
 
 const SHOTS = [
-  { src: "/screens/home.png", label: "Home — wealth kept" },
-  { src: "/screens/shock.png", label: "Shock — the compound cost" },
-  { src: "/screens/burn.png", label: "Burn — the ritual" },
+  { src: "/screens/home.webp", label: "Home — wealth kept" },
+  { src: "/screens/shock.webp", label: "Shock — the compound cost" },
+  { src: "/screens/burn.webp", label: "Burn — the ritual" },
 ];
 
 export default function Press() {

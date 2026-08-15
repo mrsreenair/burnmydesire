@@ -138,7 +138,7 @@ export default function BurnDemo() {
         <div className="phone phone-dark">
           <div className="burn-paper">
             <Image
-              src="/screens/burn.png"
+              src="/screens/burn.webp"
               alt="The burn screen: a photographed purchase, ready to be set on fire"
               width={1206}
               height={2622}

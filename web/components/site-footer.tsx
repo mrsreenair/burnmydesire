@@ -78,9 +78,25 @@ export default function SiteFooter() {
 
       <div className="wrap">
         <div className="hairline" />
-        <div className="flex flex-wrap items-center justify-between gap-4 py-7">
-          <p className="fine">© {new Date().getFullYear()} Burn My Desire</p>
-          <p className="fine">No accounts · No tracking · No cloud</p>
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-7">
+          {/* The year of first publication, not the current one. A static
+              export bakes whatever it renders, so a dynamic year would
+              quietly go stale the moment the site stopped being rebuilt —
+              and first publication is the date copyright actually runs
+              from anyway. */}
+          <p className="fine">© 2026 Burn My Desire. All rights reserved.</p>
+          <p className="fine">No accounts · No tracking · No ads</p>
+        </div>
+        <div className="pb-8">
+          {/* ™ rather than ®: the mark is claimed but not registered, and
+              ® on an unregistered mark is itself an offence in several
+              jurisdictions. It becomes ® once registration comes through. */}
+          <p className="fine max-w-3xl">
+            Burn My Desire™ and the flame mark are trademarks of Burn My
+            Desire. The app, its source code, its visual design and the
+            words on this site are protected by copyright and may not be
+            reproduced without permission.
+          </p>
         </div>
       </div>
     </footer>

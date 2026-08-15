@@ -12,21 +12,21 @@ const STEPS = [
     n: "01",
     title: "Name the desire",
     body: "A photo, a link, or a sentence. €429 headphones counts. So does €40 of drinks every Friday, and so does the thing you keep reopening at 1am.",
-    src: "/screens/home.png",
+    src: "/screens/home.webp",
     alt: "The home screen, listing desires and the wealth kept so far",
   },
   {
     n: "02",
     title: "See the real price",
     body: "Not the sticker price — the twenty-year one. The app answers with what the money becomes if it stays invested until you're 65.",
-    src: "/screens/shock.png",
+    src: "/screens/shock.webp",
     alt: "The shock screen, showing a purchase's compound cost",
   },
   {
     n: "03",
     title: "Burn it",
     body: "Hold your thumb down. A real burning front eats across the photo at 60fps, curls the edge, and leaves ash. The craving ends with it.",
-    src: "/screens/burn.png",
+    src: "/screens/burn.webp",
     alt: "The burn screen, with a photo mid-burn",
   },
 ];
@@ -127,7 +127,7 @@ export default function Home() {
               className="enter fine mt-5"
               style={{ "--delay": "760ms" } as React.CSSProperties}
             >
-              No account. No cloud. Your temptations never leave your phone.
+              No account. Encrypted on your phone. Your temptations stay there.
             </p>
           </div>
 
@@ -169,7 +169,7 @@ export default function Home() {
             >
               <div className="phone" style={{ transform: "rotate(-2.5deg)" }}>
                 <Image
-                  src="/screens/home.png"
+                  src="/screens/home.webp"
                   alt="Burn My Desire home screen, showing the wealth kept so far"
                   width={1206}
                   height={2622}

@@ -80,7 +80,7 @@ export default function GetTheApp() {
           <div className="mx-auto mt-16 w-full max-w-[290px]">
             <div className="phone" style={{ transform: "none" }}>
               <Image
-                src="/screens/shock.png"
+                src="/screens/shock.webp"
                 alt="The shock screen, showing what a purchase costs over twenty years"
                 width={1206}
                 height={2622}

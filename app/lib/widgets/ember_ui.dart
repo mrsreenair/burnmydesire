@@ -193,50 +193,64 @@ class _EmberButtonState extends State<EmberButton> {
   Widget build(BuildContext context) {
     final enabled = widget.onPressed != null;
     final fire = widget.kind == PillKind.fire;
-    return GestureDetector(
-      onTapDown: enabled ? (_) => setState(() => _down = true) : null,
-      onTapCancel: enabled ? () => setState(() => _down = false) : null,
-      onTapUp: enabled
-          ? (_) {
-              setState(() => _down = false);
-              HapticFeedback.mediumImpact();
-              widget.onPressed!();
-            }
-          : null,
-      child: AnimatedScale(
-        scale: _down ? 0.97 : 1.0,
-        duration: Motion.instant,
-        curve: Curves.easeOut,
-        child: AnimatedOpacity(
-          duration: Motion.fast,
-          opacity: enabled ? 1 : 0.35,
-          child: Container(
-            height: 56,
-            decoration: BoxDecoration(
-              color: fire ? null : AppColors.ink,
-              gradient: fire ? AppColors.emberGradient : null,
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: fire && widget.glow && enabled
-                  ? AppColors.emberGlow(opacity: _down ? 0.2 : 0.32, blur: 24)
-                  : null,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (widget.icon != null) ...[
-                  Icon(widget.icon, color: Colors.white, size: 22),
-                  const SizedBox(width: 10),
-                ],
-                Text(
-                  widget.label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.1,
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: widget.label,
+      // Without this the pill is a decorated box to VoiceOver: it reads
+      // the label as plain text and never says "button", so there is
+      // nothing to tell a blind user it can be pressed.
+      onTap: enabled ? widget.onPressed : null,
+      child: GestureDetector(
+        // The default, deferToChild, only counts a hit that lands on a
+        // descendant that hit-tests — here, the glyphs of the label. The
+        // black around them looks like part of the button and behaves
+        // like background. Opaque makes the whole pill the target.
+        behavior: HitTestBehavior.opaque,
+        onTapDown: enabled ? (_) => setState(() => _down = true) : null,
+        onTapCancel: enabled ? () => setState(() => _down = false) : null,
+        onTapUp: enabled
+            ? (_) {
+                setState(() => _down = false);
+                HapticFeedback.mediumImpact();
+                widget.onPressed!();
+              }
+            : null,
+        child: AnimatedScale(
+          scale: _down ? 0.97 : 1.0,
+          duration: Motion.instant,
+          curve: Curves.easeOut,
+          child: AnimatedOpacity(
+            duration: Motion.fast,
+            opacity: enabled ? 1 : 0.35,
+            child: Container(
+              height: 56,
+              decoration: BoxDecoration(
+                color: fire ? null : AppColors.ink,
+                gradient: fire ? AppColors.emberGradient : null,
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: fire && widget.glow && enabled
+                    ? AppColors.emberGlow(opacity: _down ? 0.2 : 0.32, blur: 24)
+                    : null,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (widget.icon != null) ...[
+                    Icon(widget.icon, color: Colors.white, size: 22),
+                    const SizedBox(width: 10),
+                  ],
+                  Text(
+                    widget.label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.1,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
