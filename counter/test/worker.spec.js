@@ -94,6 +94,29 @@ describe('rate limiting', () => {
     // Someone else's budget is untouched by the flood.
     expect((await contribute({ deltaCents: 1 }, 'bystander')).status).toBe(200);
   });
+
+  it('holds under a simultaneous burst', async () => {
+    // The case the platform binding fails: forty at once from one caller
+    // must still yield exactly ten. Sequential counting would pass this
+    // by accident, so it has to be fired in parallel.
+    const key = 'burst-caller';
+    const results = await Promise.all(
+      Array.from({ length: 40 }, () => contribute({ deltaCents: 1 }, key)),
+    );
+    const ok = results.filter((r) => r.status === 200).length;
+    expect(ok).toBe(10);
+    expect(results.filter((r) => r.status === 429).length).toBe(30);
+  });
+
+  it('does not let a flood inflate the public figure', async () => {
+    const before = await (await SELF.fetch('https://counter.test/api/stats')).json();
+    await Promise.all(
+      Array.from({ length: 40 }, () => contribute({ deltaCents: 100000 }, 'greedy')),
+    );
+    const after = await (await SELF.fetch('https://counter.test/api/stats')).json();
+    // Ten got through, not forty.
+    expect(after.totalCents - before.totalCents).toBe(10 * 100000);
+  });
 });
 
 describe('http surface', () => {

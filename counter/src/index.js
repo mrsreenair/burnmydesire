@@ -1,3 +1,10 @@
+import {
+  DEFAULT_LIMIT,
+  DEFAULT_WINDOW_SECONDS,
+  allow,
+  shouldSweep,
+  sweep,
+} from './rate_limit.js';
 import { addContribution, readStats } from './store.js';
 
 /**
@@ -58,24 +65,33 @@ async function readJson(request) {
 /**
  * True when the request may proceed.
  *
- * The Node version hashed the address with a per-process salt so the
- * limiter could count without keeping anything identifying. The binding
- * keeps that property for free: the key is handed over per request and
- * never stored anywhere we can read.
- *
- * Absent binding means allow — local `vitest` runs without one, and a
- * counter that refuses every write is worse than one that is briefly
- * unlimited.
+ * Two passes. The platform binding is free and needs no database, so it
+ * absorbs the bulk of a flood before it can cost us D1 writes — but it
+ * only approximates, so it cannot be the whole answer. The D1 counter
+ * behind it is exact, and it is the one that decides.
  */
-async function withinRateLimit(request, env) {
-  if (!env.CONTRIBUTION_LIMIT) return true;
+async function withinRateLimit(request, env, ctx) {
   const key = request.headers.get('cf-connecting-ip') ?? 'unknown';
-  const { success } = await env.CONTRIBUTION_LIMIT.limit({ key });
-  return success;
+
+  if (env.CONTRIBUTION_LIMIT) {
+    const { success } = await env.CONTRIBUTION_LIMIT.limit({ key });
+    if (!success) return false;
+  }
+
+  const verdict = await allow(env.DB, key, {
+    salt: env.RATE_SALT,
+    limit: Number(env.RATE_LIMIT ?? DEFAULT_LIMIT),
+    windowSeconds: Number(env.RATE_WINDOW_SECONDS ?? DEFAULT_WINDOW_SECONDS),
+  });
+
+  // Housekeeping happens after the response, and only now and then.
+  if (shouldSweep()) ctx?.waitUntil?.(sweep(env.DB));
+
+  return verdict.ok;
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const origin = request.headers.get('origin');
     const url = new URL(request.url);
 
@@ -88,7 +104,7 @@ export default {
     }
 
     if (request.method === 'POST' && url.pathname === '/api/contributions') {
-      if (!(await withinRateLimit(request, env))) {
+      if (!(await withinRateLimit(request, env, ctx))) {
         return json(env, origin, 429, { error: 'too many requests' });
       }
 
