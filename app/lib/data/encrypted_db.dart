@@ -122,3 +122,21 @@ QueryExecutor openEncryptedDatabase() {
     );
   });
 }
+
+/// "Erase everything" for the database itself: the file, its WAL and
+/// journal siblings, and the Keychain key. Deleting rows is not erasing —
+/// SQLite keeps freed pages in the file until a VACUUM, and even a
+/// vacuumed file is still ciphertext under a key that would still be in
+/// the Keychain. Removing the file *and* rotating the key is the only
+/// erase that means what the button says. The next open creates a fresh
+/// file under a fresh key. Call after the connection is closed.
+Future<void> wipeEncryptedDatabase() async {
+  final dir = await getApplicationDocumentsDirectory();
+  for (final suffix in const ['', '-wal', '-shm', '-journal']) {
+    final f = File(p.join(dir.path, '$kEncryptedDbFile$suffix'));
+    if (f.existsSync()) await f.delete();
+  }
+  final legacy = File(p.join(dir.path, kLegacyDbFile));
+  if (legacy.existsSync()) await legacy.delete();
+  await deleteDatabaseKey();
+}

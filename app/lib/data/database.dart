@@ -74,6 +74,17 @@ class AppDatabase extends _$AppDatabase {
 
   AppDatabase.forTesting(super.e);
 
+  bool _closed = false;
+
+  /// Idempotent: erase closes the database explicitly before deleting
+  /// the file, and the provider's dispose hook closes it again.
+  @override
+  Future<void> close() async {
+    if (_closed) return;
+    _closed = true;
+    await super.close();
+  }
+
   @override
   int get schemaVersion => 6;
 

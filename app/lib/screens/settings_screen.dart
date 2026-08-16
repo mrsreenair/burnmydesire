@@ -600,7 +600,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     // leave a full backup sitting in the cloud.
     await _cloud().deleteCloudCopy();
     await clearCloudPassphrase();
-    await ref.read(databaseProvider).deleteAllItems();
+    // Rows first (so any open stream sees an empty ledger), then the
+    // file and its key — deleting rows alone leaves recoverable pages
+    // under a key that's still in the Keychain (encrypted_db.dart).
+    final db = ref.read(databaseProvider);
+    await db.deleteAllItems();
+    await db.close();
+    await wipeEncryptedDatabase();
+    // A fresh connection — and a fresh key — for whatever comes next.
+    ref.invalidate(databaseProvider);
     final dir = Directory('${store.documentsPath}/item_images');
     if (await dir.exists()) await dir.delete(recursive: true);
     await clearAllPrefs();
