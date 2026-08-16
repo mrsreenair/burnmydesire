@@ -15,8 +15,9 @@ class ReportWindow {
   /// Monday 00:00, local.
   final DateTime start;
 
-  /// Exclusive. The following Monday 00:00 for a finished week; [now]
-  /// for the week in progress.
+  /// Exclusive: the following Monday 00:00. Always a week boundary, never
+  /// "now" — `nowProvider` is read once per app session, so a window
+  /// ending at "now" would silently exclude every burn made after launch.
   final DateTime end;
 
   /// "This week" or "Last week".
@@ -46,7 +47,11 @@ ReportWindow reportWindowFor(DateTime now) {
     final lastMonday = thisMonday.subtract(const Duration(days: 7));
     return ReportWindow(start: lastMonday, end: thisMonday, label: 'Last week');
   }
-  return ReportWindow(start: thisMonday, end: now, label: 'This week');
+  return ReportWindow(
+    start: thisMonday,
+    end: thisMonday.add(const Duration(days: 7)),
+    label: 'This week',
+  );
 }
 
 /// The Sunday-evening moment for the week containing [now]: 18:00 local.

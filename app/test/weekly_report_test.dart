@@ -20,6 +20,9 @@ void main() {
       final thu = reportWindowFor(DateTime(2026, 8, 13, 12));
       expect(thu.label, 'This week');
       expect(thu.start, monday);
+      // Ends at the week boundary, not at "now": a burn made after the
+      // window was computed must still count.
+      expect(thu.end, DateTime(2026, 8, 17));
 
       final tue = reportWindowFor(DateTime(2026, 8, 18, 9));
       expect(tue.label, 'Last week');

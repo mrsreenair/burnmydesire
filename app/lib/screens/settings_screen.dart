@@ -612,6 +612,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final dir = Directory('${store.documentsPath}/item_images');
     if (await dir.exists()) await dir.delete(recursive: true);
     await clearAllPrefs();
+    // The prefs are gone; the providers that cached them are not, and the
+    // erased app would otherwise keep showing the old goal and effect
+    // until the next cold start.
+    ref.invalidate(financialGoalProvider);
+    ref.invalidate(burnEffectIdProvider);
+    ref.invalidate(burnGoalsProvider);
+    ref.invalidate(spendCategoriesProvider);
+    ref.invalidate(ashReportSeenProvider);
     // A reminder about erased data would be a haunting.
     await ref.read(notificationServiceProvider).cancelAll();
 
