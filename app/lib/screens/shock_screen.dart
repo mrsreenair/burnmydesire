@@ -8,6 +8,7 @@ import '../providers/db_providers.dart';
 import '../providers/financial_goal_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/motion.dart';
+import '../utils/format_utils.dart';
 import '../utils/math_utils.dart';
 import '../widgets/paper_backdrop.dart';
 import '../widgets/ember_ui.dart';
@@ -171,6 +172,25 @@ class _ShockScreenState extends ConsumerState<ShockScreen> {
                                       setState(() => _fund = f),
                                 ),
                         ),
+                        // A subscription's damage is a stream, not a
+                        // lump. Twelve euros a month invested for twenty
+                        // years is roughly ten times what the same money
+                        // looks like as a one-off, and that gap is the
+                        // entire reason this mode exists.
+                        if (widget.target.isSubscription) ...[
+                          const SizedBox(height: 12),
+                          Reveal(
+                            delay: const Duration(milliseconds: 120),
+                            child: _RecurringDamage(
+                              amountCents: widget.target.recurringCents!,
+                              period: widget.target.billingPeriod!,
+                              years: _years,
+                              rate:
+                                  headlineFund?.fullHistoryCagr ??
+                                  kDefaultAnnualRate,
+                            ),
+                          ),
+                        ],
                         // The other half of the argument: what the same
                         // money is capable of. Only under the goal card —
                         // the fallback ShockCard already carries the
@@ -410,6 +430,85 @@ class _LastTimeCard extends StatelessWidget {
             '"${qa.answer}"',
             style: theme.textTheme.titleMedium?.copyWith(
               fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// What a recurring charge really costs.
+///
+/// The lump-sum card underneath prices one year of this subscription,
+/// which is the honest thing to put in the ledger. This is the number
+/// that actually changes minds: the whole stream, compounding, for as
+/// long as the slider says — because each payment would have started
+/// earning from the day it was made.
+class _RecurringDamage extends StatelessWidget {
+  const _RecurringDamage({
+    required this.amountCents,
+    required this.period,
+    required this.years,
+    required this.rate,
+  });
+
+  final int amountCents;
+  final BillingPeriod period;
+  final int years;
+  final double rate;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final paid = recurringTotalPaidCents(amountCents, period, years: years);
+    final grown = recurringFutureValueCents(
+      amountCents,
+      period,
+      annualRate: rate,
+      years: years,
+    );
+    final every = switch (period) {
+      BillingPeriod.weekly => 'a week',
+      BillingPeriod.monthly => 'a month',
+      BillingPeriod.yearly => 'a year',
+    };
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+      decoration: BoxDecoration(
+        color: AppColors.paperHigh,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: AppColors.cardShadow(opacity: 0.06),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Kept for $years years, ${formatMoney(amountCents)} $every is',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.textMid,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: grown.toDouble()),
+            duration: Motion.slow,
+            curve: Motion.easeOut,
+            builder: (context, v, _) => GradientText(
+              formatMoney(v.round()),
+              style: theme.textTheme.displaySmall,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${formatMoney(paid)} of it simply paid out — the rest is what '
+            'those payments would have earned instead.',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textMid,
+              height: 1.35,
             ),
           ),
         ],

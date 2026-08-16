@@ -75,7 +75,12 @@ class GoalDamageCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'This purchase costs you',
+            // A subscription isn't a purchase, and the year is the unit
+            // being priced here — say so rather than letting the number
+            // look like the whole cost of the thing.
+            target.isSubscription
+                ? 'A year of this costs you'
+                : 'This purchase costs you',
             textAlign: TextAlign.center,
             style: theme.textTheme.titleMedium?.copyWith(
               color: AppColors.textMid,

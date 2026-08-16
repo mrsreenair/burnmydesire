@@ -18,6 +18,8 @@ class BurnTarget {
     this.letGoForever = false,
     this.thoughtText,
     this.reflection = const [],
+    this.recurringCents,
+    this.billingPeriod,
   });
 
   final int? itemId;
@@ -26,8 +28,16 @@ class BurnTarget {
   final int priceCents;
   final InstallmentPlan? plan;
 
-  /// 'purchase' (money framing) or 'emotion' (written thought, no price).
+  /// 'purchase' (money framing), 'emotion' (written thought, no price),
+  /// or 'subscription' (a recurring charge, priced by the year).
   final String category;
+
+  /// For a subscription: what it takes each billing period. [priceCents]
+  /// still holds a single year of it — that's the honest unit for the
+  /// ledger, while the damage screen shows what the stream really costs.
+  final int? recurringCents;
+
+  final BillingPeriod? billingPeriod;
 
   /// Resistance count this burn will reach (1 for a first burn; for
   /// re-burns the stored count + 1). Drives streak messaging.
@@ -48,4 +58,6 @@ class BurnTarget {
   final List<ReflectionQA> reflection;
 
   bool get isEmotion => category == 'emotion';
+
+  bool get isSubscription => category == 'subscription';
 }

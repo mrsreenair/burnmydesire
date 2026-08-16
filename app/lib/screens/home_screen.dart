@@ -22,6 +22,7 @@ import 'capture_screen.dart';
 import 'paywall_screen.dart';
 import 'profile_setup_screen.dart';
 import 'shock_screen.dart';
+import 'subscription_screen.dart';
 import 'write_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -168,6 +169,18 @@ class HomeScreen extends ConsumerWidget {
                   Navigator.of(
                     context,
                   ).push(emberRoute(_gateOr(ref, const CaptureScreen())));
+                },
+              ),
+              const SizedBox(height: 12),
+              _SheetChoice(
+                emoji: '🔁',
+                title: 'Burn a subscription',
+                subtitle: 'The one you meant to cancel — see the real total',
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  Navigator.of(
+                    context,
+                  ).push(emberRoute(_gateOr(ref, const SubscriptionScreen())));
                 },
               ),
               const SizedBox(height: 12),
