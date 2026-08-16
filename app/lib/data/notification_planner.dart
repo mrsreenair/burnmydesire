@@ -66,6 +66,15 @@ const _checkinLines = [
   'The urge always feels urgent. It never actually is. Come check in.',
 ];
 
+/// +3 days: the invitation to burn it again. Desires come back, the app
+/// needs three burns to end one, and re-burning is free forever — so the
+/// three-day nudge says so instead of only admiring the streak (M5).
+const _streakLinesEarly = [
+  'Three days on. Still want it? Burn it again — it\'s free, and it counts.',
+  'The urge usually comes back around now. If it has, the fire\'s ready.',
+];
+
+/// +7 days: the streak itself.
 const _streakLines = [
   'One of your desires hits a longer streak tomorrow. Come claim it.',
   'Still resisted. Still yours. Come see the streak grow.',
@@ -137,19 +146,12 @@ List<PlannedNotification> planNotifications({
     return t != null && _sameDay(t, now);
   });
 
-  // --- Check-ins: daily or Mon/Wed/Fri, at the chosen (clamped) hour.
+  // --- Check-ins: on the chosen days, at the chosen (clamped) hour.
   if (prefs.checkinEnabled) {
     final hour = prefs.checkinHour.clamp(_quietStartHour, _quietEndHour - 1);
     for (var d = 0; d <= _horizonDays; d++) {
       final day = DateTime(now.year, now.month, now.day + d);
-      if (prefs.checkinFrequency == CheckinFrequency.fewTimesAWeek &&
-          ![
-            DateTime.monday,
-            DateTime.wednesday,
-            DateTime.friday,
-          ].contains(day.weekday)) {
-        continue;
-      }
+      if (!checkinFallsOn(day, prefs)) continue;
       // A burn today already was the check-in.
       if (d == 0 && burnedToday) continue;
       final when = DateTime(day.year, day.month, day.day, hour);
@@ -173,13 +175,9 @@ List<PlannedNotification> planNotifications({
         final target = base.add(Duration(days: days));
         final when = _morning(target);
         if (when.isBefore(now)) continue;
+        final lines = days == _streakDays.first ? _streakLinesEarly : _streakLines;
         candidates.add(
-          _Candidate(
-            _Kind.streak,
-            when,
-            _title,
-            _streakLines[when.day % _streakLines.length],
-          ),
+          _Candidate(_Kind.streak, when, _title, lines[when.day % lines.length]),
         );
       }
     }
@@ -281,6 +279,32 @@ List<PlannedNotification> planNotifications({
         body: c.body,
       ),
   ];
+}
+
+/// Whether a check-in belongs on [day] under [prefs] (M5). Pure, so the
+/// weekday and payday rules are testable on their own.
+bool checkinFallsOn(DateTime day, NotificationPrefs prefs) {
+  switch (prefs.checkinFrequency) {
+    case CheckinFrequency.daily:
+      return true;
+    case CheckinFrequency.fewTimesAWeek:
+      return const [
+        DateTime.monday,
+        DateTime.wednesday,
+        DateTime.friday,
+      ].contains(day.weekday);
+    case CheckinFrequency.weekends:
+      return day.weekday >= DateTime.friday;
+    case CheckinFrequency.payday:
+      // Payday and the two days after: the money is new and the urge is
+      // loudest. Days are counted forward from the pay date, so the 30th
+      // still gets its follow-on days in a short month.
+      for (var back = 0; back <= 2; back++) {
+        final candidate = DateTime(day.year, day.month, day.day - back);
+        if (candidate.day == prefs.paydayDay) return true;
+      }
+      return false;
+  }
 }
 
 DateTime _morning(DateTime day) =>

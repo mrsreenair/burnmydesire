@@ -153,6 +153,17 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _followUpAtMeta = const VerificationMeta(
+    'followUpAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> followUpAt = GeneratedColumn<DateTime>(
+    'follow_up_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _reflectionJsonMeta = const VerificationMeta(
     'reflectionJson',
   );
@@ -179,6 +190,7 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
     movedAt,
     boughtAt,
     parkedUntil,
+    followUpAt,
     reflectionJson,
   ];
   @override
@@ -289,6 +301,15 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
         ),
       );
     }
+    if (data.containsKey('follow_up_at')) {
+      context.handle(
+        _followUpAtMeta,
+        followUpAt.isAcceptableOrUnknown(
+          data['follow_up_at']!,
+          _followUpAtMeta,
+        ),
+      );
+    }
     if (data.containsKey('reflection_json')) {
       context.handle(
         _reflectionJsonMeta,
@@ -359,6 +380,10 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}parked_until'],
       ),
+      followUpAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}follow_up_at'],
+      ),
       reflectionJson: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}reflection_json'],
@@ -406,6 +431,12 @@ class Item extends DataClass implements Insertable<Item> {
   /// offered forever.
   final DateTime? parkedUntil;
 
+  /// When the user last answered a follow-up with "still resisted".
+  /// Two questions per burn (3 days, then 14 — GROWTH.md M5); this is
+  /// how the second knows the first was answered, and how a re-burn
+  /// (which moves [lastBurnedAt] past it) starts the pair again.
+  final DateTime? followUpAt;
+
   /// The purchase-interview answers, as JSON (see data/reflection.dart).
   /// Kept so a re-burn can show the user their own words from last time
   /// — "you said you'd wear it once" lands harder than any message we
@@ -425,6 +456,7 @@ class Item extends DataClass implements Insertable<Item> {
     this.movedAt,
     this.boughtAt,
     this.parkedUntil,
+    this.followUpAt,
     this.reflectionJson,
   });
   @override
@@ -456,6 +488,9 @@ class Item extends DataClass implements Insertable<Item> {
     }
     if (!nullToAbsent || parkedUntil != null) {
       map['parked_until'] = Variable<DateTime>(parkedUntil);
+    }
+    if (!nullToAbsent || followUpAt != null) {
+      map['follow_up_at'] = Variable<DateTime>(followUpAt);
     }
     if (!nullToAbsent || reflectionJson != null) {
       map['reflection_json'] = Variable<String>(reflectionJson);
@@ -492,6 +527,9 @@ class Item extends DataClass implements Insertable<Item> {
       parkedUntil: parkedUntil == null && nullToAbsent
           ? const Value.absent()
           : Value(parkedUntil),
+      followUpAt: followUpAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(followUpAt),
       reflectionJson: reflectionJson == null && nullToAbsent
           ? const Value.absent()
           : Value(reflectionJson),
@@ -517,6 +555,7 @@ class Item extends DataClass implements Insertable<Item> {
       movedAt: serializer.fromJson<DateTime?>(json['movedAt']),
       boughtAt: serializer.fromJson<DateTime?>(json['boughtAt']),
       parkedUntil: serializer.fromJson<DateTime?>(json['parkedUntil']),
+      followUpAt: serializer.fromJson<DateTime?>(json['followUpAt']),
       reflectionJson: serializer.fromJson<String?>(json['reflectionJson']),
     );
   }
@@ -537,6 +576,7 @@ class Item extends DataClass implements Insertable<Item> {
       'movedAt': serializer.toJson<DateTime?>(movedAt),
       'boughtAt': serializer.toJson<DateTime?>(boughtAt),
       'parkedUntil': serializer.toJson<DateTime?>(parkedUntil),
+      'followUpAt': serializer.toJson<DateTime?>(followUpAt),
       'reflectionJson': serializer.toJson<String?>(reflectionJson),
     };
   }
@@ -555,6 +595,7 @@ class Item extends DataClass implements Insertable<Item> {
     Value<DateTime?> movedAt = const Value.absent(),
     Value<DateTime?> boughtAt = const Value.absent(),
     Value<DateTime?> parkedUntil = const Value.absent(),
+    Value<DateTime?> followUpAt = const Value.absent(),
     Value<String?> reflectionJson = const Value.absent(),
   }) => Item(
     id: id ?? this.id,
@@ -570,6 +611,7 @@ class Item extends DataClass implements Insertable<Item> {
     movedAt: movedAt.present ? movedAt.value : this.movedAt,
     boughtAt: boughtAt.present ? boughtAt.value : this.boughtAt,
     parkedUntil: parkedUntil.present ? parkedUntil.value : this.parkedUntil,
+    followUpAt: followUpAt.present ? followUpAt.value : this.followUpAt,
     reflectionJson: reflectionJson.present
         ? reflectionJson.value
         : this.reflectionJson,
@@ -601,6 +643,9 @@ class Item extends DataClass implements Insertable<Item> {
       parkedUntil: data.parkedUntil.present
           ? data.parkedUntil.value
           : this.parkedUntil,
+      followUpAt: data.followUpAt.present
+          ? data.followUpAt.value
+          : this.followUpAt,
       reflectionJson: data.reflectionJson.present
           ? data.reflectionJson.value
           : this.reflectionJson,
@@ -623,6 +668,7 @@ class Item extends DataClass implements Insertable<Item> {
           ..write('movedAt: $movedAt, ')
           ..write('boughtAt: $boughtAt, ')
           ..write('parkedUntil: $parkedUntil, ')
+          ..write('followUpAt: $followUpAt, ')
           ..write('reflectionJson: $reflectionJson')
           ..write(')'))
         .toString();
@@ -643,6 +689,7 @@ class Item extends DataClass implements Insertable<Item> {
     movedAt,
     boughtAt,
     parkedUntil,
+    followUpAt,
     reflectionJson,
   );
   @override
@@ -662,6 +709,7 @@ class Item extends DataClass implements Insertable<Item> {
           other.movedAt == this.movedAt &&
           other.boughtAt == this.boughtAt &&
           other.parkedUntil == this.parkedUntil &&
+          other.followUpAt == this.followUpAt &&
           other.reflectionJson == this.reflectionJson);
 }
 
@@ -679,6 +727,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
   final Value<DateTime?> movedAt;
   final Value<DateTime?> boughtAt;
   final Value<DateTime?> parkedUntil;
+  final Value<DateTime?> followUpAt;
   final Value<String?> reflectionJson;
   const ItemsCompanion({
     this.id = const Value.absent(),
@@ -694,6 +743,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     this.movedAt = const Value.absent(),
     this.boughtAt = const Value.absent(),
     this.parkedUntil = const Value.absent(),
+    this.followUpAt = const Value.absent(),
     this.reflectionJson = const Value.absent(),
   });
   ItemsCompanion.insert({
@@ -710,6 +760,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     this.movedAt = const Value.absent(),
     this.boughtAt = const Value.absent(),
     this.parkedUntil = const Value.absent(),
+    this.followUpAt = const Value.absent(),
     this.reflectionJson = const Value.absent(),
   }) : imageFile = Value(imageFile),
        priceCents = Value(priceCents),
@@ -728,6 +779,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     Expression<DateTime>? movedAt,
     Expression<DateTime>? boughtAt,
     Expression<DateTime>? parkedUntil,
+    Expression<DateTime>? followUpAt,
     Expression<String>? reflectionJson,
   }) {
     return RawValuesInsertable({
@@ -744,6 +796,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
       if (movedAt != null) 'moved_at': movedAt,
       if (boughtAt != null) 'bought_at': boughtAt,
       if (parkedUntil != null) 'parked_until': parkedUntil,
+      if (followUpAt != null) 'follow_up_at': followUpAt,
       if (reflectionJson != null) 'reflection_json': reflectionJson,
     });
   }
@@ -762,6 +815,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     Value<DateTime?>? movedAt,
     Value<DateTime?>? boughtAt,
     Value<DateTime?>? parkedUntil,
+    Value<DateTime?>? followUpAt,
     Value<String?>? reflectionJson,
   }) {
     return ItemsCompanion(
@@ -778,6 +832,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
       movedAt: movedAt ?? this.movedAt,
       boughtAt: boughtAt ?? this.boughtAt,
       parkedUntil: parkedUntil ?? this.parkedUntil,
+      followUpAt: followUpAt ?? this.followUpAt,
       reflectionJson: reflectionJson ?? this.reflectionJson,
     );
   }
@@ -824,6 +879,9 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     if (parkedUntil.present) {
       map['parked_until'] = Variable<DateTime>(parkedUntil.value);
     }
+    if (followUpAt.present) {
+      map['follow_up_at'] = Variable<DateTime>(followUpAt.value);
+    }
     if (reflectionJson.present) {
       map['reflection_json'] = Variable<String>(reflectionJson.value);
     }
@@ -846,6 +904,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
           ..write('movedAt: $movedAt, ')
           ..write('boughtAt: $boughtAt, ')
           ..write('parkedUntil: $parkedUntil, ')
+          ..write('followUpAt: $followUpAt, ')
           ..write('reflectionJson: $reflectionJson')
           ..write(')'))
         .toString();
@@ -1220,6 +1279,7 @@ typedef $$ItemsTableCreateCompanionBuilder =
       Value<DateTime?> movedAt,
       Value<DateTime?> boughtAt,
       Value<DateTime?> parkedUntil,
+      Value<DateTime?> followUpAt,
       Value<String?> reflectionJson,
     });
 typedef $$ItemsTableUpdateCompanionBuilder =
@@ -1237,6 +1297,7 @@ typedef $$ItemsTableUpdateCompanionBuilder =
       Value<DateTime?> movedAt,
       Value<DateTime?> boughtAt,
       Value<DateTime?> parkedUntil,
+      Value<DateTime?> followUpAt,
       Value<String?> reflectionJson,
     });
 
@@ -1334,6 +1395,11 @@ class $$ItemsTableFilterComposer extends Composer<_$AppDatabase, $ItemsTable> {
 
   ColumnFilters<DateTime> get parkedUntil => $composableBuilder(
     column: $table.parkedUntil,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get followUpAt => $composableBuilder(
+    column: $table.followUpAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1442,6 +1508,11 @@ class $$ItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get followUpAt => $composableBuilder(
+    column: $table.followUpAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get reflectionJson => $composableBuilder(
     column: $table.reflectionJson,
     builder: (column) => ColumnOrderings(column),
@@ -1505,6 +1576,11 @@ class $$ItemsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get parkedUntil => $composableBuilder(
     column: $table.parkedUntil,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get followUpAt => $composableBuilder(
+    column: $table.followUpAt,
     builder: (column) => column,
   );
 
@@ -1580,6 +1656,7 @@ class $$ItemsTableTableManager
                 Value<DateTime?> movedAt = const Value.absent(),
                 Value<DateTime?> boughtAt = const Value.absent(),
                 Value<DateTime?> parkedUntil = const Value.absent(),
+                Value<DateTime?> followUpAt = const Value.absent(),
                 Value<String?> reflectionJson = const Value.absent(),
               }) => ItemsCompanion(
                 id: id,
@@ -1595,6 +1672,7 @@ class $$ItemsTableTableManager
                 movedAt: movedAt,
                 boughtAt: boughtAt,
                 parkedUntil: parkedUntil,
+                followUpAt: followUpAt,
                 reflectionJson: reflectionJson,
               ),
           createCompanionCallback:
@@ -1612,6 +1690,7 @@ class $$ItemsTableTableManager
                 Value<DateTime?> movedAt = const Value.absent(),
                 Value<DateTime?> boughtAt = const Value.absent(),
                 Value<DateTime?> parkedUntil = const Value.absent(),
+                Value<DateTime?> followUpAt = const Value.absent(),
                 Value<String?> reflectionJson = const Value.absent(),
               }) => ItemsCompanion.insert(
                 id: id,
@@ -1627,6 +1706,7 @@ class $$ItemsTableTableManager
                 movedAt: movedAt,
                 boughtAt: boughtAt,
                 parkedUntil: parkedUntil,
+                followUpAt: followUpAt,
                 reflectionJson: reflectionJson,
               ),
           withReferenceMapper: (p0) => p0

@@ -134,11 +134,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   /// One sheet for the check-in cadence: frequency chips + hour picker.
   Future<void> _editCheckinSchedule() async {
-    final result = await showModalBottomSheet<(CheckinFrequency, int)>(
+    final result = await showModalBottomSheet<(CheckinFrequency, int, int)>(
       context: context,
       builder: (sheetContext) {
         var freq = _notifPrefs.checkinFrequency;
         var hour = _notifPrefs.checkinHour;
+        var payday = _notifPrefs.paydayDay;
         return StatefulBuilder(
           builder: (sheetContext, setSheetState) => SafeArea(
             child: Padding(
@@ -168,8 +169,51 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         onSelected: (_) =>
                             setSheetState(() => freq = CheckinFrequency.daily),
                       ),
+                      // "When do you slip?" — the two answers most people
+                      // give (GROWTH.md M5).
+                      ChoiceChip(
+                        label: const Text('Weekends'),
+                        selected: freq == CheckinFrequency.weekends,
+                        onSelected: (_) => setSheetState(
+                          () => freq = CheckinFrequency.weekends,
+                        ),
+                      ),
+                      ChoiceChip(
+                        label: const Text('Around payday'),
+                        selected: freq == CheckinFrequency.payday,
+                        onSelected: (_) => setSheetState(
+                          () => freq = CheckinFrequency.payday,
+                        ),
+                      ),
                     ],
                   ),
+                  if (freq == CheckinFrequency.payday) ...[
+                    const SizedBox(height: 14),
+                    Text(
+                      'Pay lands on the…',
+                      style: Theme.of(sheetContext).textTheme.bodyMedium
+                          ?.copyWith(color: AppColors.textMid),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 40,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          for (var d = 1; d <= 28; d++)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: ChoiceChip(
+                                label: Text('$d'),
+                                selected: payday == d,
+                                onSelected: (_) =>
+                                    setSheetState(() => payday = d),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   // Quiet hours bound the choices, so the picker only
                   // offers hours that can actually fire.
@@ -190,7 +234,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     width: double.infinity,
                     child: FilledButton(
                       onPressed: () =>
-                          Navigator.pop(sheetContext, (freq, hour)),
+                          Navigator.pop(sheetContext, (freq, hour, payday)),
                       child: const Text('Save'),
                     ),
                   ),
@@ -203,7 +247,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     if (result == null) return;
     await _saveNotifPrefs(
-      _notifPrefs.copyWith(checkinFrequency: result.$1, checkinHour: result.$2),
+      _notifPrefs.copyWith(
+        checkinFrequency: result.$1,
+        checkinHour: result.$2,
+        paydayDay: result.$3,
+      ),
     );
   }
 
@@ -753,10 +801,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           icon: Icons.schedule_outlined,
                           title: 'When',
                           trailing:
-                              _notifPrefs.checkinFrequency ==
-                                  CheckinFrequency.daily
-                              ? 'Daily · ${_notifPrefs.checkinHour}:00'
-                              : '3×/week · ${_notifPrefs.checkinHour}:00',
+                              '${switch (_notifPrefs.checkinFrequency) {
+                                CheckinFrequency.daily => 'Daily',
+                                CheckinFrequency.fewTimesAWeek => '3×/week',
+                                CheckinFrequency.weekends => 'Weekends',
+                                CheckinFrequency.payday =>
+                                  'Payday (${_notifPrefs.paydayDay})',
+                              }} · ${_notifPrefs.checkinHour}:00',
                           onTap: _editCheckinSchedule,
                         ),
                       _SwitchRow(

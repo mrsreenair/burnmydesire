@@ -40,6 +40,12 @@ class Items extends Table {
   /// offered forever.
   DateTimeColumn get parkedUntil => dateTime().nullable()();
 
+  /// When the user last answered a follow-up with "still resisted".
+  /// Two questions per burn (3 days, then 14 — GROWTH.md M5); this is
+  /// how the second knows the first was answered, and how a re-burn
+  /// (which moves [lastBurnedAt] past it) starts the pair again.
+  DateTimeColumn get followUpAt => dateTime().nullable()();
+
   /// The purchase-interview answers, as JSON (see data/reflection.dart).
   /// Kept so a re-burn can show the user their own words from last time
   /// — "you said you'd wear it once" lands harder than any message we
@@ -69,7 +75,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -88,6 +94,7 @@ class AppDatabase extends _$AppDatabase {
         // report is a little thin rather than empty.
         await backfillBurns();
       }
+      if (from < 6) await m.addColumn(items, items.followUpAt);
     },
   );
 
@@ -190,11 +197,13 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
-  /// "No, I didn't buy it." Nothing to record but the fact we asked, so
-  /// the fourteen-day clock restarts instead of firing again tomorrow.
+  /// "No, I didn't buy it." Stamps the answer so the next stage (or
+  /// silence) follows. Deliberately no longer touches [lastBurnedAt]:
+  /// re-stamping the burn to restart a clock also moved streaks and
+  /// the weekly report, and an answer isn't a burn.
   Future<void> recordFollowUpResisted(int id) {
     return (update(items)..where((t) => t.id.equals(id))).write(
-      ItemsCompanion(lastBurnedAt: Value(DateTime.now())),
+      ItemsCompanion(followUpAt: Value(DateTime.now())),
     );
   }
 

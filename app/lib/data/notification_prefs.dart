@@ -1,7 +1,20 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// How often the check-in fires.
-enum CheckinFrequency { daily, fewTimesAWeek }
+/// When the check-in fires (GROWTH.md M5). The two new ones exist
+/// because "when do you slip?" has a real answer for most people:
+/// Friday night, or the days right after payday.
+enum CheckinFrequency {
+  daily,
+
+  /// Mon / Wed / Fri.
+  fewTimesAWeek,
+
+  /// Fri / Sat / Sun.
+  weekends,
+
+  /// Payday and the two days after it (day of month in [paydayDay]).
+  payday,
+}
 
 /// Everything the notification planner needs to know about what the
 /// user wants. Master off by default: notifications begin only when the
@@ -12,6 +25,7 @@ class NotificationPrefs {
     this.checkinEnabled = true,
     this.checkinFrequency = CheckinFrequency.fewTimesAWeek,
     this.checkinHour = 21,
+    this.paydayDay = 1,
     this.streakEnabled = true,
     this.milestoneEnabled = true,
     this.weeklyEnabled = true,
@@ -26,6 +40,9 @@ class NotificationPrefs {
   /// the planner, so a stored 23 can't fire at 23:00.
   final int checkinHour;
 
+  /// Day of month the pay lands, 1–28, for [CheckinFrequency.payday].
+  final int paydayDay;
+
   final bool streakEnabled;
   final bool milestoneEnabled;
 
@@ -38,6 +55,7 @@ class NotificationPrefs {
     bool? checkinEnabled,
     CheckinFrequency? checkinFrequency,
     int? checkinHour,
+    int? paydayDay,
     bool? streakEnabled,
     bool? milestoneEnabled,
     bool? weeklyEnabled,
@@ -47,6 +65,7 @@ class NotificationPrefs {
     checkinEnabled: checkinEnabled ?? this.checkinEnabled,
     checkinFrequency: checkinFrequency ?? this.checkinFrequency,
     checkinHour: checkinHour ?? this.checkinHour,
+    paydayDay: paydayDay ?? this.paydayDay,
     streakEnabled: streakEnabled ?? this.streakEnabled,
     milestoneEnabled: milestoneEnabled ?? this.milestoneEnabled,
     weeklyEnabled: weeklyEnabled ?? this.weeklyEnabled,
@@ -58,6 +77,7 @@ const _kEnabled = 'notif_enabled';
 const _kCheckin = 'notif_checkin';
 const _kFrequency = 'notif_checkin_frequency';
 const _kHour = 'notif_checkin_hour';
+const _kPayday = 'notif_payday_day';
 const _kStreak = 'notif_streak';
 const _kMilestone = 'notif_milestone';
 const _kWeekly = 'notif_weekly';
@@ -70,10 +90,14 @@ Future<NotificationPrefs> loadNotificationPrefs() async {
   return NotificationPrefs(
     enabled: p.getBool(_kEnabled) ?? d.enabled,
     checkinEnabled: p.getBool(_kCheckin) ?? d.checkinEnabled,
-    checkinFrequency: (p.getString(_kFrequency) == 'daily')
-        ? CheckinFrequency.daily
-        : d.checkinFrequency,
+    checkinFrequency: switch (p.getString(_kFrequency)) {
+      'daily' => CheckinFrequency.daily,
+      'weekends' => CheckinFrequency.weekends,
+      'payday' => CheckinFrequency.payday,
+      _ => d.checkinFrequency,
+    },
     checkinHour: p.getInt(_kHour) ?? d.checkinHour,
+    paydayDay: (p.getInt(_kPayday) ?? d.paydayDay).clamp(1, 28),
     streakEnabled: p.getBool(_kStreak) ?? d.streakEnabled,
     milestoneEnabled: p.getBool(_kMilestone) ?? d.milestoneEnabled,
     weeklyEnabled: p.getBool(_kWeekly) ?? d.weeklyEnabled,
@@ -85,11 +109,14 @@ Future<void> saveNotificationPrefs(NotificationPrefs prefs) async {
   final p = await SharedPreferences.getInstance();
   await p.setBool(_kEnabled, prefs.enabled);
   await p.setBool(_kCheckin, prefs.checkinEnabled);
-  await p.setString(
-    _kFrequency,
-    prefs.checkinFrequency == CheckinFrequency.daily ? 'daily' : 'few',
-  );
+  await p.setString(_kFrequency, switch (prefs.checkinFrequency) {
+    CheckinFrequency.daily => 'daily',
+    CheckinFrequency.fewTimesAWeek => 'few',
+    CheckinFrequency.weekends => 'weekends',
+    CheckinFrequency.payday => 'payday',
+  });
   await p.setInt(_kHour, prefs.checkinHour);
+  await p.setInt(_kPayday, prefs.paydayDay);
   await p.setBool(_kStreak, prefs.streakEnabled);
   await p.setBool(_kMilestone, prefs.milestoneEnabled);
   await p.setBool(_kWeekly, prefs.weeklyEnabled);

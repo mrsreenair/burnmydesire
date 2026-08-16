@@ -333,4 +333,59 @@ void main() {
       expect(sun.body, contains('Ash Report'));
     });
   });
+
+  group('check-in days (GROWTH.md M5)', () {
+    // now is Mon 10 Aug 2026.
+    test('weekends land Fri/Sat/Sun only', () {
+      final out = plan(
+        prefs: const NotificationPrefs(
+          enabled: true,
+          checkinFrequency: CheckinFrequency.weekends,
+        ),
+      );
+      expect(out, isNotEmpty);
+      for (final n in out) {
+        expect(n.when.weekday, greaterThanOrEqualTo(DateTime.friday));
+      }
+      // A Tuesday never fires.
+      expect(out.where((n) => n.when.weekday == DateTime.tuesday), isEmpty);
+    });
+
+    test('payday covers the day and the two after', () {
+      final out = plan(
+        prefs: const NotificationPrefs(
+          enabled: true,
+          checkinFrequency: CheckinFrequency.payday,
+          paydayDay: 25,
+        ),
+      );
+      final days = out.map((n) => n.when.day).toSet();
+      expect(days, {25, 26, 27});
+    });
+
+    test('a payday on the 28th still gets its follow-on days in a short month', () {
+      const prefs = NotificationPrefs(
+        enabled: true,
+        checkinFrequency: CheckinFrequency.payday,
+        paydayDay: 28,
+      );
+      expect(checkinFallsOn(DateTime(2026, 2, 28), prefs), isTrue);
+      expect(checkinFallsOn(DateTime(2026, 3, 1), prefs), isTrue);
+      expect(checkinFallsOn(DateTime(2026, 3, 2), prefs), isTrue);
+      expect(checkinFallsOn(DateTime(2026, 3, 3), prefs), isFalse);
+    });
+
+    test('the three-day streak nudge invites the re-burn', () {
+      final out = plan(items: [item(lastBurnedAt: now)]);
+      final three = out.firstWhere(
+        (n) => n.when.day == now.day + 3 && n.when.hour == 9,
+      );
+      // Both rotations point at the fire, not the streak.
+      expect(
+        three.body.toLowerCase(),
+        anyOf(contains('burn it again'), contains('fire')),
+      );
+      expect(three.body, isNot(contains('streak')));
+    });
+  });
 }

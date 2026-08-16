@@ -41,8 +41,8 @@ speaks in wins.
 
 | Category | Schedule | Example |
 |---|---|---|
-| **Check-in** | Daily or 3×/week (default) at a user-chosen hour (default 21:00 — the impulse-shopping hour). Skips today if the user already burned today. | "Anything pulling at you tonight? One minute here is cheaper than one tap of Buy Now." |
-| **Streak guard** | Per live item, +3 and +7 days after its last burn, at 09:30. | "One of your desires hits a one-week streak tomorrow. Come claim it." |
+| **Check-in** | Daily, 3×/week (default), weekends (Fri–Sun) or around payday (the day + two after), at a user-chosen hour (default 21:00 — the impulse-shopping hour). Skips today if the user already burned today. | "Anything pulling at you tonight? One minute here is cheaper than one tap of Buy Now." |
+| **Streak guard** | Per live item, +3 and +7 days after its last burn, at 09:30. The +3 invites the re-burn ("Still want it? Burn it again — it's free"); the +7 admires the streak. | "One of your desires hits a one-week streak tomorrow. Come claim it." |
 | **Monthly proof** | Monthly on the first-burn anniversary day, 09:30. Needs a positive protected total. | "₹12,400 is still yours. Two months of winning." |
 | **Final-burn invitation** | The morning after an item becomes one burn away from the final-burn threshold. | "One desire is ready to be ended forever. You've already beaten it three times." |
 | **Backup nudge** (Pro) | When the last encrypted backup is over 30 days old. 09:30. | "Your wins deserve a backup. Thirty seconds, encrypted, yours." |

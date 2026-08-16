@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/database.dart';
+import '../data/follow_up.dart';
 import '../data/image_store.dart';
 import '../data/market_data.dart';
 import '../data/user_prefs.dart';
@@ -88,17 +89,13 @@ final parkedItemsProvider = Provider<List<Item>>((ref) {
       .toList();
 });
 
-/// Burns old enough to be worth asking about, and not yet answered. Two
-/// weeks is long enough that the craving has resolved one way or the
-/// other, and short enough to still remember.
+/// Burns with a follow-up question due — three days, then fourteen
+/// (follow_up.dart). Paired with the stage so the card can word it.
 final needsFollowUpProvider = Provider<List<Item>>((ref) {
   final now = ref.watch(nowProvider);
-  return (ref.watch(itemsProvider).value ?? const <Item>[]).where((i) {
-    if (i.boughtAt != null || i.category == 'emotion') return false;
-    final burned = i.lastBurnedAt;
-    if (burned == null) return false;
-    return now.difference(burned) >= const Duration(days: 14);
-  }).toList();
+  return (ref.watch(itemsProvider).value ?? const <Item>[])
+      .where((i) => followUpStageFor(i, now) > 0)
+      .toList();
 });
 
 /// Now, as a provider so tests can freeze the calendar.

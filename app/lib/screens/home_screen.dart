@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../config.dart';
 import '../data/plan_offer.dart';
 import '../data/database.dart';
+import '../data/follow_up.dart';
 import '../data/user_prefs.dart';
 import '../data/weekly_report.dart';
 import '../data/reflection.dart';
@@ -698,7 +699,9 @@ class _FollowUpCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final weeks = DateTime.now().difference(item.lastBurnedAt!).inDays ~/ 7;
+    final now = DateTime.now();
+    final days = now.difference(item.lastBurnedAt!).inDays;
+    final second = followUpStageFor(item, now) == 2;
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
       decoration: BoxDecoration(
@@ -709,23 +712,26 @@ class _FollowUpCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            weeks < 1
-                ? 'You burned this recently'
-                : 'You burned this $weeks week${weeks == 1 ? '' : 's'} ago',
+            days < 7
+                ? 'You burned this $days days ago'
+                : 'You burned this ${days ~/ 7} '
+                      'week${days ~/ 7 == 1 ? '' : 's'} ago',
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppColors.textMid,
             ),
           ),
           const SizedBox(height: 2),
           Text(
-            'Did you end up buying it?',
+            second ? 'Two weeks on — still not bought?' : 'Did you buy it?',
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            'Honest either way — it just keeps your total true.',
+            second
+                ? 'Last question about this one. Honest either way.'
+                : 'Honest either way — it just keeps your total true.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.textMid,
             ),

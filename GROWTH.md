@@ -44,7 +44,7 @@ mid-flight; everything before them is pure Dart and ships independently.
 | M2 | Give Pro a reason to exist, and a moment to be offered | 1 day | ✅ 2026-08-16 |
 | M3 | Share card 2.0 — goal-anchored | ½ day | ✅ 2026-08-16 |
 | M4 | Weekly Ash Report | 1½ days | ✅ 2026-08-16 |
-| M5 | Follow-up cadence + re-burn loop | ½ day | ⬜ |
+| M5 | Follow-up cadence + re-burn loop | ½ day | ✅ 2026-08-16 |
 | M6 | Cosmetics as Pro — two new burn effects | 1 day | ⬜ |
 | M7 | Analytics decision (no code unless the decision flips) | — | ⏳ founder |
 | M8 | Home-screen widget (native) | 2 days | ⬜ |
@@ -154,12 +154,12 @@ existing users get one row per item.
 — the app already needs 3 burns to destroy one, so invite the second.
 
 **Scope**
-- [ ] Follow-up window 14 d → **3 d + 14 d** (two questions per item; the second only if the first was "not yet"). `needsFollowUpProvider` grows a stage.
-- [ ] Check-in gets a **days** choice: every day · a few times a week · weekends · payday (day-of-month picker). Copy unchanged, planner filters by weekday.
-- [ ] Streak-guard +3 push copy adds the invitation to re-burn ("Still want it? Burn it again — it's free.")
-- [ ] Tests: stage transitions; weekday filtering
+- [x] Follow-up window 14 d → **3 d + 14 d** (`follow_up.dart`, pure; schema v6 adds `followUpAt`; "still resisted" no longer re-stamps `lastBurnedAt`, which was moving streaks and the weekly report). Card copy changes for the second question; a re-burn starts the pair again
+- [x] Check-in days: daily · 3×/week · **weekends** (Fri–Sun) · **around payday** (day + two after, day-of-month picker 1–28, month-end safe). `checkinFallsOn` is pure
+- [x] Streak-guard +3 copy invites the re-burn; +7 keeps the streak line
+- [x] Tests: `follow_up_test` (6), planner (4 more)
 
-**Exit.** A purchase burned on Monday asks on Thursday; "not yet" asks again two Mondays later; a "weekends" check-in never fires on a Tuesday.
+**Exit.** ✅ All three assertions are literally the tests: Monday burn → Thursday ask → second Monday; weekends never Tuesday.
 
 ---
 
