@@ -22,6 +22,24 @@ class Items extends Table {
   /// survives so "wealth protected" totals stay honest forever.
   DateTimeColumn get destroyedAt => dateTime().nullable()();
 
+  /// When the user confirmed they actually moved this money somewhere it
+  /// can't be spent. Without this the app's headline number is a claim
+  /// nobody's bank balance agrees with: resisting a €150 purchase doesn't
+  /// protect €150 if it leaves on something else by Friday. Resisted and
+  /// genuinely saved are different facts, so they're stored separately.
+  DateTimeColumn get movedAt => dateTime().nullable()();
+
+  /// When the user admitted they bought it in the end. The honest
+  /// counterweight to a total that otherwise only ever goes up — a burn
+  /// isn't a saving until the craving stays dead.
+  DateTimeColumn get boughtAt => dateTime().nullable()();
+
+  /// "Not now": the desire is parked until this moment, and a
+  /// notification brings it back. The 24-hour rule is the best-evidenced
+  /// intervention against impulse buying, and the app previously only
+  /// offered forever.
+  DateTimeColumn get parkedUntil => dateTime().nullable()();
+
   /// The purchase-interview answers, as JSON (see data/reflection.dart).
   /// Kept so a re-burn can show the user their own words from last time
   /// — "you said you'd wear it once" lands harder than any message we
@@ -38,13 +56,18 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onUpgrade: (m, from, to) async {
       if (from < 2) await m.addColumn(items, items.destroyedAt);
       if (from < 3) await m.addColumn(items, items.reflectionJson);
+      if (from < 4) {
+        await m.addColumn(items, items.movedAt);
+        await m.addColumn(items, items.boughtAt);
+        await m.addColumn(items, items.parkedUntil);
+      }
     },
   );
 
@@ -89,6 +112,53 @@ class AppDatabase extends _$AppDatabase {
         resistanceCount: items.resistanceCount + const Constant(1),
         lastBurnedAt: Variable(DateTime.now()),
       ),
+    );
+  }
+
+  /// The user moved the money for real (or took it back). Only a burned
+  /// item can be marked moved, so the toggle can't invent savings.
+  Future<void> setMoved(int id, {required bool moved}) {
+    return (update(items)..where((t) => t.id.equals(id))).write(
+      ItemsCompanion(movedAt: Value(moved ? DateTime.now() : null)),
+    );
+  }
+
+  /// The follow-up answer: they bought it in the end. Keeps the row —
+  /// deleting it would quietly restore the total it should be reducing.
+  Future<void> markBought(int id) {
+    return (update(items)..where((t) => t.id.equals(id))).write(
+      ItemsCompanion(
+        boughtAt: Value(DateTime.now()),
+        movedAt: const Value(null),
+      ),
+    );
+  }
+
+  /// "No, I didn't buy it." Nothing to record but the fact we asked, so
+  /// the fourteen-day clock restarts instead of firing again tomorrow.
+  Future<void> recordFollowUpResisted(int id) {
+    return (update(items)..where((t) => t.id.equals(id))).write(
+      ItemsCompanion(lastBurnedAt: Value(DateTime.now())),
+    );
+  }
+
+  /// They resisted after all: clear the confession and let it count again.
+  Future<void> markNotBought(int id) {
+    return (update(items)..where((t) => t.id.equals(id))).write(
+      const ItemsCompanion(boughtAt: Value(null)),
+    );
+  }
+
+  /// Park a desire until [until] instead of burning it now.
+  Future<void> park(int id, DateTime until) {
+    return (update(items)..where((t) => t.id.equals(id))).write(
+      ItemsCompanion(parkedUntil: Value(until)),
+    );
+  }
+
+  Future<void> unpark(int id) {
+    return (update(items)..where((t) => t.id.equals(id))).write(
+      const ItemsCompanion(parkedUntil: Value(null)),
     );
   }
 

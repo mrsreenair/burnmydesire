@@ -62,6 +62,43 @@ final destroyedItemsProvider = Provider<List<Item>>(
       .toList(),
 );
 
+/// Desires the user confessed to buying in the end. Kept out of every
+/// total: the point of asking is that the answer changes the number.
+final boughtItemsProvider = Provider<List<Item>>(
+  (ref) => (ref.watch(itemsProvider).value ?? const <Item>[])
+      .where((i) => i.boughtAt != null)
+      .toList(),
+);
+
+/// Parked desires whose waiting time is up — the ones to bring back.
+final dueParkedItemsProvider = Provider<List<Item>>((ref) {
+  final now = ref.watch(nowProvider);
+  return (ref.watch(liveItemsProvider))
+      .where((i) => i.parkedUntil != null && !i.parkedUntil!.isAfter(now))
+      .toList();
+});
+
+/// Still waiting out their pause.
+final parkedItemsProvider = Provider<List<Item>>((ref) {
+  final now = ref.watch(nowProvider);
+  return (ref.watch(liveItemsProvider))
+      .where((i) => i.parkedUntil != null && i.parkedUntil!.isAfter(now))
+      .toList();
+});
+
+/// Burns old enough to be worth asking about, and not yet answered. Two
+/// weeks is long enough that the craving has resolved one way or the
+/// other, and short enough to still remember.
+final needsFollowUpProvider = Provider<List<Item>>((ref) {
+  final now = ref.watch(nowProvider);
+  return (ref.watch(itemsProvider).value ?? const <Item>[]).where((i) {
+    if (i.boughtAt != null || i.category == 'emotion') return false;
+    final burned = i.lastBurnedAt;
+    if (burned == null) return false;
+    return now.difference(burned) >= const Duration(days: 14);
+  }).toList();
+});
+
 /// Now, as a provider so tests can freeze the calendar.
 final nowProvider = Provider<DateTime>((ref) => DateTime.now());
 
@@ -79,10 +116,24 @@ final newItemsThisMonthProvider = Provider<int>((ref) {
 });
 
 /// Total wealth protected: each unique item counted once, no matter how
-/// often it was re-burned (PROJECT.md F4).
+/// often it was re-burned (PROJECT.md F4) — and never one the user has
+/// since admitted buying. A total that can only go up isn't a measure of
+/// anything, and users know it before we do.
 final protectedCentsProvider = Provider<int>((ref) {
   final items = ref.watch(itemsProvider).value ?? const [];
-  return items.fold(0, (sum, item) => sum + item.priceCents);
+  return items
+      .where((i) => i.boughtAt == null)
+      .fold(0, (sum, item) => sum + item.priceCents);
+});
+
+/// Of that, the part the user says they actually moved somewhere it can't
+/// be spent. Resisting is not the same as saving, and this is the number
+/// their bank balance would agree with.
+final movedCentsProvider = Provider<int>((ref) {
+  final items = ref.watch(itemsProvider).value ?? const [];
+  return items
+      .where((i) => i.boughtAt == null && i.movedAt != null)
+      .fold(0, (sum, item) => sum + item.priceCents);
 });
 
 /// Thoughts burned: items with no price, counted once each however often

@@ -32,6 +32,26 @@ class ShockScreen extends ConsumerStatefulWidget {
 class _ShockScreenState extends ConsumerState<ShockScreen> {
   int _years = kDefaultHorizonYears;
   int _fund = 0;
+  bool _busy = false;
+
+  /// Park the desire for a day instead of deciding now. Only offered for
+  /// saved items — a brand-new capture has no row to park yet, and
+  /// inventing one here would count against the free monthly allowance
+  /// for something the user hasn't committed to.
+  Future<void> _park() async {
+    final id = widget.target.itemId;
+    if (id == null) return;
+    setState(() => _busy = true);
+    final until = DateTime.now().add(const Duration(hours: 24));
+    await ref.read(databaseProvider).park(id, until);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Parked for 24 hours. Most urges don\'t survive it.'),
+      ),
+    );
+    Navigator.of(context).popUntil((r) => r.isFirst);
+  }
 
   /// Fund, horizon and the legal text — everything technical, one tap
   /// away rather than stacked on the card.
@@ -207,6 +227,17 @@ class _ShockScreenState extends ConsumerState<ShockScreen> {
                         context,
                       ).push(fireRoute(BurnScreen(target: widget.target))),
                     ),
+                    // The 24-hour rule: the best-evidenced thing anyone
+                    // has found against impulse buying, and until now the
+                    // app only offered "forever". Most people don't want
+                    // to say no — they want to say not yet.
+                    if (widget.target.itemId != null) ...[
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: _busy ? null : _park,
+                        child: const Text('Not now — remind me tomorrow'),
+                      ),
+                    ],
                     // They said it builds their future, so the honest
                     // exit gets a real button — not just the back arrow.
                     // The app shows the cost; it never makes the call.

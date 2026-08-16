@@ -120,6 +120,39 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _movedAtMeta = const VerificationMeta(
+    'movedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> movedAt = GeneratedColumn<DateTime>(
+    'moved_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _boughtAtMeta = const VerificationMeta(
+    'boughtAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> boughtAt = GeneratedColumn<DateTime>(
+    'bought_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _parkedUntilMeta = const VerificationMeta(
+    'parkedUntil',
+  );
+  @override
+  late final GeneratedColumn<DateTime> parkedUntil = GeneratedColumn<DateTime>(
+    'parked_until',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _reflectionJsonMeta = const VerificationMeta(
     'reflectionJson',
   );
@@ -143,6 +176,9 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
     createdAt,
     lastBurnedAt,
     destroyedAt,
+    movedAt,
+    boughtAt,
+    parkedUntil,
     reflectionJson,
   ];
   @override
@@ -232,6 +268,27 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
         ),
       );
     }
+    if (data.containsKey('moved_at')) {
+      context.handle(
+        _movedAtMeta,
+        movedAt.isAcceptableOrUnknown(data['moved_at']!, _movedAtMeta),
+      );
+    }
+    if (data.containsKey('bought_at')) {
+      context.handle(
+        _boughtAtMeta,
+        boughtAt.isAcceptableOrUnknown(data['bought_at']!, _boughtAtMeta),
+      );
+    }
+    if (data.containsKey('parked_until')) {
+      context.handle(
+        _parkedUntilMeta,
+        parkedUntil.isAcceptableOrUnknown(
+          data['parked_until']!,
+          _parkedUntilMeta,
+        ),
+      );
+    }
     if (data.containsKey('reflection_json')) {
       context.handle(
         _reflectionJsonMeta,
@@ -290,6 +347,18 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}destroyed_at'],
       ),
+      movedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}moved_at'],
+      ),
+      boughtAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}bought_at'],
+      ),
+      parkedUntil: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}parked_until'],
+      ),
       reflectionJson: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}reflection_json'],
@@ -319,6 +388,24 @@ class Item extends DataClass implements Insertable<Item> {
   /// survives so "wealth protected" totals stay honest forever.
   final DateTime? destroyedAt;
 
+  /// When the user confirmed they actually moved this money somewhere it
+  /// can't be spent. Without this the app's headline number is a claim
+  /// nobody's bank balance agrees with: resisting a €150 purchase doesn't
+  /// protect €150 if it leaves on something else by Friday. Resisted and
+  /// genuinely saved are different facts, so they're stored separately.
+  final DateTime? movedAt;
+
+  /// When the user admitted they bought it in the end. The honest
+  /// counterweight to a total that otherwise only ever goes up — a burn
+  /// isn't a saving until the craving stays dead.
+  final DateTime? boughtAt;
+
+  /// "Not now": the desire is parked until this moment, and a
+  /// notification brings it back. The 24-hour rule is the best-evidenced
+  /// intervention against impulse buying, and the app previously only
+  /// offered forever.
+  final DateTime? parkedUntil;
+
   /// The purchase-interview answers, as JSON (see data/reflection.dart).
   /// Kept so a re-burn can show the user their own words from last time
   /// — "you said you'd wear it once" lands harder than any message we
@@ -335,6 +422,9 @@ class Item extends DataClass implements Insertable<Item> {
     required this.createdAt,
     this.lastBurnedAt,
     this.destroyedAt,
+    this.movedAt,
+    this.boughtAt,
+    this.parkedUntil,
     this.reflectionJson,
   });
   @override
@@ -357,6 +447,15 @@ class Item extends DataClass implements Insertable<Item> {
     }
     if (!nullToAbsent || destroyedAt != null) {
       map['destroyed_at'] = Variable<DateTime>(destroyedAt);
+    }
+    if (!nullToAbsent || movedAt != null) {
+      map['moved_at'] = Variable<DateTime>(movedAt);
+    }
+    if (!nullToAbsent || boughtAt != null) {
+      map['bought_at'] = Variable<DateTime>(boughtAt);
+    }
+    if (!nullToAbsent || parkedUntil != null) {
+      map['parked_until'] = Variable<DateTime>(parkedUntil);
     }
     if (!nullToAbsent || reflectionJson != null) {
       map['reflection_json'] = Variable<String>(reflectionJson);
@@ -384,6 +483,15 @@ class Item extends DataClass implements Insertable<Item> {
       destroyedAt: destroyedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(destroyedAt),
+      movedAt: movedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(movedAt),
+      boughtAt: boughtAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(boughtAt),
+      parkedUntil: parkedUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(parkedUntil),
       reflectionJson: reflectionJson == null && nullToAbsent
           ? const Value.absent()
           : Value(reflectionJson),
@@ -406,6 +514,9 @@ class Item extends DataClass implements Insertable<Item> {
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       lastBurnedAt: serializer.fromJson<DateTime?>(json['lastBurnedAt']),
       destroyedAt: serializer.fromJson<DateTime?>(json['destroyedAt']),
+      movedAt: serializer.fromJson<DateTime?>(json['movedAt']),
+      boughtAt: serializer.fromJson<DateTime?>(json['boughtAt']),
+      parkedUntil: serializer.fromJson<DateTime?>(json['parkedUntil']),
       reflectionJson: serializer.fromJson<String?>(json['reflectionJson']),
     );
   }
@@ -423,6 +534,9 @@ class Item extends DataClass implements Insertable<Item> {
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'lastBurnedAt': serializer.toJson<DateTime?>(lastBurnedAt),
       'destroyedAt': serializer.toJson<DateTime?>(destroyedAt),
+      'movedAt': serializer.toJson<DateTime?>(movedAt),
+      'boughtAt': serializer.toJson<DateTime?>(boughtAt),
+      'parkedUntil': serializer.toJson<DateTime?>(parkedUntil),
       'reflectionJson': serializer.toJson<String?>(reflectionJson),
     };
   }
@@ -438,6 +552,9 @@ class Item extends DataClass implements Insertable<Item> {
     DateTime? createdAt,
     Value<DateTime?> lastBurnedAt = const Value.absent(),
     Value<DateTime?> destroyedAt = const Value.absent(),
+    Value<DateTime?> movedAt = const Value.absent(),
+    Value<DateTime?> boughtAt = const Value.absent(),
+    Value<DateTime?> parkedUntil = const Value.absent(),
     Value<String?> reflectionJson = const Value.absent(),
   }) => Item(
     id: id ?? this.id,
@@ -450,6 +567,9 @@ class Item extends DataClass implements Insertable<Item> {
     createdAt: createdAt ?? this.createdAt,
     lastBurnedAt: lastBurnedAt.present ? lastBurnedAt.value : this.lastBurnedAt,
     destroyedAt: destroyedAt.present ? destroyedAt.value : this.destroyedAt,
+    movedAt: movedAt.present ? movedAt.value : this.movedAt,
+    boughtAt: boughtAt.present ? boughtAt.value : this.boughtAt,
+    parkedUntil: parkedUntil.present ? parkedUntil.value : this.parkedUntil,
     reflectionJson: reflectionJson.present
         ? reflectionJson.value
         : this.reflectionJson,
@@ -476,6 +596,11 @@ class Item extends DataClass implements Insertable<Item> {
       destroyedAt: data.destroyedAt.present
           ? data.destroyedAt.value
           : this.destroyedAt,
+      movedAt: data.movedAt.present ? data.movedAt.value : this.movedAt,
+      boughtAt: data.boughtAt.present ? data.boughtAt.value : this.boughtAt,
+      parkedUntil: data.parkedUntil.present
+          ? data.parkedUntil.value
+          : this.parkedUntil,
       reflectionJson: data.reflectionJson.present
           ? data.reflectionJson.value
           : this.reflectionJson,
@@ -495,6 +620,9 @@ class Item extends DataClass implements Insertable<Item> {
           ..write('createdAt: $createdAt, ')
           ..write('lastBurnedAt: $lastBurnedAt, ')
           ..write('destroyedAt: $destroyedAt, ')
+          ..write('movedAt: $movedAt, ')
+          ..write('boughtAt: $boughtAt, ')
+          ..write('parkedUntil: $parkedUntil, ')
           ..write('reflectionJson: $reflectionJson')
           ..write(')'))
         .toString();
@@ -512,6 +640,9 @@ class Item extends DataClass implements Insertable<Item> {
     createdAt,
     lastBurnedAt,
     destroyedAt,
+    movedAt,
+    boughtAt,
+    parkedUntil,
     reflectionJson,
   );
   @override
@@ -528,6 +659,9 @@ class Item extends DataClass implements Insertable<Item> {
           other.createdAt == this.createdAt &&
           other.lastBurnedAt == this.lastBurnedAt &&
           other.destroyedAt == this.destroyedAt &&
+          other.movedAt == this.movedAt &&
+          other.boughtAt == this.boughtAt &&
+          other.parkedUntil == this.parkedUntil &&
           other.reflectionJson == this.reflectionJson);
 }
 
@@ -542,6 +676,9 @@ class ItemsCompanion extends UpdateCompanion<Item> {
   final Value<DateTime> createdAt;
   final Value<DateTime?> lastBurnedAt;
   final Value<DateTime?> destroyedAt;
+  final Value<DateTime?> movedAt;
+  final Value<DateTime?> boughtAt;
+  final Value<DateTime?> parkedUntil;
   final Value<String?> reflectionJson;
   const ItemsCompanion({
     this.id = const Value.absent(),
@@ -554,6 +691,9 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     this.createdAt = const Value.absent(),
     this.lastBurnedAt = const Value.absent(),
     this.destroyedAt = const Value.absent(),
+    this.movedAt = const Value.absent(),
+    this.boughtAt = const Value.absent(),
+    this.parkedUntil = const Value.absent(),
     this.reflectionJson = const Value.absent(),
   });
   ItemsCompanion.insert({
@@ -567,6 +707,9 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     required DateTime createdAt,
     this.lastBurnedAt = const Value.absent(),
     this.destroyedAt = const Value.absent(),
+    this.movedAt = const Value.absent(),
+    this.boughtAt = const Value.absent(),
+    this.parkedUntil = const Value.absent(),
     this.reflectionJson = const Value.absent(),
   }) : imageFile = Value(imageFile),
        priceCents = Value(priceCents),
@@ -582,6 +725,9 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     Expression<DateTime>? createdAt,
     Expression<DateTime>? lastBurnedAt,
     Expression<DateTime>? destroyedAt,
+    Expression<DateTime>? movedAt,
+    Expression<DateTime>? boughtAt,
+    Expression<DateTime>? parkedUntil,
     Expression<String>? reflectionJson,
   }) {
     return RawValuesInsertable({
@@ -595,6 +741,9 @@ class ItemsCompanion extends UpdateCompanion<Item> {
       if (createdAt != null) 'created_at': createdAt,
       if (lastBurnedAt != null) 'last_burned_at': lastBurnedAt,
       if (destroyedAt != null) 'destroyed_at': destroyedAt,
+      if (movedAt != null) 'moved_at': movedAt,
+      if (boughtAt != null) 'bought_at': boughtAt,
+      if (parkedUntil != null) 'parked_until': parkedUntil,
       if (reflectionJson != null) 'reflection_json': reflectionJson,
     });
   }
@@ -610,6 +759,9 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     Value<DateTime>? createdAt,
     Value<DateTime?>? lastBurnedAt,
     Value<DateTime?>? destroyedAt,
+    Value<DateTime?>? movedAt,
+    Value<DateTime?>? boughtAt,
+    Value<DateTime?>? parkedUntil,
     Value<String?>? reflectionJson,
   }) {
     return ItemsCompanion(
@@ -623,6 +775,9 @@ class ItemsCompanion extends UpdateCompanion<Item> {
       createdAt: createdAt ?? this.createdAt,
       lastBurnedAt: lastBurnedAt ?? this.lastBurnedAt,
       destroyedAt: destroyedAt ?? this.destroyedAt,
+      movedAt: movedAt ?? this.movedAt,
+      boughtAt: boughtAt ?? this.boughtAt,
+      parkedUntil: parkedUntil ?? this.parkedUntil,
       reflectionJson: reflectionJson ?? this.reflectionJson,
     );
   }
@@ -660,6 +815,15 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     if (destroyedAt.present) {
       map['destroyed_at'] = Variable<DateTime>(destroyedAt.value);
     }
+    if (movedAt.present) {
+      map['moved_at'] = Variable<DateTime>(movedAt.value);
+    }
+    if (boughtAt.present) {
+      map['bought_at'] = Variable<DateTime>(boughtAt.value);
+    }
+    if (parkedUntil.present) {
+      map['parked_until'] = Variable<DateTime>(parkedUntil.value);
+    }
     if (reflectionJson.present) {
       map['reflection_json'] = Variable<String>(reflectionJson.value);
     }
@@ -679,6 +843,9 @@ class ItemsCompanion extends UpdateCompanion<Item> {
           ..write('createdAt: $createdAt, ')
           ..write('lastBurnedAt: $lastBurnedAt, ')
           ..write('destroyedAt: $destroyedAt, ')
+          ..write('movedAt: $movedAt, ')
+          ..write('boughtAt: $boughtAt, ')
+          ..write('parkedUntil: $parkedUntil, ')
           ..write('reflectionJson: $reflectionJson')
           ..write(')'))
         .toString();
@@ -708,6 +875,9 @@ typedef $$ItemsTableCreateCompanionBuilder =
       required DateTime createdAt,
       Value<DateTime?> lastBurnedAt,
       Value<DateTime?> destroyedAt,
+      Value<DateTime?> movedAt,
+      Value<DateTime?> boughtAt,
+      Value<DateTime?> parkedUntil,
       Value<String?> reflectionJson,
     });
 typedef $$ItemsTableUpdateCompanionBuilder =
@@ -722,6 +892,9 @@ typedef $$ItemsTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<DateTime?> lastBurnedAt,
       Value<DateTime?> destroyedAt,
+      Value<DateTime?> movedAt,
+      Value<DateTime?> boughtAt,
+      Value<DateTime?> parkedUntil,
       Value<String?> reflectionJson,
     });
 
@@ -780,6 +953,21 @@ class $$ItemsTableFilterComposer extends Composer<_$AppDatabase, $ItemsTable> {
 
   ColumnFilters<DateTime> get destroyedAt => $composableBuilder(
     column: $table.destroyedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get movedAt => $composableBuilder(
+    column: $table.movedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get boughtAt => $composableBuilder(
+    column: $table.boughtAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get parkedUntil => $composableBuilder(
+    column: $table.parkedUntil,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -848,6 +1036,21 @@ class $$ItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get movedAt => $composableBuilder(
+    column: $table.movedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get boughtAt => $composableBuilder(
+    column: $table.boughtAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get parkedUntil => $composableBuilder(
+    column: $table.parkedUntil,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get reflectionJson => $composableBuilder(
     column: $table.reflectionJson,
     builder: (column) => ColumnOrderings(column),
@@ -903,6 +1106,17 @@ class $$ItemsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<DateTime> get movedAt =>
+      $composableBuilder(column: $table.movedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get boughtAt =>
+      $composableBuilder(column: $table.boughtAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get parkedUntil => $composableBuilder(
+    column: $table.parkedUntil,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get reflectionJson => $composableBuilder(
     column: $table.reflectionJson,
     builder: (column) => column,
@@ -947,6 +1161,9 @@ class $$ItemsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime?> lastBurnedAt = const Value.absent(),
                 Value<DateTime?> destroyedAt = const Value.absent(),
+                Value<DateTime?> movedAt = const Value.absent(),
+                Value<DateTime?> boughtAt = const Value.absent(),
+                Value<DateTime?> parkedUntil = const Value.absent(),
                 Value<String?> reflectionJson = const Value.absent(),
               }) => ItemsCompanion(
                 id: id,
@@ -959,6 +1176,9 @@ class $$ItemsTableTableManager
                 createdAt: createdAt,
                 lastBurnedAt: lastBurnedAt,
                 destroyedAt: destroyedAt,
+                movedAt: movedAt,
+                boughtAt: boughtAt,
+                parkedUntil: parkedUntil,
                 reflectionJson: reflectionJson,
               ),
           createCompanionCallback:
@@ -973,6 +1193,9 @@ class $$ItemsTableTableManager
                 required DateTime createdAt,
                 Value<DateTime?> lastBurnedAt = const Value.absent(),
                 Value<DateTime?> destroyedAt = const Value.absent(),
+                Value<DateTime?> movedAt = const Value.absent(),
+                Value<DateTime?> boughtAt = const Value.absent(),
+                Value<DateTime?> parkedUntil = const Value.absent(),
                 Value<String?> reflectionJson = const Value.absent(),
               }) => ItemsCompanion.insert(
                 id: id,
@@ -985,6 +1208,9 @@ class $$ItemsTableTableManager
                 createdAt: createdAt,
                 lastBurnedAt: lastBurnedAt,
                 destroyedAt: destroyedAt,
+                movedAt: movedAt,
+                boughtAt: boughtAt,
+                parkedUntil: parkedUntil,
                 reflectionJson: reflectionJson,
               ),
           withReferenceMapper: (p0) => p0

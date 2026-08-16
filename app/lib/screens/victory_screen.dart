@@ -19,6 +19,7 @@ import '../providers/financial_goal_provider.dart';
 import '../providers/notification_provider.dart';
 import '../providers/pro_provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/motion.dart';
 import '../utils/format_utils.dart';
 import '../utils/math_utils.dart';
 import '../utils/milestone_card.dart';
@@ -56,6 +57,12 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
 
   /// Whether to show the one-time world-counter ask on this victory.
   bool _offerCounter = false;
+
+  /// The row this burn wrote, so "I moved it" has something to mark.
+  int? _itemId;
+
+  /// Whether the user has confirmed the money actually went somewhere.
+  bool _moved = false;
 
   @override
   void initState() {
@@ -148,6 +155,16 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
     await HapticFeedback.lightImpact();
   }
 
+  /// Records that the money really moved. Silent if the row hasn't
+  /// landed yet — the toggle appears with the screen, the insert is a
+  /// frame or two behind it.
+  Future<void> _setMoved(bool moved) async {
+    setState(() => _moved = moved);
+    final id = _itemId;
+    if (id == null) return;
+    await ref.read(databaseProvider).setMoved(id, moved: moved);
+  }
+
   Future<void> _persistBurn() async {
     final db = ref.read(databaseProvider);
     final store = ref.read(imageStoreProvider);
@@ -169,6 +186,7 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
             : encodeReflection(target.reflection),
       );
     }
+    if (mounted) setState(() => _itemId = id);
     if (_isFinal) {
       // The final burn: delete the photo (the craving trigger), then
       // tombstone the row so the savings ledger survives.
@@ -317,6 +335,21 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
                                 protectedCents: protected,
                                 thoughts: ref.watch(thoughtsBurnedProvider),
                                 onAnswer: _answerCounterAsk,
+                              ),
+                            ),
+                          ],
+                          // The claim the whole app rests on, checked.
+                          // "Protected €150" is a story the user's bank
+                          // balance doesn't tell unless the money really
+                          // went somewhere it can't be spent.
+                          if (!target.isEmotion && price > 0) ...[
+                            const SizedBox(height: 24),
+                            Reveal(
+                              delay: const Duration(milliseconds: 540),
+                              child: _MovedItCard(
+                                cents: price,
+                                moved: _moved,
+                                onChanged: _setMoved,
                               ),
                             ),
                           ],
@@ -740,6 +773,89 @@ class _MoveTheMoney extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// "Did the money actually go somewhere?"
+///
+/// The app's headline claim is that resisting protects money. That's only
+/// true if the money moves — otherwise it sits in the current account and
+/// leaves on something else by Friday, and the total quietly becomes
+/// fiction. Asking costs one tap and makes the number real.
+///
+/// Deliberately not a nag: unanswered means "resisted", which is still
+/// worth counting. It just isn't the same fact as "saved".
+class _MovedItCard extends StatelessWidget {
+  const _MovedItCard({
+    required this.cents,
+    required this.moved,
+    required this.onChanged,
+  });
+
+  final int cents;
+  final bool moved;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: () => onChanged(!moved),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: Motion.fast,
+        curve: Motion.easeOut,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: moved
+              ? AppColors.money.withValues(alpha: 0.10)
+              : AppColors.paperHigh,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: moved
+                ? AppColors.money.withValues(alpha: 0.5)
+                : AppColors.hairline,
+          ),
+          boxShadow: moved ? null : AppColors.cardShadow(opacity: 0.05),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              moved ? Icons.check_circle_rounded : Icons.savings_outlined,
+              color: moved ? AppColors.moneyDeep : AppColors.textLow,
+              size: 26,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    moved
+                        ? 'Moved for real'
+                        : 'Did you move the ${formatMoney(cents)}?',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    moved
+                        ? 'Counted as saved, not just resisted.'
+                        : 'Tap if it went to savings or investments. '
+                              'Money left in the account tends to leave.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.textMid,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

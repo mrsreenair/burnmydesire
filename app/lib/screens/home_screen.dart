@@ -63,6 +63,20 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  /// The follow-up answer. "Yes, I bought it" pulls the money back out of
+  /// the protected total; "no" just stops the asking by counting as the
+  /// most recent word on it.
+  Future<void> _answerFollowUp(WidgetRef ref, Item item, bool bought) async {
+    final db = ref.read(databaseProvider);
+    if (bought) {
+      await db.markBought(item.id);
+    } else {
+      // Re-stamp the burn so the fourteen-day clock restarts rather than
+      // asking again tomorrow.
+      await db.recordFollowUpResisted(item.id);
+    }
+  }
+
   /// Long-press: end the desire now instead of waiting for burn three.
   Future<void> _confirmForever(
     BuildContext context,
@@ -177,6 +191,14 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(liveItemsProvider);
     final protected = ref.watch(protectedCentsProvider);
+    // One at a time, oldest first: a stack of confessions to work through
+    // would feel like an audit, not a check-in.
+    final pending = ref.watch(needsFollowUpProvider);
+    final followUp = pending.isEmpty
+        ? null
+        : (pending.toList()
+                ..sort((a, b) => a.lastBurnedAt!.compareTo(b.lastBurnedAt!)))
+              .first;
     // Rebuild when the currency changes — this screen sits in the tab
     // stack, so nothing else would repaint its amounts.
     ref.watch(currencyProvider);
@@ -209,6 +231,19 @@ class HomeScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
+                  // The question nobody asks: did resisting actually
+                  // stick? Two weeks on, one tap makes the total true.
+                  if (followUp != null) ...[
+                    const SizedBox(height: 20),
+                    Reveal(
+                      delay: const Duration(milliseconds: 40),
+                      child: _FollowUpCard(
+                        item: followUp,
+                        onAnswer: (bought) =>
+                            _answerFollowUp(ref, followUp, bought),
+                      ),
+                    ),
+                  ],
                   if (protected > 0) ...[
                     const SizedBox(height: 20),
                     Reveal(
@@ -540,6 +575,80 @@ class _SheetChoice extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// "Did you buy it in the end?"
+///
+/// The app otherwise assumes every burn is a permanent saving, which
+/// users know isn't true — and a total that can only rise stops meaning
+/// anything. Asking two weeks later costs one tap, makes the number
+/// honest, and is a real reason to open the app again.
+///
+/// Framed without judgement on purpose. An app about self-compassion for
+/// craving cannot punish the honest answer, or it only ever gets the
+/// other one.
+class _FollowUpCard extends StatelessWidget {
+  const _FollowUpCard({required this.item, required this.onAnswer});
+
+  final Item item;
+  final ValueChanged<bool> onAnswer;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final weeks = DateTime.now().difference(item.lastBurnedAt!).inDays ~/ 7;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+      decoration: BoxDecoration(
+        color: AppColors.washPeach.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            weeks < 1
+                ? 'You burned this recently'
+                : 'You burned this $weeks week${weeks == 1 ? '' : 's'} ago',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textMid,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Did you end up buying it?',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Honest either way — it just keeps your total true.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.textMid,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => onAnswer(true),
+                  child: const Text('I bought it'),
+                ),
+              ),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => onAnswer(false),
+                  child: const Text('Still resisted'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
