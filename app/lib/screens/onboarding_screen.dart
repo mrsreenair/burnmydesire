@@ -5,7 +5,7 @@ import '../theme/motion.dart';
 import '../widgets/ember_ui.dart';
 import '../widgets/paper_backdrop.dart';
 import '../widgets/tilt_card.dart';
-import 'profile_setup_screen.dart';
+import 'disclaimer_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -40,10 +40,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   ];
 
   void _finish() {
-    // Setup completes (and is flagged) at the end of category selection.
-    Navigator.of(
-      context,
-    ).pushReplacement(emberRoute(const ProfileSetupScreen()));
+    // Straight to the duty-of-care note, then the app. Everything else —
+    // name, PIN, currency, goals — is asked *after* the first burn.
+    //
+    // The old flow put seven screens between install and the thing the
+    // app is for. None of them are needed to burn something: the currency
+    // is already guessed from the locale, and a PIN protects data that
+    // doesn't exist yet. Activation is the metric this funnel was
+    // costing (PROJECT.md §11).
+    //
+    // The disclaimer stays in front. It's the one screen that isn't
+    // setup — it's what we owe someone before they use this on an
+    // addiction — and it's short.
+    Navigator.of(context).pushReplacement(emberRoute(const DisclaimerScreen()));
   }
 
   @override

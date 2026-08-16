@@ -338,6 +338,18 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
                               ),
                             ),
                           ],
+                          // A thought burn ends and the screen just…
+                          // stops. Someone who has just let go of a
+                          // craving or a person needs somewhere for the
+                          // next ten minutes to go — that's the whole
+                          // difference between a ritual and a tool.
+                          if (target.isEmotion) ...[
+                            const SizedBox(height: 24),
+                            Reveal(
+                              delay: const Duration(milliseconds: 540),
+                              child: _Aftercare(seed: target.imageBytes.length),
+                            ),
+                          ],
                           // The claim the whole app rests on, checked.
                           // "Protected €150" is a story the user's bank
                           // balance doesn't tell unless the money really
@@ -856,6 +868,114 @@ class _MovedItCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// What to do with the next ten minutes.
+///
+/// A burn ends and the screen stops, which is fine for a €200 gadget and
+/// wrong for grief. The urge that brought someone here doesn't end with
+/// the animation; it ends when something else fills the gap. These are
+/// the three things every craving protocol agrees on — move, call
+/// someone, breathe — and they're offered, never prescribed.
+///
+/// No links, no timers, no tracking whether it was done. The moment a
+/// suggestion becomes a task the app is one more thing to fail at.
+class _Aftercare extends StatelessWidget {
+  const _Aftercare({required this.seed});
+
+  /// Varies the opener between burns so it doesn't read as a form letter.
+  final int seed;
+
+  static const _openers = [
+    'The urge passes faster with something in its place.',
+    'Cravings peak and fade. Give this one somewhere to go.',
+    'The next ten minutes are the ones that matter.',
+  ];
+
+  static const _ideas = [
+    (Icons.directions_walk_rounded, 'Move', 'Ten minutes outside. Anywhere.'),
+    (
+      Icons.chat_bubble_outline_rounded,
+      'Say it out loud',
+      'Text one person what just happened.',
+    ),
+    (
+      Icons.air_rounded,
+      'Breathe',
+      'Slow count of four, in and out, ten times.',
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
+      decoration: BoxDecoration(
+        color: AppColors.washMint.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'What now?',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            _openers[seed.abs() % _openers.length],
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.textMid,
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 14),
+          for (final (icon, title, body) in _ideas)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.paperHigh,
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    child: Icon(icon, size: 18, color: AppColors.moneyDeep),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          body,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.textMid,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

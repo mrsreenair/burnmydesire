@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/financial_goal.dart';
+import '../data/user_prefs.dart';
 import '../providers/financial_goal_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/motion.dart';
@@ -66,7 +67,10 @@ class _FinancialGoalScreenState extends ConsumerState<FinancialGoalScreen> {
 
   bool get _ready => _name.text.trim().isNotEmpty && _targetCents != null;
 
-  void _leave() {
+  /// End of the deferred setup chain: nothing left to ask.
+  Future<void> _leave() async {
+    await markDeferredSetupDone();
+    if (!mounted) return;
     if (widget.inSetup) {
       Navigator.of(
         context,

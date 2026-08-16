@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../config.dart';
 import '../data/database.dart';
+import '../data/user_prefs.dart';
 import '../data/reflection.dart';
 import '../models/burn_target.dart';
 import '../providers/currency_provider.dart';
@@ -19,6 +20,7 @@ import '../widgets/tilt_card.dart';
 import 'burn_screen.dart';
 import 'capture_screen.dart';
 import 'paywall_screen.dart';
+import 'profile_setup_screen.dart';
 import 'shock_screen.dart';
 import 'write_screen.dart';
 
@@ -231,6 +233,15 @@ class HomeScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
+                  // Setup, offered once there's something to protect —
+                  // the PIN in particular means nothing before the first
+                  // burn, because there's no data behind it yet.
+                  if (items.isNotEmpty)
+                    _DeferredSetupCard(
+                      onStart: () => Navigator.of(
+                        context,
+                      ).push(emberRoute(const ProfileSetupScreen())),
+                    ),
                   // The question nobody asks: did resisting actually
                   // stick? Two weeks on, one tap makes the total true.
                   if (followUp != null) ...[
@@ -649,6 +660,95 @@ class _FollowUpCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// "Finish setting up" — the name, PIN, currency and goals that used to
+/// stand between install and the first burn.
+///
+/// Appears only once something has been burned, which is also the first
+/// moment any of it means anything: a PIN protects data, and until now
+/// there wasn't any. Dismissible, and it never comes back — this is an
+/// offer, not a chore list.
+class _DeferredSetupCard extends StatefulWidget {
+  const _DeferredSetupCard({required this.onStart});
+
+  final VoidCallback onStart;
+
+  @override
+  State<_DeferredSetupCard> createState() => _DeferredSetupCardState();
+}
+
+class _DeferredSetupCardState extends State<_DeferredSetupCard> {
+  /// null while we're still asking the prefs whether to show at all.
+  bool? _show;
+
+  @override
+  void initState() {
+    super.initState();
+    deferredSetupDone().then((done) {
+      if (mounted) setState(() => _show = !done);
+    });
+  }
+
+  Future<void> _dismiss() async {
+    setState(() => _show = false);
+    await markDeferredSetupDone();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_show != true) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(18, 16, 12, 10),
+        decoration: BoxDecoration(
+          color: AppColors.paperHigh,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: AppColors.cardShadow(opacity: 0.05),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.lock_outline, color: AppColors.textMid),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Lock this behind a PIN?',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'You\'ve got something worth keeping private now. Takes a '
+              'minute: a PIN, your currency, and what you\'re saving for.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.textMid,
+                height: 1.35,
+              ),
+            ),
+            Row(
+              children: [
+                TextButton(onPressed: _dismiss, child: const Text('Not now')),
+                const Spacer(),
+                FilledButton(
+                  onPressed: widget.onStart,
+                  child: const Text('Set it up'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

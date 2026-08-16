@@ -56,6 +56,19 @@ Future<bool> aiCoachEnabled() async =>
 Future<void> setAiCoachEnabled(bool on) async =>
     (await SharedPreferences.getInstance()).setBool(_kAiCoachKey, on);
 
+const _kDeferredSetupKey = 'deferred_setup_done';
+
+/// Whether the optional setup — name, PIN, currency, goals — has been
+/// offered and finished. Onboarding no longer asks for any of it up
+/// front: nothing there is needed to burn something, and seven screens
+/// between install and the first burn is the wrong trade.
+Future<bool> deferredSetupDone() async =>
+    (await SharedPreferences.getInstance()).getBool(_kDeferredSetupKey) ??
+    false;
+
+Future<void> markDeferredSetupDone() async =>
+    (await SharedPreferences.getInstance()).setBool(_kDeferredSetupKey, true);
+
 const _kBurnSoundKey = 'burn_sound_enabled';
 
 /// The crackle (or the shredder motor) under a hold. On by default, and
