@@ -43,7 +43,7 @@ mid-flight; everything before them is pure Dart and ships independently.
 | M1 | Pricing + the honest paywall | ½ day | ✅ 2026-08-16 |
 | M2 | Give Pro a reason to exist, and a moment to be offered | 1 day | ✅ 2026-08-16 |
 | M3 | Share card 2.0 — goal-anchored | ½ day | ✅ 2026-08-16 |
-| M4 | Weekly Ash Report | 1½ days | ⬜ |
+| M4 | Weekly Ash Report | 1½ days | ✅ 2026-08-16 |
 | M5 | Follow-up cadence + re-burn loop | ½ day | ⬜ |
 | M6 | Cosmetics as Pro — two new burn effects | 1 day | ⬜ |
 | M7 | Analytics decision (no code unless the decision flips) | — | ⏳ founder |
@@ -136,15 +136,15 @@ category) — schema **v5**, back-filled from `lastBurnedAt` on migrate so
 existing users get one row per item.
 
 **Scope**
-- [ ] `Burns` table + migration + `recordBurn` called from the victory path
-- [ ] `weeklyReportProvider`: burns, protected, goal movement, follow-ups resisted, for the ISO week
-- [ ] `AshReportScreen`: headline number, three tiles, one line of copy (rotating bank), ShareMilestone(story)
-- [ ] Notification: Sunday 18:00 local, kind `weekly`, priority below streak, obeys cap + quiet hours; skipped if zero burns that week (never a "you did nothing" push)
-- [ ] Home entry: small "This week" chip on the ledger from Saturday until it's opened
-- [ ] Free for everyone. Reports are the ad, not the product.
-- [ ] Tests: week bucketing (Monday start, local tz), planner skips empty weeks
+- [x] `Burns` table (itemId, at, priceCents snapshot, category), schema v5 with backfill; every insert/re-burn writes an event in the same transaction; erase clears it; restore-from-backup back-fills
+- [x] `weekly_report.dart` (pure) + `weeklyReportProvider`: burns, re-burns, thoughts, money first kept, goal % before/after. Window: Mon-start; Mon–Tue show *last* week so a Sunday chip opened Monday isn't blank
+- [x] `AshReportScreen`: headline (money, or count when none), three tiles (burns · came back · goal +% / thoughts), rotating line, ShareMilestone(story) of the running total
+- [x] Notification: Sunday 18:00, kind `weekly` (below streak, above monthly), own toggle in Settings, skipped for an empty week; counted straight from the DB so the burn that triggered the replan counts
+- [x] Home chip Sat→Tue until opened (`ashReportChipDue`, pure); Ashes tab gets a permanent "This week in ashes" row
+- [x] Free for everyone.
+- [x] Tests: `weekly_report_test` (8), planner (4), database burn log (3). Not built: notification-tap deep link to the screen — the app has no tap routing today; the chip is on home when it opens.
 
-**Exit.** After two burns in a week, Sunday's notification opens a report showing both; a week with none schedules nothing.
+**Exit.** ✅ Simulator 2026-08-16 (a Sunday): chip "2 burns this week · Ash Report" on home → report with €200 kept, tiles, +5 % A trip → chip gone after opening.
 
 ---
 

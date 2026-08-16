@@ -771,6 +771,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                       ),
                       _SwitchRow(
+                        icon: Icons.calendar_view_week_outlined,
+                        title: 'Weekly Ash Report',
+                        subtitle:
+                            'Sunday evening, only for weeks you burned '
+                            'something.',
+                        value: _notifPrefs.weeklyEnabled,
+                        onChanged: (on) => _saveNotifPrefs(
+                          _notifPrefs.copyWith(weeklyEnabled: on),
+                        ),
+                      ),
+                      _SwitchRow(
                         icon: Icons.savings_outlined,
                         title: 'Monthly total',
                         subtitle: 'Once a month: how much is still yours.',

@@ -88,4 +88,32 @@ void main() {
     expect(protected, 300,
         reason: 'destroying an item must never shrink wealth protected');
   });
+
+  group('burn log (GROWTH.md M4)', () {
+    test('every burn writes an event with a price snapshot', () async {
+      final id = await db.insertBurnedItem(imageFile: 'a.jpg', priceCents: 80000);
+      await db.recordReBurn(id);
+      final burns = await db.watchBurnsSince(DateTime(2000)).first;
+      expect(burns, hasLength(2));
+      expect(burns.every((b) => b.itemId == id), isTrue);
+      expect(burns.every((b) => b.priceCents == 80000), isTrue);
+    });
+
+    test('backfill gives every item exactly one event, once', () async {
+      final id = await db.insertBurnedItem(imageFile: 'a.jpg', priceCents: 1);
+      // Simulate a pre-v5 row: wipe its events, then backfill twice.
+      await db.customStatement('DELETE FROM burns');
+      await db.backfillBurns();
+      await db.backfillBurns();
+      final burns = await db.watchBurnsSince(DateTime(2000)).first;
+      expect(burns, hasLength(1));
+      expect(burns.single.itemId, id);
+    });
+
+    test('erase everything takes the log with it', () async {
+      await db.insertBurnedItem(imageFile: 'a.jpg', priceCents: 1);
+      await db.deleteAllItems();
+      expect(await db.watchBurnsSince(DateTime(2000)).first, isEmpty);
+    });
+  });
 }

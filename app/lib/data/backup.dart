@@ -166,6 +166,9 @@ class BackupService {
             );
         restored++;
       }
+      // Backups carry items, not the burn-event log; give each restored
+      // item its one known burn so the weekly report isn't blank.
+      await db.backfillBurns();
 
       final name = meta['name'] as String? ?? '';
       if (name.isNotEmpty) await saveProfileName(name);

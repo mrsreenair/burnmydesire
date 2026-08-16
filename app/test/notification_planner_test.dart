@@ -35,6 +35,7 @@ List<PlannedNotification> plan({
   DateTime? lastBackupAt,
   DateTime? renewsAt,
   String? renewalPrice,
+  int burnsThisWeek = 0,
 }) =>
     planNotifications(
       items: items,
@@ -44,6 +45,7 @@ List<PlannedNotification> plan({
       lastBackupAt: lastBackupAt,
       renewsAt: renewsAt,
       renewalPrice: renewalPrice,
+      burnsThisWeek: burnsThisWeek,
       now: now,
     );
 
@@ -279,6 +281,56 @@ void main() {
       );
       expect(out, hasLength(1));
       expect(out.single.body, contains('renews'));
+    });
+  });
+
+  group('weekly Ash Report push (GROWTH.md M4)', () {
+    test('lands Sunday 18:00 of the current week, with the count', () {
+      final out = plan(burnsThisWeek: 3);
+      final weekly = out.firstWhere((n) => n.body.contains('Ash Report'));
+      expect(weekly.when.weekday, DateTime.sunday);
+      expect(weekly.when.hour, 18);
+      expect(weekly.when.difference(now).inDays, lessThan(7));
+      expect(weekly.body, contains('3 burns'));
+    });
+
+    test('an empty week gets no push, ever', () {
+      expect(
+        plan(burnsThisWeek: 0).where((n) => n.body.contains('Ash Report')),
+        isEmpty,
+      );
+    });
+
+    test('has its own toggle', () {
+      final out = plan(
+        burnsThisWeek: 2,
+        prefs: const NotificationPrefs(enabled: true, weeklyEnabled: false),
+      );
+      expect(out.where((n) => n.body.contains('Ash Report')), isEmpty);
+    });
+
+    test('a streak guard on Sunday outranks it; a check-in does not', () {
+      // Streak +7 from a Sunday burn lands next Sunday 09:30 — same day.
+      final lastSunday = now.subtract(const Duration(days: 1));
+      final withStreak = plan(
+        burnsThisWeek: 1,
+        items: [item(lastBurnedAt: lastSunday)],
+        prefs: const NotificationPrefs(enabled: true, checkinEnabled: false),
+      );
+      final sunday = withStreak.where((n) => n.when.weekday == DateTime.sunday);
+      expect(sunday.first.body, isNot(contains('Ash Report')));
+
+      final withCheckin = plan(
+        burnsThisWeek: 1,
+        prefs: const NotificationPrefs(
+          enabled: true,
+          checkinFrequency: CheckinFrequency.daily,
+        ),
+      );
+      final sun = withCheckin
+          .where((n) => n.when.weekday == DateTime.sunday)
+          .first;
+      expect(sun.body, contains('Ash Report'));
     });
   });
 }

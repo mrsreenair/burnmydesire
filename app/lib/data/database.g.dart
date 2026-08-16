@@ -852,15 +852,357 @@ class ItemsCompanion extends UpdateCompanion<Item> {
   }
 }
 
+class $BurnsTable extends Burns with TableInfo<$BurnsTable, Burn> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BurnsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<int> itemId = GeneratedColumn<int>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES items (id)',
+    ),
+  );
+  static const VerificationMeta _atMeta = const VerificationMeta('at');
+  @override
+  late final GeneratedColumn<DateTime> at = GeneratedColumn<DateTime>(
+    'at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _priceCentsMeta = const VerificationMeta(
+    'priceCents',
+  );
+  @override
+  late final GeneratedColumn<int> priceCents = GeneratedColumn<int>(
+    'price_cents',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('purchase'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, itemId, at, priceCents, category];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'burns';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Burn> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('at')) {
+      context.handle(_atMeta, at.isAcceptableOrUnknown(data['at']!, _atMeta));
+    } else if (isInserting) {
+      context.missing(_atMeta);
+    }
+    if (data.containsKey('price_cents')) {
+      context.handle(
+        _priceCentsMeta,
+        priceCents.isAcceptableOrUnknown(data['price_cents']!, _priceCentsMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_priceCentsMeta);
+    }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Burn map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Burn(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}item_id'],
+      )!,
+      at: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}at'],
+      )!,
+      priceCents: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}price_cents'],
+      )!,
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      )!,
+    );
+  }
+
+  @override
+  $BurnsTable createAlias(String alias) {
+    return $BurnsTable(attachedDatabase, alias);
+  }
+}
+
+class Burn extends DataClass implements Insertable<Burn> {
+  final int id;
+  final int itemId;
+  final DateTime at;
+  final int priceCents;
+  final String category;
+  const Burn({
+    required this.id,
+    required this.itemId,
+    required this.at,
+    required this.priceCents,
+    required this.category,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['item_id'] = Variable<int>(itemId);
+    map['at'] = Variable<DateTime>(at);
+    map['price_cents'] = Variable<int>(priceCents);
+    map['category'] = Variable<String>(category);
+    return map;
+  }
+
+  BurnsCompanion toCompanion(bool nullToAbsent) {
+    return BurnsCompanion(
+      id: Value(id),
+      itemId: Value(itemId),
+      at: Value(at),
+      priceCents: Value(priceCents),
+      category: Value(category),
+    );
+  }
+
+  factory Burn.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Burn(
+      id: serializer.fromJson<int>(json['id']),
+      itemId: serializer.fromJson<int>(json['itemId']),
+      at: serializer.fromJson<DateTime>(json['at']),
+      priceCents: serializer.fromJson<int>(json['priceCents']),
+      category: serializer.fromJson<String>(json['category']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'itemId': serializer.toJson<int>(itemId),
+      'at': serializer.toJson<DateTime>(at),
+      'priceCents': serializer.toJson<int>(priceCents),
+      'category': serializer.toJson<String>(category),
+    };
+  }
+
+  Burn copyWith({
+    int? id,
+    int? itemId,
+    DateTime? at,
+    int? priceCents,
+    String? category,
+  }) => Burn(
+    id: id ?? this.id,
+    itemId: itemId ?? this.itemId,
+    at: at ?? this.at,
+    priceCents: priceCents ?? this.priceCents,
+    category: category ?? this.category,
+  );
+  Burn copyWithCompanion(BurnsCompanion data) {
+    return Burn(
+      id: data.id.present ? data.id.value : this.id,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      at: data.at.present ? data.at.value : this.at,
+      priceCents: data.priceCents.present
+          ? data.priceCents.value
+          : this.priceCents,
+      category: data.category.present ? data.category.value : this.category,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Burn(')
+          ..write('id: $id, ')
+          ..write('itemId: $itemId, ')
+          ..write('at: $at, ')
+          ..write('priceCents: $priceCents, ')
+          ..write('category: $category')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, itemId, at, priceCents, category);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Burn &&
+          other.id == this.id &&
+          other.itemId == this.itemId &&
+          other.at == this.at &&
+          other.priceCents == this.priceCents &&
+          other.category == this.category);
+}
+
+class BurnsCompanion extends UpdateCompanion<Burn> {
+  final Value<int> id;
+  final Value<int> itemId;
+  final Value<DateTime> at;
+  final Value<int> priceCents;
+  final Value<String> category;
+  const BurnsCompanion({
+    this.id = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.at = const Value.absent(),
+    this.priceCents = const Value.absent(),
+    this.category = const Value.absent(),
+  });
+  BurnsCompanion.insert({
+    this.id = const Value.absent(),
+    required int itemId,
+    required DateTime at,
+    required int priceCents,
+    this.category = const Value.absent(),
+  }) : itemId = Value(itemId),
+       at = Value(at),
+       priceCents = Value(priceCents);
+  static Insertable<Burn> custom({
+    Expression<int>? id,
+    Expression<int>? itemId,
+    Expression<DateTime>? at,
+    Expression<int>? priceCents,
+    Expression<String>? category,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (itemId != null) 'item_id': itemId,
+      if (at != null) 'at': at,
+      if (priceCents != null) 'price_cents': priceCents,
+      if (category != null) 'category': category,
+    });
+  }
+
+  BurnsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? itemId,
+    Value<DateTime>? at,
+    Value<int>? priceCents,
+    Value<String>? category,
+  }) {
+    return BurnsCompanion(
+      id: id ?? this.id,
+      itemId: itemId ?? this.itemId,
+      at: at ?? this.at,
+      priceCents: priceCents ?? this.priceCents,
+      category: category ?? this.category,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<int>(itemId.value);
+    }
+    if (at.present) {
+      map['at'] = Variable<DateTime>(at.value);
+    }
+    if (priceCents.present) {
+      map['price_cents'] = Variable<int>(priceCents.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BurnsCompanion(')
+          ..write('id: $id, ')
+          ..write('itemId: $itemId, ')
+          ..write('at: $at, ')
+          ..write('priceCents: $priceCents, ')
+          ..write('category: $category')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $ItemsTable items = $ItemsTable(this);
+  late final $BurnsTable burns = $BurnsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [items];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [items, burns];
 }
 
 typedef $$ItemsTableCreateCompanionBuilder =
@@ -897,6 +1239,30 @@ typedef $$ItemsTableUpdateCompanionBuilder =
       Value<DateTime?> parkedUntil,
       Value<String?> reflectionJson,
     });
+
+final class $$ItemsTableReferences
+    extends BaseReferences<_$AppDatabase, $ItemsTable, Item> {
+  $$ItemsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$BurnsTable, List<Burn>> _burnsRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.burns,
+    aliasName: 'items__id__burns__item_id',
+  );
+
+  $$BurnsTableProcessedTableManager get burnsRefs {
+    final manager = $$BurnsTableTableManager(
+      $_db,
+      $_db.burns,
+    ).filter((f) => f.itemId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_burnsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
 
 class $$ItemsTableFilterComposer extends Composer<_$AppDatabase, $ItemsTable> {
   $$ItemsTableFilterComposer({
@@ -975,6 +1341,31 @@ class $$ItemsTableFilterComposer extends Composer<_$AppDatabase, $ItemsTable> {
     column: $table.reflectionJson,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> burnsRefs(
+    Expression<bool> Function($$BurnsTableFilterComposer f) f,
+  ) {
+    final $$BurnsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.burns,
+      getReferencedColumn: (t) => t.itemId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BurnsTableFilterComposer(
+            $db: $db,
+            $table: $db.burns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ItemsTableOrderingComposer
@@ -1121,6 +1512,31 @@ class $$ItemsTableAnnotationComposer
     column: $table.reflectionJson,
     builder: (column) => column,
   );
+
+  Expression<T> burnsRefs<T extends Object>(
+    Expression<T> Function($$BurnsTableAnnotationComposer a) f,
+  ) {
+    final $$BurnsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.burns,
+      getReferencedColumn: (t) => t.itemId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BurnsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.burns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ItemsTableTableManager
@@ -1134,9 +1550,9 @@ class $$ItemsTableTableManager
           $$ItemsTableAnnotationComposer,
           $$ItemsTableCreateCompanionBuilder,
           $$ItemsTableUpdateCompanionBuilder,
-          (Item, BaseReferences<_$AppDatabase, $ItemsTable, Item>),
+          (Item, $$ItemsTableReferences),
           Item,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool burnsRefs})
         > {
   $$ItemsTableTableManager(_$AppDatabase db, $ItemsTable table)
     : super(
@@ -1214,9 +1630,34 @@ class $$ItemsTableTableManager
                 reflectionJson: reflectionJson,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) =>
+                    (e.readTable(table), $$ItemsTableReferences(db, table, e)),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({burnsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (burnsRefs) db.burns],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (burnsRefs)
+                    await $_getPrefetchedData<Item, $ItemsTable, Burn>(
+                      currentTable: table,
+                      referencedTable: $$ItemsTableReferences._burnsRefsTable(
+                        db,
+                      ),
+                      managerFromTypedResult: (p0) =>
+                          $$ItemsTableReferences(db, table, p0).burnsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.itemId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -1231,9 +1672,319 @@ typedef $$ItemsTableProcessedTableManager =
       $$ItemsTableAnnotationComposer,
       $$ItemsTableCreateCompanionBuilder,
       $$ItemsTableUpdateCompanionBuilder,
-      (Item, BaseReferences<_$AppDatabase, $ItemsTable, Item>),
+      (Item, $$ItemsTableReferences),
       Item,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool burnsRefs})
+    >;
+typedef $$BurnsTableCreateCompanionBuilder =
+    BurnsCompanion Function({
+      Value<int> id,
+      required int itemId,
+      required DateTime at,
+      required int priceCents,
+      Value<String> category,
+    });
+typedef $$BurnsTableUpdateCompanionBuilder =
+    BurnsCompanion Function({
+      Value<int> id,
+      Value<int> itemId,
+      Value<DateTime> at,
+      Value<int> priceCents,
+      Value<String> category,
+    });
+
+final class $$BurnsTableReferences
+    extends BaseReferences<_$AppDatabase, $BurnsTable, Burn> {
+  $$BurnsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $ItemsTable _itemIdTable(_$AppDatabase db) =>
+      db.items.createAlias('burns__item_id__items__id');
+
+  $$ItemsTableProcessedTableManager get itemId {
+    final $_column = $_itemColumn<int>('item_id')!;
+
+    final manager = $$ItemsTableTableManager(
+      $_db,
+      $_db.items,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_itemIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$BurnsTableFilterComposer extends Composer<_$AppDatabase, $BurnsTable> {
+  $$BurnsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get at => $composableBuilder(
+    column: $table.at,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get priceCents => $composableBuilder(
+    column: $table.priceCents,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ItemsTableFilterComposer get itemId {
+    final $$ItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.itemId,
+      referencedTable: $db.items,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.items,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BurnsTableOrderingComposer
+    extends Composer<_$AppDatabase, $BurnsTable> {
+  $$BurnsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get at => $composableBuilder(
+    column: $table.at,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get priceCents => $composableBuilder(
+    column: $table.priceCents,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ItemsTableOrderingComposer get itemId {
+    final $$ItemsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.itemId,
+      referencedTable: $db.items,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ItemsTableOrderingComposer(
+            $db: $db,
+            $table: $db.items,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BurnsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BurnsTable> {
+  $$BurnsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get at =>
+      $composableBuilder(column: $table.at, builder: (column) => column);
+
+  GeneratedColumn<int> get priceCents => $composableBuilder(
+    column: $table.priceCents,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  $$ItemsTableAnnotationComposer get itemId {
+    final $$ItemsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.itemId,
+      referencedTable: $db.items,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ItemsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.items,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BurnsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $BurnsTable,
+          Burn,
+          $$BurnsTableFilterComposer,
+          $$BurnsTableOrderingComposer,
+          $$BurnsTableAnnotationComposer,
+          $$BurnsTableCreateCompanionBuilder,
+          $$BurnsTableUpdateCompanionBuilder,
+          (Burn, $$BurnsTableReferences),
+          Burn,
+          PrefetchHooks Function({bool itemId})
+        > {
+  $$BurnsTableTableManager(_$AppDatabase db, $BurnsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BurnsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BurnsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BurnsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> itemId = const Value.absent(),
+                Value<DateTime> at = const Value.absent(),
+                Value<int> priceCents = const Value.absent(),
+                Value<String> category = const Value.absent(),
+              }) => BurnsCompanion(
+                id: id,
+                itemId: itemId,
+                at: at,
+                priceCents: priceCents,
+                category: category,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int itemId,
+                required DateTime at,
+                required int priceCents,
+                Value<String> category = const Value.absent(),
+              }) => BurnsCompanion.insert(
+                id: id,
+                itemId: itemId,
+                at: at,
+                priceCents: priceCents,
+                category: category,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) =>
+                    (e.readTable(table), $$BurnsTableReferences(db, table, e)),
+              )
+              .toList(),
+          prefetchHooksCallback: ({itemId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (itemId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.itemId,
+                                referencedTable: $$BurnsTableReferences
+                                    ._itemIdTable(db),
+                                referencedColumn: $$BurnsTableReferences
+                                    ._itemIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$BurnsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $BurnsTable,
+      Burn,
+      $$BurnsTableFilterComposer,
+      $$BurnsTableOrderingComposer,
+      $$BurnsTableAnnotationComposer,
+      $$BurnsTableCreateCompanionBuilder,
+      $$BurnsTableUpdateCompanionBuilder,
+      (Burn, $$BurnsTableReferences),
+      Burn,
+      PrefetchHooks Function({bool itemId})
     >;
 
 class $AppDatabaseManager {
@@ -1241,4 +1992,6 @@ class $AppDatabaseManager {
   $AppDatabaseManager(this._db);
   $$ItemsTableTableManager get items =>
       $$ItemsTableTableManager(_db, _db.items);
+  $$BurnsTableTableManager get burns =>
+      $$BurnsTableTableManager(_db, _db.burns);
 }

@@ -6,6 +6,7 @@ import '../config.dart';
 import '../data/plan_offer.dart';
 import '../data/database.dart';
 import '../data/user_prefs.dart';
+import '../data/weekly_report.dart';
 import '../data/reflection.dart';
 import '../models/burn_target.dart';
 import '../providers/currency_provider.dart';
@@ -18,6 +19,7 @@ import '../utils/math_utils.dart';
 import '../widgets/ember_ui.dart';
 import '../widgets/paper_backdrop.dart';
 import '../widgets/tilt_card.dart';
+import 'ash_report_screen.dart';
 import 'burn_screen.dart';
 import 'capture_screen.dart';
 import 'paywall_screen.dart';
@@ -78,6 +80,15 @@ class HomeScreen extends ConsumerWidget {
       // Re-stamp the burn so the fourteen-day clock restarts rather than
       // asking again tomorrow.
       await db.recordFollowUpResisted(item.id);
+    }
+  }
+
+  Future<void> _openAshReport(BuildContext context, WidgetRef ref) async {
+    final window = ref.read(reportWindowProvider);
+    await markAshReportSeen(window);
+    ref.invalidate(ashReportSeenProvider);
+    if (context.mounted) {
+      await Navigator.of(context).push(emberRoute(const AshReportScreen()));
     }
   }
 
@@ -278,6 +289,19 @@ class HomeScreen extends ConsumerWidget {
                       child: _WealthHero(protected: protected),
                     ),
                   ],
+                  // The week, offered from Saturday until it's been read
+                  // (GROWTH.md M4). A chip, not a card: it's an invitation
+                  // to a ritual, not another ask.
+                  if (ref.watch(ashReportChipProvider)) ...[
+                    const SizedBox(height: 16),
+                    Reveal(
+                      delay: const Duration(milliseconds: 80),
+                      child: _AshReportChip(
+                        report: ref.watch(weeklyReportProvider)!,
+                        onTap: () => _openAshReport(context, ref),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 28),
                   if (items.isEmpty)
                     const Padding(
@@ -334,6 +358,54 @@ class HomeScreen extends ConsumerWidget {
                 ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// "3 burns this week · Ash Report" — the Sunday chip.
+class _AshReportChip extends StatelessWidget {
+  const _AshReportChip({required this.report, required this.onTap});
+
+  final WeeklyReport report;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final n = report.burns;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(14, 10, 12, 10),
+        decoration: BoxDecoration(
+          color: AppColors.washPeach.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.local_fire_department,
+              size: 16,
+              color: AppColors.ember,
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                '$n ${n == 1 ? 'burn' : 'burns'} '
+                '${report.window.label.toLowerCase()} · Ash Report',
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.chevron_right, size: 18, color: AppColors.textMid),
+          ],
         ),
       ),
     );

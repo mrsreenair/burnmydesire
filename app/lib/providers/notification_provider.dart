@@ -5,6 +5,7 @@ import '../data/cloud_backup.dart';
 import '../data/notification_planner.dart';
 import '../data/notification_prefs.dart';
 import '../data/notification_service.dart';
+import '../data/weekly_report.dart';
 import 'db_providers.dart';
 import 'pro_provider.dart';
 
@@ -43,7 +44,17 @@ Future<void> replanNotifications(WidgetRef ref) async {
       lastBackupAt: lastBackup,
       renewsAt: renewal?.renewsAt,
       renewalPrice: renewal?.priceString,
+      burnsThisWeek: await _burnsThisWeek(ref),
       now: DateTime.now(),
     ),
   );
+}
+
+/// Counted straight from the database rather than the provider, which
+/// may not have finished its first load when the plan is rebuilt on
+/// launch — and the very burn that triggered this replan must count.
+Future<int> _burnsThisWeek(WidgetRef ref) async {
+  final start = weekStartOf(DateTime.now());
+  final burns = await ref.read(databaseProvider).watchBurnsSince(start).first;
+  return burns.length;
 }

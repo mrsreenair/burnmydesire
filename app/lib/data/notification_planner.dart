@@ -4,6 +4,7 @@ import '../config.dart';
 import '../utils/format_utils.dart';
 import 'database.dart';
 import 'notification_prefs.dart';
+import 'weekly_report.dart';
 
 /// The scheduling brain (NOTIFICATIONS.md §4).
 ///
@@ -35,7 +36,7 @@ class PlannedNotification {
 /// paywall *promises*. An app that says "we'll remind you before you're
 /// charged" and then lets a streak nudge crowd that reminder out has
 /// lied about the only thing that mattered.
-enum _Kind { renewal, finalBurn, streak, milestone, backup, checkin }
+enum _Kind { renewal, finalBurn, streak, weekly, milestone, backup, checkin }
 
 class _Candidate {
   const _Candidate(this.kind, this.when, this.title, this.body);
@@ -86,6 +87,11 @@ String _milestoneLine(int protectedCents, int months) {
 const _backupLine =
     'Your wins deserve a backup. Thirty seconds, encrypted, yours.';
 
+/// Sunday's line. Counts only — never what was burned.
+String weeklyLine(int burnsThisWeek) => burnsThisWeek == 1
+    ? 'One burn this week. Your Ash Report is ready.'
+    : '$burnsThisWeek burns this week. Your Ash Report is ready.';
+
 /// How far ahead of a renewal the reminder lands. Three days is long
 /// enough to act on and short enough to still be about *this* charge.
 const renewalReminderLeadDays = 3;
@@ -112,6 +118,11 @@ List<PlannedNotification> planNotifications({
   /// lifetime, for a cancelled plan running out, and for free users.
   DateTime? renewsAt,
   String? renewalPrice,
+
+  /// Burns so far in the week that contains [now]. Gates the Sunday
+  /// report: an empty week gets no push, ever — "you did nothing" is
+  /// not a notification this app sends.
+  int burnsThisWeek = 0,
   required DateTime now,
 }) {
   if (!prefs.enabled) return const [];
@@ -214,6 +225,18 @@ List<PlannedNotification> planNotifications({
     );
     if (!when.isBefore(now)) {
       candidates.add(_Candidate(_Kind.backup, when, _title, _backupLine));
+    }
+  }
+
+  // --- Weekly Ash Report: Sunday 18:00, only for a week with burns in it.
+  // Only the coming Sunday — next week's count isn't knowable yet, and
+  // the plan is rebuilt after every burn anyway.
+  if (prefs.weeklyEnabled && burnsThisWeek > 0) {
+    final when = weeklyReportMoment(now);
+    if (!when.isBefore(now)) {
+      candidates.add(
+        _Candidate(_Kind.weekly, when, _title, weeklyLine(burnsThisWeek)),
+      );
     }
   }
 

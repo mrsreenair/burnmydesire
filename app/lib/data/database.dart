@@ -47,7 +47,20 @@ class Items extends Table {
   TextColumn get reflectionJson => text().nullable()();
 }
 
-@DriftDatabase(tables: [Items])
+/// One burn, as an event. `Items` keeps only the latest (`lastBurnedAt`)
+/// and a count, which is enough for streaks but not for "what happened
+/// this week" — the weekly Ash Report (GROWTH.md M4) needs every burn
+/// with its date. The price is snapshotted so a later edit or a bought
+/// confession can't rewrite history: the report says what was true.
+class Burns extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get itemId => integer().references(Items, #id)();
+  DateTimeColumn get at => dateTime()();
+  IntColumn get priceCents => integer()();
+  TextColumn get category => text().withDefault(const Constant('purchase'))();
+}
+
+@DriftDatabase(tables: [Items, Burns])
 class AppDatabase extends _$AppDatabase {
   /// Encrypted at rest with a key that lives only in the iOS Keychain
   /// (PROJECT.md §5). Without that key the file is ciphertext.
@@ -56,7 +69,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -68,8 +81,32 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(items, items.boughtAt);
         await m.addColumn(items, items.parkedUntil);
       }
+      if (from < 5) {
+        await m.createTable(burns);
+        // Existing users get one event per item, dated at its last
+        // burn — the most recent thing we know for sure. Their first
+        // report is a little thin rather than empty.
+        await backfillBurns();
+      }
     },
   );
+
+  /// One burn row per item that has none, dated at its last burn (or
+  /// creation). Used by the v5 migration and by restore-from-backup,
+  /// which recreates items without their event history.
+  Future<void> backfillBurns() => customStatement(
+    'INSERT INTO burns (item_id, at, price_cents, category) '
+    'SELECT id, COALESCE(last_burned_at, created_at), price_cents, category '
+    'FROM items WHERE id NOT IN (SELECT item_id FROM burns)',
+  );
+
+  /// Every burn since [since], newest first.
+  Stream<List<Burn>> watchBurnsSince(DateTime since) {
+    final query = select(burns)
+      ..where((t) => t.at.isBiggerOrEqualValue(since))
+      ..orderBy([(t) => OrderingTerm.desc(t.at)]);
+    return query.watch();
+  }
 
   Stream<List<Item>> watchItems() {
     final query = select(items)
@@ -90,30 +127,49 @@ class AppDatabase extends _$AppDatabase {
     String? reflectionJson,
   }) {
     final now = DateTime.now();
-    return into(items).insert(
-      ItemsCompanion.insert(
-        imageFile: imageFile,
-        priceCents: priceCents,
-        category: Value(category),
-        monthlyCents: Value(monthlyCents),
-        months: Value(months),
-        resistanceCount: const Value(1),
-        createdAt: now,
-        lastBurnedAt: Value(now),
-        reflectionJson: Value(reflectionJson),
-      ),
-    );
+    return transaction(() async {
+      final id = await into(items).insert(
+        ItemsCompanion.insert(
+          imageFile: imageFile,
+          priceCents: priceCents,
+          category: Value(category),
+          monthlyCents: Value(monthlyCents),
+          months: Value(months),
+          resistanceCount: const Value(1),
+          createdAt: now,
+          lastBurnedAt: Value(now),
+          reflectionJson: Value(reflectionJson),
+        ),
+      );
+      await _recordBurn(id, now, priceCents, category);
+      return id;
+    });
   }
 
   /// The urge came back and the user burned it again.
   Future<void> recordReBurn(int id) {
-    return (update(items)..where((t) => t.id.equals(id))).write(
-      ItemsCompanion.custom(
-        resistanceCount: items.resistanceCount + const Constant(1),
-        lastBurnedAt: Variable(DateTime.now()),
-      ),
-    );
+    final now = DateTime.now();
+    return transaction(() async {
+      await (update(items)..where((t) => t.id.equals(id))).write(
+        ItemsCompanion.custom(
+          resistanceCount: items.resistanceCount + const Constant(1),
+          lastBurnedAt: Variable(now),
+        ),
+      );
+      final item = await getItem(id);
+      await _recordBurn(id, now, item.priceCents, item.category);
+    });
   }
+
+  Future<void> _recordBurn(int itemId, DateTime at, int cents, String cat) =>
+      into(burns).insert(
+        BurnsCompanion.insert(
+          itemId: itemId,
+          at: at,
+          priceCents: cents,
+          category: Value(cat),
+        ),
+      );
 
   /// The user moved the money for real (or took it back). Only a burned
   /// item can be marked moved, so the toggle can't invent savings.
@@ -163,7 +219,10 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// "Erase everything" from settings: wipe the ledger completely.
-  Future<void> deleteAllItems() => delete(items).go();
+  Future<void> deleteAllItems() => transaction(() async {
+    await delete(burns).go();
+    await delete(items).go();
+  });
 
   Future<Item> getItem(int id) =>
       (select(items)..where((t) => t.id.equals(id))).getSingle();

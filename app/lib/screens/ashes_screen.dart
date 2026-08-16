@@ -4,13 +4,16 @@ import 'package:intl/intl.dart';
 
 import '../config.dart';
 import '../data/database.dart';
+import '../data/weekly_report.dart';
 import '../providers/currency_provider.dart';
 import '../providers/db_providers.dart';
 import '../theme/app_colors.dart';
+import '../theme/motion.dart';
 import '../utils/format_utils.dart';
 import '../widgets/ember_ui.dart';
 import '../widgets/paper_backdrop.dart';
 import '../widgets/tilt_card.dart';
+import 'ash_report_screen.dart';
 
 /// The memorial: every desire that reached its Final Burn. No photos —
 /// they were deleted on purpose — just the ledger and the date it died.
@@ -28,6 +31,7 @@ class AshesScreen extends ConsumerWidget {
     // stack, so nothing else would repaint its amounts.
     ref.watch(currencyProvider);
     final protectedForever = destroyed.fold(0, (s, i) => s + i.priceCents);
+    final report = ref.watch(weeklyReportProvider);
 
     return Scaffold(
       body: PaperBackdrop(
@@ -56,6 +60,25 @@ class AshesScreen extends ConsumerWidget {
                   ],
                 ),
               ),
+              const SizedBox(height: 20),
+              // The week, always reachable from here — the memorial is
+              // the natural home for a look back (GROWTH.md M4).
+              if (report != null && !report.isEmpty)
+                Reveal(
+                  delay: const Duration(milliseconds: 40),
+                  child: _WeekCard(
+                    report: report,
+                    onTap: () async {
+                      await markAshReportSeen(report.window);
+                      ref.invalidate(ashReportSeenProvider);
+                      if (context.mounted) {
+                        await Navigator.of(
+                          context,
+                        ).push(emberRoute(const AshReportScreen()));
+                      }
+                    },
+                  ),
+                ),
               const SizedBox(height: 28),
               if (destroyed.isEmpty)
                 const Reveal(
@@ -118,6 +141,75 @@ class AshesScreen extends ConsumerWidget {
       }
     }
     return widgets;
+  }
+}
+
+/// This week (or last), in one row: count, money, and a chevron.
+class _WeekCard extends StatelessWidget {
+  const _WeekCard({required this.report, required this.onTap});
+
+  final WeeklyReport report;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final n = report.burns;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(18, 16, 14, 16),
+        decoration: BoxDecoration(
+          color: AppColors.paperHigh,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: AppColors.cardShadow(opacity: 0.06),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: AppColors.ember.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.calendar_view_week_outlined,
+                size: 20,
+                color: AppColors.ember,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${report.window.label} in ashes',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    report.protectedCents > 0
+                        ? '$n ${n == 1 ? 'burn' : 'burns'} · '
+                              '${formatMoney(report.protectedCents)} kept'
+                        : '$n ${n == 1 ? 'burn' : 'burns'}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.textMid,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: AppColors.textMid),
+          ],
+        ),
+      ),
+    );
   }
 }
 

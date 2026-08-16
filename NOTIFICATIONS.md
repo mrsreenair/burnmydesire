@@ -46,11 +46,14 @@ speaks in wins.
 | **Monthly proof** | Monthly on the first-burn anniversary day, 09:30. Needs a positive protected total. | "₹12,400 is still yours. Two months of winning." |
 | **Final-burn invitation** | The morning after an item becomes one burn away from the final-burn threshold. | "One desire is ready to be ended forever. You've already beaten it three times." |
 | **Backup nudge** (Pro) | When the last encrypted backup is over 30 days old. 09:30. | "Your wins deserve a backup. Thirty seconds, encrypted, yours." |
+| **Weekly Ash Report** | Sunday 18:00, only for a week with at least one burn in it. Never for an empty week. (GROWTH.md M4) | "3 burns this week. Your Ash Report is ready." |
+| **Renewal reminder** (Pro, subscription plans) | Three mornings before the next charge; if that's already passed, tomorrow morning — never after the charge. Only the master switch can silence it. (GROWTH.md M1) | "Pro renews in 3 days for €14.99. Keep it, or cancel in one tap — either is fine." |
 
 ### Global rules
 
 - **Hard cap: one notification per day.** Priority when two collide:
-  final-burn > streak > monthly proof > backup > check-in.
+  renewal > final-burn > streak > weekly report > monthly proof > backup > check-in.
+  Renewal is first because it's the one the paywall *promises*.
 - **Quiet hours:** nothing before 09:00 or after 22:30. The user's
   chosen check-in hour is clamped into that window.
 - **Horizon:** the next 30 days, at most 20 scheduled (iOS caps pending

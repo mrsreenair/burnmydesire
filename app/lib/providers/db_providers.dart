@@ -4,7 +4,9 @@ import '../data/database.dart';
 import '../data/image_store.dart';
 import '../data/market_data.dart';
 import '../data/user_prefs.dart';
+import '../data/weekly_report.dart';
 import 'currency_provider.dart';
+import 'financial_goal_provider.dart';
 
 /// Overridden in main() with the real documents path.
 final imageStoreProvider = Provider<ImageStore>(
@@ -152,4 +154,53 @@ final spendCategoriesProvider = FutureProvider<List<String>>(
 /// The burn goals picked during setup (ids from [burnGoals]).
 final burnGoalsProvider = FutureProvider<List<String>>(
   (ref) => savedBurnGoals(),
+);
+
+/// The window the weekly Ash Report covers right now (GROWTH.md M4).
+final reportWindowProvider = Provider<ReportWindow>(
+  (ref) => reportWindowFor(ref.watch(nowProvider)),
+);
+
+/// Every burn event inside the report window, live.
+final weekBurnsProvider = StreamProvider<List<Burn>>((ref) {
+  final window = ref.watch(reportWindowProvider);
+  return ref.watch(databaseProvider).watchBurnsSince(window.start);
+});
+
+/// The week, summed. Null until items and burns have both loaded.
+final weeklyReportProvider = Provider<WeeklyReport?>((ref) {
+  final items = ref.watch(itemsProvider).value;
+  final burns = ref.watch(weekBurnsProvider).value;
+  if (items == null || burns == null) return null;
+  return summariseWeek(
+    window: ref.watch(reportWindowProvider),
+    items: items,
+    burns: burns,
+    protectedTotalCents: ref.watch(protectedCentsProvider),
+    goal: ref.watch(financialGoalProvider).value,
+  );
+});
+
+/// Burns in the week in progress — what the Sunday push is gated on.
+/// Distinct from the report window, which flips to "last week" on
+/// Monday: the planner only ever asks about the week that's happening.
+final burnsThisWeekProvider = Provider<int>((ref) {
+  final now = ref.watch(nowProvider);
+  final start = weekStartOf(now);
+  final burns = ref.watch(weekBurnsProvider).value ?? const <Burn>[];
+  return burns.where((b) => !b.at.isBefore(start)).length;
+});
+
+/// The window key of the last Ash Report opened. Invalidate on open.
+final ashReportSeenProvider = FutureProvider<String?>(
+  (ref) => ashReportSeenWindow(),
+);
+
+/// Whether home should show the "your week" chip right now.
+final ashReportChipProvider = Provider<bool>(
+  (ref) => ashReportChipDue(
+    now: ref.watch(nowProvider),
+    report: ref.watch(weeklyReportProvider),
+    seenWindowKey: ref.watch(ashReportSeenProvider).value,
+  ),
 );
