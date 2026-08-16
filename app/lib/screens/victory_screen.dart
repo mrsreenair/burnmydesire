@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +11,8 @@ import '../data/cloud_backup.dart';
 import '../data/database.dart';
 import '../data/image_store.dart';
 import '../data/notification_prefs.dart';
+import '../data/plan_offer.dart';
+import '../data/pro_moment.dart';
 import '../data/reflection.dart';
 import '../data/user_prefs.dart';
 import '../data/world_counter.dart';
@@ -29,6 +32,7 @@ import '../widgets/ember_ui.dart';
 import '../widgets/goal_progress.dart';
 import '../widgets/share_milestone.dart';
 import '../widgets/paper_backdrop.dart';
+import 'paywall_screen.dart';
 
 /// The payoff. Structured like a proper achievement screen: hero, earned
 /// badge, one big headline, supporting line, pinned CTA — with a confetti
@@ -58,6 +62,10 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
   /// Whether to show the one-time world-counter ask on this victory.
   bool _offerCounter = false;
 
+  /// Whether to offer Pro on this victory (GROWTH.md M2). Lowest priority
+  /// of the three cards, and only after a burn worth more than Pro.
+  bool _offerPro = false;
+
   /// The row this burn wrote, so "I moved it" has something to mark.
   int? _itemId;
 
@@ -78,11 +86,38 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
   /// Two cards stacked under a win turns a celebration into a consent
   /// form; the counter simply waits for the next burn.
   Future<void> _checkAsks() async {
+    // Read before bumping: "never on the first burn" means the first
+    // victory this install has ever shown.
+    final victoriesBefore = await victoriesSeen();
+    await bumpVictoriesSeen();
     if (!await notificationAskShown()) {
       if (mounted) setState(() => _offerNotifications = true);
       return;
     }
-    await _checkCounterNotice();
+    if (await _checkCounterNotice()) return;
+    await _checkProMoment(victoriesBefore);
+  }
+
+  /// The Pro moment. Everything that decides it is a pure rule in
+  /// pro_moment.dart; this just gathers the inputs and remembers the
+  /// showing — on show, not on tap, so a "not now" is honoured.
+  Future<void> _checkProMoment(int victoriesBefore) async {
+    final now = DateTime.now();
+    final due = ProMoment.eligible(
+      burnCents: widget.target.priceCents,
+      eurosPerUnit: activeCurrency.eurosPerUnit,
+      isEmotion: widget.target.isEmotion,
+      isPro: ref.read(proProvider),
+      // Debug builds have the preview paywall; release needs a real store.
+      storeAvailable: ref.read(purchasesConfiguredProvider) || kDebugMode,
+      anotherAskShowing: _offerNotifications || _offerCounter,
+      victoriesBefore: victoriesBefore,
+      lastShownAt: await proMomentLastShown(),
+      now: now,
+    );
+    if (!due) return;
+    await markProMomentShown(now);
+    if (mounted) setState(() => _offerPro = true);
   }
 
   /// The counter notice, put at the only moment it makes sense: just
@@ -92,13 +127,14 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
   /// The counter is on by default now, so this is a disclosure rather
   /// than a request — but it is shown before anything is sent, and it
   /// carries the switch to stop it. Shown once, ever.
-  Future<void> _checkCounterNotice() async {
-    if (!WorldCounter().configured) return;
+  Future<bool> _checkCounterNotice() async {
+    if (!WorldCounter().configured) return false;
     final hasSomethingToAdd =
         widget.target.priceCents > 0 || widget.target.isEmotion;
-    if (!hasSomethingToAdd) return;
-    if (await worldCounterAskShown()) return;
+    if (!hasSomethingToAdd) return false;
+    if (await worldCounterAskShown()) return false;
     if (mounted) setState(() => _offerCounter = true);
+    return true;
   }
 
   Future<void> _answerCounterAsk(bool stayIn) async {
@@ -335,6 +371,30 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
                                 protectedCents: protected,
                                 thoughts: ref.watch(thoughtsBurnedProvider),
                                 onAnswer: _answerCounterAsk,
+                              ),
+                            ),
+                          ],
+                          // The Pro moment: after the win, anchored to
+                          // its number, dismissable, and rare (M2).
+                          if (_offerPro) ...[
+                            const SizedBox(height: 24),
+                            Reveal(
+                              delay: const Duration(milliseconds: 520),
+                              child: _ProMomentCard(
+                                cents: price,
+                                onDismiss: () =>
+                                    setState(() => _offerPro = false),
+                                onSee: () {
+                                  setState(() => _offerPro = false);
+                                  Navigator.of(context).push(
+                                    emberRoute(
+                                      PaywallScreen(
+                                        source: PaywallSource.moment,
+                                        anchorCents: price,
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           ],
@@ -636,6 +696,72 @@ class _NotificationAsk extends StatelessWidget {
                 child: FilledButton(
                   onPressed: () => onAnswer(true),
                   child: const Text('Remind me'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The Pro offer, in the user's own number. No feature list — the
+/// paywall has that. One sentence that's true, one that's honest about
+/// what the plan is, two buttons of equal weight.
+class _ProMomentCard extends StatelessWidget {
+  const _ProMomentCard({
+    required this.cents,
+    required this.onDismiss,
+    required this.onSee,
+  });
+
+  final int cents;
+  final VoidCallback onDismiss;
+  final VoidCallback onSee;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.washPeach.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'That one burn pays for Pro',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'You just protected ${formatMoney(cents)}. Pro forever costs '
+            'less than that — once, no renewal, and the burn stays free '
+            'either way.',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textMid,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onDismiss,
+                  child: const Text('Not now'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton(
+                  onPressed: onSee,
+                  child: const Text('See Pro'),
                 ),
               ),
             ],

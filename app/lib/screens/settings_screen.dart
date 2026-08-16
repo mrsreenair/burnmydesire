@@ -10,6 +10,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import '../data/ai_coach.dart';
 import '../data/backup.dart';
 import '../data/burn_effects.dart';
+import '../data/plan_offer.dart';
 import '../data/cloud_backup.dart';
 import '../data/currencies.dart';
 import '../data/document_picker.dart';
@@ -1028,9 +1029,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onTap: () {
                     Navigator.of(sheetContext).pop();
                     if (e.pro && !unlocked) {
-                      Navigator.of(
-                        context,
-                      ).push(emberRoute(const PaywallScreen()));
+                      Navigator.of(context).push(
+                        emberRoute(
+                          const PaywallScreen(source: PaywallSource.effect),
+                        ),
+                      );
                     } else {
                       _pickEffect(e);
                     }

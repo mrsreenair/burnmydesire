@@ -41,7 +41,7 @@ mid-flight; everything before them is pure Dart and ships independently.
 | # | Milestone | Effort | Status |
 |---|---|---|---|
 | M1 | Pricing + the honest paywall | ½ day | ✅ 2026-08-16 |
-| M2 | Give Pro a reason to exist, and a moment to be offered | 1 day | ⬜ |
+| M2 | Give Pro a reason to exist, and a moment to be offered | 1 day | ✅ 2026-08-16 |
 | M3 | Share card 2.0 — goal-anchored | ½ day | ⬜ |
 | M4 | Weekly Ash Report | 1½ days | ⬜ |
 | M5 | Follow-up cadence + re-burn loop | ½ day | ⬜ |
@@ -94,17 +94,17 @@ hits. Two fixes: make Pro contain things a Gen Z user actually wants,
 and offer it once, at the one moment it's welcome — **after** a burn,
 never on the shock card (same rule as "move the money", PROJECT.md §7.0).
 
-**Pro contains (after M2 + M6):** unlimited capture · all burn effects (2 free, 4 Pro) · multiple goals · dashboard + CSV export · reminders · encrypted backup · adjustable rate/horizon.
+**Pro contains (after M2 + M6):** unlimited capture · all burn effects (2 free, 4 Pro) · dashboard · reminders · encrypted backup · adjustable rate/horizon.
 
 **Scope**
-- [ ] Victory-screen "Pro moment": one dismissible card, shown only when the burn was worth ≥ €50, at most once per 14 days, never on the first burn, never on emotion burns. Copy anchors to the burn: *"You just protected €249. Pro is one-eighth of that — once, forever."*
-- [ ] Frequency cap persisted (`user_prefs`), reset never
-- [ ] Effect picker: locked Pro effects show a lock + open the paywall with `source: 'effect'`
-- [ ] Multiple financial goals — Pro; free keeps one. Goal picker on the goal card. (Data model already supports it — verify.)
-- [ ] Paywall `source` param so copy can adapt: `effect` → "Unlock every way to let go", `goal` → "Chase more than one thing", `limit` → existing "You let go of 5 desires…", `moment` → the €-anchored line
-- [ ] Tests: frequency-cap logic; source→copy mapping
+- [x] Victory-screen "Pro moment": one dismissible card, shown only when the burn is worth ≥ ~€30 (about the lifetime price, via the currency's rough EUR rate — so "one burn pays for it" is true), at most once per 14 days, never on the first victory, never on emotion burns, never alongside a permission ask. Copy anchors to the burn: *"You just protected €200. Pro forever costs less than that — once, no renewal."*
+- [x] Frequency cap persisted (`pro_moment.dart`), marked on show not on tap
+- [x] Effect picker: locked Pro effects open the paywall with `source: effect`
+- [x] ~~Multiple financial goals~~ — **dropped.** `financial_goal.dart` says "one goal, by design: a single destination keeps every burn pointed at the same picture", and that's right; selling a second goal would sell a worse product. Recorded in §2.
+- [x] Paywall `source` + `anchorCents` (landed in M1): `effect` → "Unlock every way to let go", `limit` → existing "You let go of 5 desires…", `moment` → "You just protected €200" + "That one burn pays for Pro 6 times over — forever"
+- [x] Tests: `pro_moment_test` (7), headline mapping in `plan_offer_test`
 
-**Exit.** A €200 burn on the fifth day shows the card once; the sixth doesn't. Locked effects open the paywall with the right headline.
+**Exit.** ✅ Verified on the simulator 2026-08-16: second €200 burn showed the notification ask (Pro moment waited); third showed the Pro moment; "See Pro" opened the paywall with the anchored headline.
 
 ---
 
@@ -258,7 +258,7 @@ where the promise stays visible. *"🕯 19 h left"* — never the item.
 | Hero plan | Lifetime €29.99 | 2026-08-16 |
 | Weekly plan | Removed | 2026-08-16 |
 | Free effects | Fire + Shred; the rest Pro | 2026-08-16 |
-| Free goals | One; multiple is Pro | 2026-08-16 |
+| Goals | One, for everyone — multiple goals dropped from M2 (conflicts with the one-picture design in `financial_goal.dart`) | 2026-08-16 |
 | Weekly report | Free for everyone | 2026-08-16 |
 | Analytics SDK | Deferred (M7) | 2026-08-16 |
 | Burn video export | **Not now** — recording the shader is a day of work for a share format we can't measure yet; revisit after M3 share numbers | 2026-08-16 |

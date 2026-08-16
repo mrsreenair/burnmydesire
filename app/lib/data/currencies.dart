@@ -29,9 +29,11 @@ class Currency {
   /// ₹100,000 to an Indian teen would look as foreign as 1.689 did.
   final String locale;
 
-  /// Very rough EUR value of one unit, used for exactly one thing: the
-  /// opt-in world counter, whose total is labelled self-reported and
-  /// approximate. Never shown to the user as a conversion.
+  /// Very rough EUR value of one unit, used for exactly two things,
+  /// neither of them display: the opt-in world counter (whose total is
+  /// labelled self-reported and approximate) and the "is this burn worth
+  /// more than Pro" threshold in pro_moment.dart. Never shown to the
+  /// user as a conversion.
   final double eurosPerUnit;
 }
 
