@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -46,12 +47,16 @@ export default function SiteNav() {
         }}
       >
         <Link href="/" className="flex items-center gap-2.5">
-          <span
-            className="block h-6 w-6 rounded-[9px]"
-            style={{
-              background: "linear-gradient(135deg,var(--ember),var(--flame))",
-              boxShadow: "0 4px 14px rgba(255,107,44,.42)",
-            }}
+          {/* The app's own icon, so the thing in the tab bar, on the home
+              screen and in the nav are one mark. */}
+          <Image
+            src="/brand/flame.png"
+            alt=""
+            width={26}
+            height={26}
+            className="block h-[26px] w-[26px] rounded-[8px]"
+            style={{ boxShadow: "0 4px 14px rgba(255,107,44,.35)" }}
+            priority
           />
           <span className="display text-[19px]">
             Burn <em>My</em> Desire

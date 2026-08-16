@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const COLUMNS = [
@@ -36,11 +37,12 @@ export default function SiteFooter() {
       <div className="wrap grid gap-12 py-16 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div>
           <div className="flex items-center gap-2.5">
-            <span
-              className="block h-6 w-6 rounded-[9px]"
-              style={{
-                background: "linear-gradient(135deg,var(--ember),var(--flame))",
-              }}
+            <Image
+              src="/brand/flame.png"
+              alt=""
+              width={26}
+              height={26}
+              className="block h-[26px] w-[26px] rounded-[8px]"
             />
             <span className="display text-[19px]">
               Burn <em>My</em> Desire

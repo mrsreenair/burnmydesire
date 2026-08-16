@@ -36,6 +36,13 @@ export const metadata: Metadata = {
     siteName: "Burn My Desire",
     type: "website",
   },
+  // favicon.ico / icon.png / apple-icon.png next to this file are picked
+  // up by convention; this only adds what the convention can't express.
+  appleWebApp: { title: "Burn My Desire" },
+};
+
+export const viewport = {
+  themeColor: "#F7F3EC",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

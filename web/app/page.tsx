@@ -18,9 +18,9 @@ const STEPS = [
   {
     n: "02",
     title: "See the real price",
-    body: "Not the sticker price — the twenty-year one. The app answers with what the money becomes if it stays invested until you're 65.",
+    body: "Not the sticker price — what it takes from the thing you're actually saving for, and what the money becomes if it stays invested instead.",
     src: "/screens/shock.webp",
-    alt: "The shock screen, showing a purchase's compound cost",
+    alt: "The damage screen: the purchase as a slice of your goal, and what it becomes invested",
   },
   {
     n: "03",
@@ -407,9 +407,13 @@ export default function Home() {
       <section className="section">
         <div className="wrap">
           <Reveal>
-            <div className="max-w-[24ch]">
+            {/* The measure lives on the heading itself: `ch` is the width
+                of a "0" in the element's own font, and this h2 is set in
+                the display face at 62px — 24ch on the small-type wrapper
+                came to ~200px and stacked one word per line. */}
+            <div>
               <p className="kicker">Privacy</p>
-              <h2 className="display mt-4">
+              <h2 className="display mt-4 max-w-[16ch]">
                 The things you&apos;re ashamed of stay on your <em>phone</em>.
               </h2>
             </div>
