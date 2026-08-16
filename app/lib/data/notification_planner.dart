@@ -30,7 +30,12 @@ class PlannedNotification {
 }
 
 /// Priority when two candidates land on the same day (lower wins).
-enum _Kind { finalBurn, streak, milestone, backup, checkin }
+///
+/// Renewal comes first, above everything: it's the one notification the
+/// paywall *promises*. An app that says "we'll remind you before you're
+/// charged" and then lets a streak nudge crowd that reminder out has
+/// lied about the only thing that mattered.
+enum _Kind { renewal, finalBurn, streak, milestone, backup, checkin }
 
 class _Candidate {
   const _Candidate(this.kind, this.when, this.title, this.body);
@@ -81,6 +86,19 @@ String _milestoneLine(int protectedCents, int months) {
 const _backupLine =
     'Your wins deserve a backup. Thirty seconds, encrypted, yours.';
 
+/// How far ahead of a renewal the reminder lands. Three days is long
+/// enough to act on and short enough to still be about *this* charge.
+const renewalReminderLeadDays = 3;
+
+/// The renewal reminder. [price] is the store's own localized string.
+/// Deliberately neutral about which way to go: the reminder is a
+/// courtesy, not a retention tactic, and it reads that way.
+String renewalLine(String? price) => price == null
+    ? 'Pro renews in $renewalReminderLeadDays days. Keep it, or cancel in '
+          'one tap — either is fine.'
+    : 'Pro renews in $renewalReminderLeadDays days for $price. Keep it, or '
+          'cancel in one tap — either is fine.';
+
 const _title = 'Burn My Desire';
 
 List<PlannedNotification> planNotifications({
@@ -89,6 +107,11 @@ List<PlannedNotification> planNotifications({
   required NotificationPrefs prefs,
   required bool isPro,
   DateTime? lastBackupAt,
+
+  /// When the current Pro subscription next bills, if it will. Null for
+  /// lifetime, for a cancelled plan running out, and for free users.
+  DateTime? renewsAt,
+  String? renewalPrice,
   required DateTime now,
 }) {
   if (!prefs.enabled) return const [];
@@ -191,6 +214,25 @@ List<PlannedNotification> planNotifications({
     );
     if (!when.isBefore(now)) {
       candidates.add(_Candidate(_Kind.backup, when, _title, _backupLine));
+    }
+  }
+
+  // --- Renewal reminder: the promise on the paywall. Not behind any of
+  // the per-category toggles — only the master switch — because it isn't
+  // engagement, it's the courtesy that makes the subscription honest.
+  if (renewsAt != null) {
+    final target = renewsAt.subtract(
+      const Duration(days: renewalReminderLeadDays),
+    );
+    // Missed the lead (installed late, phone off): say it tomorrow
+    // morning as long as that's still before the charge.
+    final when = target.isBefore(now)
+        ? _morning(now.add(const Duration(days: 1)))
+        : _morning(target);
+    if (!when.isBefore(now) && when.isBefore(renewsAt)) {
+      candidates.add(
+        _Candidate(_Kind.renewal, when, _title, renewalLine(renewalPrice)),
+      );
     }
   }
 

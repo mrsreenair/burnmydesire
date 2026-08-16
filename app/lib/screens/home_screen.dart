@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../config.dart';
+import '../data/plan_offer.dart';
 import '../data/database.dart';
 import '../data/user_prefs.dart';
 import '../data/reflection.dart';
@@ -123,9 +124,11 @@ class HomeScreen extends ConsumerWidget {
     return switch (ref.read(addBlockProvider)) {
       AddBlock.none => destination,
       AddBlock.liveLimit => const PaywallScreen(
+        source: PaywallSource.limit,
         headline: 'Three desires in the fight.\nGo unlimited?',
       ),
       AddBlock.monthlyLimit => PaywallScreen(
+        source: PaywallSource.limit,
         headline:
             'You let go of $kFreeMonthlyNewItems desires '
             'this month.',

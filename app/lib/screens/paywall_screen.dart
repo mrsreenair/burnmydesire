@@ -6,10 +6,12 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config.dart';
+import '../data/notification_planner.dart' show renewalReminderLeadDays;
 import '../data/paywall_preview.dart';
 import '../data/plan_offer.dart';
 import '../providers/pro_provider.dart';
 import '../theme/app_colors.dart';
+import '../utils/format_utils.dart';
 import '../widgets/paper_backdrop.dart';
 import '../widgets/ember_ui.dart';
 import '../widgets/trial_timeline.dart';
@@ -17,12 +19,19 @@ import '../widgets/trial_timeline.dart';
 /// The paywall.
 ///
 /// Built on what subscription apps that survive review actually do
-/// (Monarch, Centr, Deezer, Deepstash, Wolt on Mobbin). Four things they
-/// share that the first version of this screen didn't:
+/// (Monarch, Centr, Deezer, Deepstash, Wolt on Mobbin), then bent to fit
+/// an app whose whole pitch is "stop paying for things forever":
 ///
-///  * The annual plan is preselected and carries a savings badge and a
-///    per-month equivalent, so the cheaper option is the obvious one
-///    rather than a calculation.
+///  * **Lifetime is the hero**, not the footnote (Peanut's structure, one
+///    year's and timespent's tone). An app that teaches you to burn the
+///    subscription you forgot to cancel can't lead with an auto-renewing
+///    one — Gen Z would screenshot the irony into a review. So the
+///    one-time plan sits on top, preselected, and says "no renewal, ever".
+///  * Weekly plans are filtered out even if the store offers one.
+///  * The subscriptions get an honesty block instead of a countdown:
+///    the burn stays free, no fake discounts, cancel in one tap (a real
+///    link to Apple's page), and a reminder before every renewal — which
+///    the notification planner actually keeps.
 ///  * A trial timeline — today, the reminder, the charge — because the
 ///    only question between a person and a free trial is when they get
 ///    billed and whether they'll see it coming.
@@ -31,7 +40,13 @@ import '../widgets/trial_timeline.dart';
 ///  * Terms and Privacy are linked. Guideline 3.1.2 requires it; leaving
 ///    them out is one of the most common rejections there is.
 class PaywallScreen extends ConsumerStatefulWidget {
-  const PaywallScreen({super.key, this.embedded = false, this.headline});
+  const PaywallScreen({
+    super.key,
+    this.embedded = false,
+    this.headline,
+    this.source = PaywallSource.general,
+    this.anchorCents,
+  });
 
   /// True when shown as a tab: no close button, and room for the tab bar.
   final bool embedded;
@@ -40,6 +55,13 @@ class PaywallScreen extends ConsumerStatefulWidget {
   /// instead of the generic one when the paywall was reached by hitting
   /// a limit — the moment should acknowledge the win, not scold.
   final String? headline;
+
+  /// Where the screen was opened from; picks the opening line.
+  final PaywallSource source;
+
+  /// The burn that led here (source == moment): lets the screen say
+  /// "one burn already pays for it" with the user's own number.
+  final int? anchorCents;
 
   @override
   ConsumerState<PaywallScreen> createState() => _PaywallScreenState();
@@ -82,8 +104,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       if (!mounted) return;
       setState(() {
         _packages = _ordered(packages);
-        // Land on the best value, the way every reference paywall does.
-        // Nobody arrives wanting to pay more per month.
+        // Land on the hero. Nobody arrives wanting to pay more, or longer.
         _picked = _bestValueIndex(_packages);
         _loading = false;
       });
@@ -96,40 +117,47 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     }
   }
 
-  /// Annual first, then monthly, then anything else — the order every
-  /// reference paywall uses, regardless of how the dashboard lists them.
+  static PlanPeriod _period(Package p) =>
+      planPeriodFrom(p.storeProduct.subscriptionPeriod);
+
+  /// Lifetime, then annual, then monthly; weekly and anything unparseable
+  /// dropped — regardless of how the dashboard lists them (plan_offer).
   static List<Package> _ordered(List<Package> packages) {
-    int rank(Package p) =>
-        switch (planPeriodFrom(p.storeProduct.subscriptionPeriod)) {
-          PlanPeriod.annual => 0,
-          PlanPeriod.monthly => 1,
-          PlanPeriod.weekly => 2,
-          PlanPeriod.lifetime => 3,
-          PlanPeriod.other => 4,
-        };
-    final out = [...packages]..sort((a, b) => rank(a).compareTo(rank(b)));
+    final out = [
+      for (final p in packages)
+        if (offeredOnPaywall(_period(p))) p,
+    ]..sort((a, b) => paywallRank(_period(a)).compareTo(paywallRank(_period(b))));
     return out;
   }
 
-  static int _bestValueIndex(List<Package> packages) {
-    for (var i = 0; i < packages.length; i++) {
-      final period = planPeriodFrom(
-        packages[i].storeProduct.subscriptionPeriod,
-      );
-      if (period == PlanPeriod.annual) return i;
+  static int _bestValueIndex(List<Package> packages) =>
+      heroIndex([for (final p in packages) _period(p)]);
+
+  Package? _first(PlanPeriod period) {
+    for (final p in _packages) {
+      if (_period(p) == period) return p;
     }
-    return 0;
+    return null;
   }
 
   /// The monthly plan's price, used to work out what annual saves.
-  double? get _monthlyPrice {
-    for (final p in _packages) {
-      if (planPeriodFrom(p.storeProduct.subscriptionPeriod) ==
-          PlanPeriod.monthly) {
-        return p.storeProduct.price;
-      }
-    }
-    return null;
+  double? get _monthlyPrice => _first(PlanPeriod.monthly)?.storeProduct.price;
+
+  /// The one line under the headline that ties Pro to the user's own
+  /// number. Only says "one burn pays for it" when that's arithmetically
+  /// true for the burn that brought them here.
+  String? get _anchorLine {
+    final cents = widget.anchorCents;
+    final lifetime = _first(PlanPeriod.lifetime)?.storeProduct;
+    if (cents == null || lifetime == null) return null;
+    final times = burnsCoveringLifetime(
+      burnCents: cents,
+      lifetimePrice: lifetime.price,
+    );
+    if (times == null) return null;
+    return times == 1
+        ? 'That one burn already pays for Pro — forever.'
+        : 'That one burn pays for Pro $times times over — forever.';
   }
 
   Future<void> _buy(Package package) async {
@@ -238,17 +266,36 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 child: GradientText(
                   isPro
                       ? 'You\'re Pro'
-                      : widget.headline ?? 'Burn without limits',
+                      : paywallHeadline(
+                          widget.source,
+                          limitLine: widget.headline,
+                          burnLabel: widget.anchorCents == null
+                              ? null
+                              : formatMoney(widget.anchorCents!),
+                        ),
                   style: theme.textTheme.headlineMedium,
                 ),
               ),
+              if (!isPro && _anchorLine != null) ...[
+                const SizedBox(height: 8),
+                Reveal(
+                  delay: const Duration(milliseconds: 120),
+                  child: Text(
+                    _anchorLine!,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: AppColors.textMid,
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
 
               for (final (i, f) in const [
                 ('♾️', 'Unlimited desires, every month'),
+                ('🔥', 'Every burn effect, now and future'),
                 ('📈', 'Custom return rates & horizons'),
-                ('📊', 'Wealth-protected analytics'),
-                ('🔥', 'Every future destruction effect'),
+                ('📊', 'Wealth-protected analytics & backup'),
               ].indexed)
                 Reveal(
                   delay: Duration(milliseconds: 140 + 60 * i),
@@ -260,8 +307,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
               if (isPro)
                 _Notice(
-                  'Pro is active on this Apple ID. Manage or cancel it in '
-                  'iOS Settings → your name → Subscriptions.',
+                  'Pro is active on this Apple ID. Thank you — the burn was '
+                  'always free; you paid for the rest.',
                 )
               else if (!configured && !_preview)
                 const _SetupNotice()
@@ -278,7 +325,21 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                           '"Ready to Submit" in App Store Connect.',
                 )
               else ...[
-                for (final (i, p) in _packages.indexed)
+                for (final (i, p) in _packages.indexed) ...[
+                  // The subscriptions sit under their own small heading,
+                  // so the one-time plan above them reads as the offer
+                  // and they read as the alternative — not the reverse.
+                  if (i > 0 && _period(_packages[i - 1]) == PlanPeriod.lifetime)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(4, 6, 4, 10),
+                      child: Text(
+                        'or a subscription — cancel in one tap',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.textMid,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10),
                     child: _PlanCard(
@@ -288,6 +349,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                       onTap: () => setState(() => _picked = i),
                     ),
                   ),
+                ],
+
+                const SizedBox(height: 4),
+                _HonestyBlock(onManage: () => _open(kManageSubscriptionsUrl)),
+                const SizedBox(height: 10),
 
                 if (trialDays != null && selected != null) ...[
                   const SizedBox(height: 8),
@@ -330,6 +396,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 EmberButton(
                   label: _busy
                       ? 'One moment…'
+                      : selected != null &&
+                            _period(selected) == PlanPeriod.lifetime
+                      ? 'Own Pro forever · ${selected.storeProduct.priceString}'
                       : trialDays != null
                       ? 'Start my $trialDays-day free trial'
                       : 'Unlock Pro',
@@ -345,6 +414,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 TextButton(
                   onPressed: _busy ? null : _restore,
                   child: const Text('Restore purchases'),
+                ),
+              ],
+              if (isPro) ...[
+                const SizedBox(height: 4),
+                TextButton(
+                  onPressed: () => _open(kManageSubscriptionsUrl),
+                  child: const Text('Manage or cancel'),
                 ),
               ],
 
@@ -390,14 +466,75 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final price = '${p.storeProduct.priceString}${_perLabel(p)}';
     final period = planPeriodFrom(p.storeProduct.subscriptionPeriod);
     if (period == PlanPeriod.lifetime) {
-      return '$price. One payment, no subscription.';
+      return '${p.storeProduct.priceString}, once. Yours forever — nothing '
+          'renews, nothing to cancel.';
     }
     final renews =
-        'Renews automatically until you cancel. '
-        'Cancel any time in iOS Settings → Subscriptions.';
+        'Renews automatically until you cancel. We remind you '
+        '$renewalReminderLeadDays days before each renewal (with '
+        'notifications on), and cancelling is one tap on Apple\'s page.';
     return trialDays != null
         ? '$trialDays days free, then $price. $renews'
         : '$price. $renews';
+  }
+}
+
+/// The three sentences that make the subscription honest — timespent's
+/// "no dark patterns" letter, compressed. Shown for every plan, because
+/// the person weighing lifetime against yearly is exactly who needs to
+/// hear that the yearly one has an exit.
+class _HonestyBlock extends StatelessWidget {
+  const _HonestyBlock({required this.onManage});
+
+  final VoidCallback onManage;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    Widget line(String text, {VoidCallback? onTap}) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: Icon(Icons.check, size: 16, color: AppColors.money),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                text,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: onTap == null ? AppColors.textMid : AppColors.accent,
+                  fontWeight: onTap == null ? null : FontWeight.w700,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      decoration: BoxDecoration(
+        color: AppColors.paperHigh.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          line('The burn stays free. Forever, for everyone.'),
+          line('No countdown timers. No fake discounts.'),
+          line('Cancel in one tap — Apple\'s page, no hoops.', onTap: onManage),
+        ],
+      ),
+    );
   }
 }
 
@@ -528,6 +665,8 @@ class _PlanCard extends StatelessWidget {
     final product = package.storeProduct;
     final period = planPeriodFrom(product.subscriptionPeriod);
 
+    final hero = period == PlanPeriod.lifetime;
+
     final label = switch (period) {
       PlanPeriod.annual => 'Yearly',
       PlanPeriod.monthly => 'Monthly',
@@ -546,10 +685,24 @@ class _PlanCard extends StatelessWidget {
     // Per-month equivalent, formatted from the store's own currency
     // symbol rather than a guess at the user's locale.
     final symbol = product.priceString.replaceAll(RegExp(r'[\d.,\s]'), '');
-    final perMonth = period == PlanPeriod.annual
-        ? '$symbol${perMonthFromAnnual(product.price).toStringAsFixed(2)}'
-              '/month'
+    final subtitle = switch (period) {
+      PlanPeriod.lifetime => 'One payment. No renewal, ever.',
+      PlanPeriod.annual =>
+        '$symbol${perMonthFromAnnual(product.price).toStringAsFixed(2)}'
+            '/month, billed once a year',
+      PlanPeriod.monthly => 'Billed monthly',
+      _ => null,
+    };
+
+    final badge = hero
+        ? 'ONE BURN PAYS FOR IT'
+        : savings != null
+        ? 'SAVE $savings%'
         : null;
+
+    // The hero is drawn in fire so it reads as the offer; the
+    // subscriptions in ink so they read as the alternative.
+    final tint = hero ? AppColors.ember : AppColors.accent;
 
     return GestureDetector(
       onTap: onTap,
@@ -557,19 +710,17 @@ class _PlanCard extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        padding: EdgeInsets.fromLTRB(16, hero ? 18 : 14, 16, hero ? 18 : 14),
         decoration: BoxDecoration(
-          color: selected
-              ? AppColors.accent.withValues(alpha: 0.10)
-              : AppColors.paperHigh,
-          borderRadius: BorderRadius.circular(18),
+          color: selected ? tint.withValues(alpha: 0.10) : AppColors.paperHigh,
+          borderRadius: BorderRadius.circular(hero ? 22 : 18),
           border: Border.all(
-            color: selected
-                ? AppColors.accent
-                : AppColors.ink.withValues(alpha: 0.06),
+            color: selected ? tint : AppColors.ink.withValues(alpha: 0.06),
             width: selected ? 1.6 : 1,
           ),
-          boxShadow: selected ? null : AppColors.cardShadow(opacity: 0.05),
+          boxShadow: selected
+              ? null
+              : AppColors.cardShadow(opacity: hero ? 0.09 : 0.05),
         ),
         child: Row(
           children: [
@@ -578,31 +729,37 @@ class _PlanCard extends StatelessWidget {
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
               size: 22,
-              color: selected ? AppColors.accent : AppColors.textLow,
+              color: selected ? tint : AppColors.textLow,
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 4,
                     children: [
                       Text(
                         label,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style:
+                            (hero
+                                    ? theme.textTheme.titleLarge
+                                    : theme.textTheme.titleMedium)
+                                ?.copyWith(fontWeight: FontWeight.w800),
                       ),
-                      if (savings != null) ...[
-                        const SizedBox(width: 8),
-                        BadgePill('SAVE $savings%', color: AppColors.money),
-                      ],
+                      if (badge != null)
+                        _PlanBadge(
+                          badge,
+                          color: hero ? AppColors.ember : AppColors.money,
+                        ),
                     ],
                   ),
-                  if (perMonth != null) ...[
+                  if (subtitle != null) ...[
                     const SizedBox(height: 2),
                     Text(
-                      perMonth,
+                      subtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: AppColors.textMid,
                       ),
@@ -614,12 +771,46 @@ class _PlanCard extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               product.priceString,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: selected ? AppColors.accent : AppColors.ink,
-              ),
+              style:
+                  (hero
+                          ? theme.textTheme.titleLarge
+                          : theme.textTheme.titleMedium)
+                      ?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: selected ? tint : AppColors.ink,
+                      ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A plan's tag — compact enough to sit beside the plan name without
+/// pushing the price off the card. The earned-achievement `BadgePill`
+/// (star, generous padding) is right above a headline and wrong here.
+class _PlanBadge extends StatelessWidget {
+  const _PlanBadge(this.label, {required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10.5,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.6,
+          color: color,
         ),
       ),
     );

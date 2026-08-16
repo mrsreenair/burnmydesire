@@ -151,9 +151,11 @@ Every item record carries a `category` from day one:
 | Burns / re-burns per item | Unlimited | Unlimited |
 | Return rate / horizon | Fixed 8% / 20y | Adjustable |
 | Dashboard & analytics | — | ✓ |
-| Price | — | €2.99/mo · €19.99/yr · **€29.99 lifetime** |
+| Price | — | **€29.99 lifetime (hero)** · €14.99/yr (7-day trial) · €2.99/mo — no weekly plan, ever |
 
-Rationale: gating *capture* (not burns) puts the paywall where usage pressure actually is while never holding the ritual hostage — re-burning an existing struggle is free forever, because "pay €2.99 to resist your urge" is the one-star review that writes itself. The monthly count includes tombstones, so a final burn can't be farmed to refill the allowance. The paywall moment acknowledges the win ("You let go of 5 desires this month"), never scolds. Lifetime option matters — privacy-minded users prefer pay-once.
+Rationale: gating *capture* (not burns) puts the paywall where usage pressure actually is while never holding the ritual hostage — re-burning an existing struggle is free forever, because "pay €2.99 to resist your urge" is the one-star review that writes itself. The monthly count includes tombstones, so a final burn can't be farmed to refill the allowance. The paywall moment acknowledges the win ("You let go of 5 desires this month"), never scolds.
+
+**Lifetime is the hero (2026-08-16, GROWTH.md M1).** An app that teaches people to burn the subscription they forgot to cancel cannot lead with an auto-renewing one — the irony is real and Gen Z screenshots it. So the one-time plan sits first and preselected ("One burn pays for it. No renewal, ever."), the subscriptions sit under it as the alternative, weekly is filtered out even if the store offers one, and every plan carries three promises: the burn stays free, no countdown timers or fake discounts, cancel in one tap (a real link to Apple's page) with a local reminder three days before each renewal. LTV maths: yearly at €19.99 × ~45 % renewal ≈ €32 over three years; lifetime at €29.99 is the same money with zero churn and it matches what the app preaches.
 
 **Ads: rejected (2026-08-11).** An ad SDK would end the "Data Not Collected" label, put trackers inside an app holding addiction data, serve shopping ads to people mid-craving (the product's exact antithesis), and earn pocket change (~€2 blended eCPM on a low-session utility) while suppressing Pro conversion and affiliate revenue — both larger. The only ad-shaped thing ever worth considering: a self-served static "sponsored by" card from one aligned brand, no SDK, no tracking. Not before v3.
 
@@ -255,7 +257,7 @@ lib/
 
 
 
-1. **Pro tier** (RevenueCat, no backend): €2.99/mo · €19.99/yr · €29.99 lifetime.
+1. **Pro tier** (RevenueCat, no backend): €29.99 lifetime (hero) · €14.99/yr · €2.99/mo. See §4.5 and GROWTH.md.
 2. **Broker affiliate links** (IBKR, DEGIRO referral): outbound URLs only; treated as bonus revenue, never the pillar. No CFD platforms.
 3. **No ads, ever** — conflicts with privacy positioning and the premium calm of the ritual.
 

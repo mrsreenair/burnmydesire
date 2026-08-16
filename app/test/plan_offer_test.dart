@@ -62,4 +62,77 @@ void main() {
   test('perMonthFromAnnual', () {
     expect(perMonthFromAnnual(19.99), closeTo(1.665, 0.001));
   });
+
+  group('the paywall\'s own ordering (GROWTH.md M1)', () {
+    test('lifetime is the hero, weekly is never sold', () {
+      final periods = [
+        PlanPeriod.weekly,
+        PlanPeriod.annual,
+        PlanPeriod.monthly,
+        PlanPeriod.lifetime,
+        PlanPeriod.other,
+      ];
+      final shown = [
+        for (final p in periods)
+          if (offeredOnPaywall(p)) p,
+      ]..sort((a, b) => paywallRank(a).compareTo(paywallRank(b)));
+      expect(shown, [
+        PlanPeriod.lifetime,
+        PlanPeriod.annual,
+        PlanPeriod.monthly,
+      ]);
+      expect(heroIndex(shown), 0);
+    });
+
+    test('without a lifetime plan, annual is preselected', () {
+      expect(heroIndex([PlanPeriod.annual, PlanPeriod.monthly]), 0);
+      expect(heroIndex([PlanPeriod.monthly, PlanPeriod.annual]), 1);
+      expect(heroIndex([PlanPeriod.monthly]), 0);
+    });
+
+    test('the new prices still earn a savings badge', () {
+      // €2.99/mo is €35.88 a year; €14.99 saves 58%.
+      expect(
+        annualSavingsPercent(monthlyPrice: 2.99, annualPrice: 14.99),
+        58,
+      );
+    });
+  });
+
+  group('burnsCoveringLifetime', () {
+    test('says how many times a burn covers Pro forever', () {
+      expect(burnsCoveringLifetime(burnCents: 24900, lifetimePrice: 29.99), 8);
+      expect(burnsCoveringLifetime(burnCents: 2999, lifetimePrice: 29.99), 1);
+      expect(burnsCoveringLifetime(burnCents: 5000, lifetimePrice: 29.99), 1);
+    });
+
+    test('says nothing when the burn is smaller than the price', () {
+      // A €12 coffee-machine burn does not "pay for" a €29.99 plan, and
+      // the paywall must not pretend it does.
+      expect(burnsCoveringLifetime(burnCents: 1200, lifetimePrice: 29.99), isNull);
+      expect(burnsCoveringLifetime(burnCents: 0, lifetimePrice: 29.99), isNull);
+      expect(burnsCoveringLifetime(burnCents: 5000, lifetimePrice: 0), isNull);
+    });
+  });
+
+  group('paywallHeadline', () {
+    test('speaks to the moment it was opened from', () {
+      expect(paywallHeadline(PaywallSource.general), 'Burn without limits');
+      expect(
+        paywallHeadline(PaywallSource.limit, limitLine: 'You let go of 5.'),
+        'You let go of 5.',
+      );
+      expect(paywallHeadline(PaywallSource.limit), 'Burn without limits');
+      expect(
+        paywallHeadline(PaywallSource.effect),
+        'Unlock every way to let go',
+      );
+      expect(paywallHeadline(PaywallSource.goal), 'Chase more than one thing');
+      expect(
+        paywallHeadline(PaywallSource.moment, burnLabel: '€249'),
+        'You just protected €249',
+      );
+      expect(paywallHeadline(PaywallSource.moment), 'Keep this going');
+    });
+  });
 }

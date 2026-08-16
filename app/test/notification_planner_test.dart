@@ -33,6 +33,8 @@ List<PlannedNotification> plan({
   int protectedCents = 0,
   bool isPro = false,
   DateTime? lastBackupAt,
+  DateTime? renewsAt,
+  String? renewalPrice,
 }) =>
     planNotifications(
       items: items,
@@ -40,6 +42,8 @@ List<PlannedNotification> plan({
       prefs: prefs,
       isPro: isPro,
       lastBackupAt: lastBackupAt,
+      renewsAt: renewsAt,
+      renewalPrice: renewalPrice,
       now: now,
     );
 
@@ -215,5 +219,66 @@ void main() {
         expect(n.title.toLowerCase(), isNot(contains(word)));
       }
     }
+  });
+
+  group('renewal reminder — the promise on the paywall (GROWTH.md M1)', () {
+    test('lands three mornings before the charge, with the price', () {
+      final renewsAt = now.add(const Duration(days: 20));
+      final out = plan(isPro: true, renewsAt: renewsAt, renewalPrice: '€14.99');
+      final reminder = out.firstWhere((n) => n.body.contains('renews'));
+      expect(reminder.when.difference(renewsAt).inDays, -3);
+      expect(reminder.when.hour, 9);
+      expect(reminder.body, contains('€14.99'));
+      expect(reminder.body, contains('cancel'));
+    });
+
+    test('beats every other kind on its day', () {
+      // A final-burn invitation would land tomorrow morning too.
+      final renewsAt = now.add(const Duration(days: 4));
+      final out = plan(
+        isPro: true,
+        items: [item(resistanceCount: 2)],
+        renewsAt: renewsAt,
+      );
+      final tomorrow = out.where((n) => n.when.day == now.day + 1);
+      expect(tomorrow, hasLength(1));
+      expect(tomorrow.single.body, contains('renews'));
+    });
+
+    test('a missed lead still says it tomorrow, if that is before the charge', () {
+      final out = plan(isPro: true, renewsAt: now.add(const Duration(days: 2)));
+      final reminder = out.firstWhere((n) => n.body.contains('renews'));
+      expect(reminder.when.day, now.day + 1);
+    });
+
+    test('never fires after the charge, and never for lifetime or free', () {
+      // Renewing tomorrow at 03:00: tomorrow 09:30 is after it — silence
+      // beats a reminder that arrives late and reads as a joke.
+      expect(
+        plan(
+          isPro: true,
+          renewsAt: DateTime(now.year, now.month, now.day + 1, 3),
+        ).where((n) => n.body.contains('renews')),
+        isEmpty,
+      );
+      expect(plan(isPro: true).where((n) => n.body.contains('renews')), isEmpty);
+    });
+
+    test('is not silenced by the per-category toggles, only the master', () {
+      final quiet = const NotificationPrefs(
+        enabled: true,
+        checkinEnabled: false,
+        streakEnabled: false,
+        milestoneEnabled: false,
+        backupEnabled: false,
+      );
+      final out = plan(
+        isPro: true,
+        prefs: quiet,
+        renewsAt: now.add(const Duration(days: 10)),
+      );
+      expect(out, hasLength(1));
+      expect(out.single.body, contains('renews'));
+    });
   });
 }

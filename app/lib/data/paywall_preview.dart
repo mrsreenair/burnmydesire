@@ -44,13 +44,24 @@ List<Package> previewPackages() {
     context,
   );
 
+  // Deliberately in dashboard order, not display order, and with a
+  // weekly plan that must NOT appear — so the preview exercises the
+  // paywall's own sorting and filtering (GROWTH.md M1).
   return [
+    plan(
+      id: 'pro_weekly',
+      type: PackageType.weekly,
+      title: 'Pro Weekly',
+      price: 0.99,
+      priceString: '€0.99',
+      period: 'P1W',
+    ),
     plan(
       id: 'pro_yearly',
       type: PackageType.annual,
       title: 'Pro Yearly',
-      price: 19.99,
-      priceString: '€19.99',
+      price: 14.99,
+      priceString: '€14.99',
       period: 'P1Y',
       trialPeriod: 'P1W',
     ),

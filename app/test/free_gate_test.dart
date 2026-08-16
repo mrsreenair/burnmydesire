@@ -29,13 +29,8 @@ ProviderContainer _container({
   return ProviderContainer(overrides: [
     nowProvider.overrideWithValue(_now),
     itemsProvider.overrideWith((ref) => Stream.value(items)),
-    if (pro) proProvider.overrideWith(() => _AlwaysPro()),
+    if (pro) proProvider.overrideWithValue(true),
   ]);
-}
-
-class _AlwaysPro extends ProNotifier {
-  @override
-  bool build() => true;
 }
 
 Future<ProviderContainer> _ready(ProviderContainer c) async {

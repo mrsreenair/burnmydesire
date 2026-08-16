@@ -34,6 +34,13 @@ const String kPrivacyUrl = String.fromEnvironment(
   defaultValue: '',
 );
 
+/// Apple's own subscription-management page. Opens the App Store app on
+/// the list of this Apple ID's subscriptions, cancel button included.
+/// The paywall links to it *before* purchase — "cancel in one tap" is a
+/// claim, and this is what makes it true.
+const String kManageSubscriptionsUrl =
+    'https://apps.apple.com/account/subscriptions';
+
 /// Free tier: up to this many active temptation items (PROJECT.md §4.5).
 /// Destroyed items don't count — finishing a desire frees a slot.
 const int kFreeItemLimit = 3;

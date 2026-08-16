@@ -34,9 +34,12 @@ changing a price never needs an app update.
    most common reason products never appear.
 2. Create the in-app purchases:
    - `pro_monthly` — Auto-Renewable Subscription, €2.99/month
-   - `pro_yearly` — Auto-Renewable Subscription, €19.99/year, **1 week
+   - `pro_yearly` — Auto-Renewable Subscription, €14.99/year, **1 week
      free trial** (Introductory Offer → Free Trial)
-   - `pro_lifetime` — Non-Consumable, €29.99
+   - `pro_lifetime` — Non-Consumable, €29.99 — **the hero plan**
+   - Do **not** create a weekly product. The paywall filters weekly out
+     even if one exists (`offeredOnPaywall`), so it would only confuse
+     the RevenueCat dashboard.
 3. Put both subscriptions in **one subscription group** so people can move
    between them without double-paying.
 4. Each product needs a display name, description, and a review
@@ -80,8 +83,9 @@ set, and shipping it that way risks rejection.
 
 ### The screen, with no store at all
 
-Debug builds with no `RC_IOS_KEY` show sample plans (€19.99/yr with a
-7-day trial, €2.99/mo, €29.99 lifetime) so the layout, the savings badge
+Debug builds with no `RC_IOS_KEY` show sample plans (€29.99 lifetime,
+€14.99/yr with a 7-day trial, €2.99/mo — plus a €0.99 weekly that must
+*not* appear, to prove the filter) so the layout, the savings badge
 and the trial timeline can be checked without any setup. The buy button
 is deliberately dead and a banner says why. Release builds can't reach
 this code — see `lib/data/paywall_preview.dart`.
@@ -110,8 +114,13 @@ app locked is worse than no test at all.
 
 ### What to check
 
-- [ ] All three plans appear, yearly first and preselected
+- [ ] All three plans appear, **lifetime first and preselected**, then
+      yearly, then monthly; the "or a subscription" heading sits between
 - [ ] The savings badge matches the real prices (it's computed, not typed)
+- [ ] "Cancel in one tap" opens the App Store's subscriptions page
+- [ ] After buying yearly (sandbox), Settings → notifications shows a
+      pending renewal reminder — sandbox years last ~1 h, so it lands
+      "tomorrow morning" via the missed-lead path
 - [ ] Buying unlocks Pro without restarting the app
 - [ ] Cancelling the sheet leaves no error on screen
 - [ ] Restore purchases works on a second device with the same Apple ID

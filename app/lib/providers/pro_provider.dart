@@ -9,24 +9,64 @@ final purchasesConfiguredProvider = Provider<bool>(
   (ref) => kRevenueCatIosApiKey.isNotEmpty,
 );
 
-/// True when the user owns the Pro entitlement. Without a configured
-/// RevenueCat key this is always false (free tier).
-class ProNotifier extends Notifier<bool> {
+/// The latest word from RevenueCat about this Apple ID. Null until the
+/// first answer arrives, and forever when there's no store key.
+class CustomerInfoNotifier extends Notifier<CustomerInfo?> {
   @override
-  bool build() {
-    if (!ref.read(purchasesConfiguredProvider)) return false;
+  CustomerInfo? build() {
+    if (!ref.read(purchasesConfiguredProvider)) return null;
     Purchases.addCustomerInfoUpdateListener(_onInfo);
     ref.onDispose(() => Purchases.removeCustomerInfoUpdateListener(_onInfo));
     Purchases.getCustomerInfo().then(_onInfo).ignore();
-    return false;
+    return null;
   }
 
-  void _onInfo(CustomerInfo info) {
-    state = info.entitlements.active.containsKey(kProEntitlementId);
-  }
+  void _onInfo(CustomerInfo info) => state = info;
 }
 
-final proProvider = NotifierProvider<ProNotifier, bool>(ProNotifier.new);
+final customerInfoProvider = NotifierProvider<CustomerInfoNotifier, CustomerInfo?>(
+  CustomerInfoNotifier.new,
+);
+
+/// True when the user owns the Pro entitlement. Without a configured
+/// RevenueCat key this is always false (free tier).
+final proProvider = Provider<bool>(
+  (ref) =>
+      ref
+          .watch(customerInfoProvider)
+          ?.entitlements
+          .active
+          .containsKey(kProEntitlementId) ??
+      false,
+);
+
+/// The next Pro charge, when there is one: a subscription that will
+/// renew. Null for lifetime, for a cancelled plan running out its term,
+/// and for free users. Feeds the renewal reminder — the notification the
+/// paywall promises — so it has to be right rather than approximate.
+class ProRenewal {
+  const ProRenewal({required this.renewsAt, this.priceString});
+  final DateTime renewsAt;
+  final String? priceString;
+}
+
+final proRenewalProvider = FutureProvider<ProRenewal?>((ref) async {
+  final info = ref.watch(customerInfoProvider);
+  final pro = info?.entitlements.active[kProEntitlementId];
+  if (pro == null || !pro.willRenew || pro.expirationDate == null) {
+    return null;
+  }
+  final renewsAt = DateTime.tryParse(pro.expirationDate!)?.toLocal();
+  if (renewsAt == null) return null;
+  String? price;
+  try {
+    final products = await Purchases.getProducts([pro.productIdentifier]);
+    if (products.isNotEmpty) price = products.first.priceString;
+  } on Exception {
+    // A reminder without the amount still keeps the promise.
+  }
+  return ProRenewal(renewsAt: renewsAt, priceString: price);
+});
 
 /// Whether Pro features are available. Dev builds without a RevenueCat
 /// key keep them open so the founder can demo.

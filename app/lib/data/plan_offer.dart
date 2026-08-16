@@ -63,3 +63,84 @@ int? annualSavingsPercent({
 /// The per-month equivalent of an annual price, for the "€1.67/mo" line
 /// every subscription app shows under a yearly plan.
 double perMonthFromAnnual(double annualPrice) => annualPrice / 12;
+
+/// Whether a plan is offered on the paywall at all.
+///
+/// Weekly is not. It's the plan that bills before anyone notices, the
+/// exact mechanic this app teaches people to burn — and a store can add
+/// one to the offering without an app update, so the app decides, not
+/// the dashboard. Anything unparseable is hidden too: a plan the paywall
+/// can't describe is a plan it shouldn't sell.
+bool offeredOnPaywall(PlanPeriod period) => switch (period) {
+  PlanPeriod.lifetime || PlanPeriod.annual || PlanPeriod.monthly => true,
+  PlanPeriod.weekly || PlanPeriod.other => false,
+};
+
+/// Display order (lower first). Lifetime is the hero: for an app whose
+/// pitch is "stop paying for things forever", the honest sale is the one
+/// that ends. Annual is the cheap way in; monthly exists to make annual
+/// look cheap.
+int paywallRank(PlanPeriod period) => switch (period) {
+  PlanPeriod.lifetime => 0,
+  PlanPeriod.annual => 1,
+  PlanPeriod.monthly => 2,
+  PlanPeriod.weekly => 3,
+  PlanPeriod.other => 4,
+};
+
+/// The plan preselected on arrival — the hero, when it exists.
+int heroIndex(List<PlanPeriod> periods) {
+  final i = periods.indexOf(PlanPeriod.lifetime);
+  if (i >= 0) return i;
+  final a = periods.indexOf(PlanPeriod.annual);
+  return a >= 0 ? a : 0;
+}
+
+/// Roughly how many times over a single resisted purchase pays for the
+/// lifetime plan, or null when there's nothing meaningful to say. Used
+/// for the "one burn pays for it" line — only when it's actually true.
+int? burnsCoveringLifetime({
+  required int burnCents,
+  required double lifetimePrice,
+}) {
+  if (burnCents <= 0 || lifetimePrice <= 0) return null;
+  final times = (burnCents / 100) / lifetimePrice;
+  return times >= 1 ? times.floor() : null;
+}
+
+/// Where the paywall was opened from. Decides the opening line so the
+/// screen speaks to the moment rather than reciting features.
+enum PaywallSource {
+  /// Settings, dashboard, the tab — no particular moment.
+  general,
+
+  /// The free capture limit was hit.
+  limit,
+
+  /// A locked burn effect was tapped.
+  effect,
+
+  /// A second financial goal was attempted.
+  goal,
+
+  /// Offered on the victory screen right after a sizeable burn.
+  moment,
+}
+
+/// The headline for each source. [burnLabel] is the formatted amount of
+/// the burn that led here (moment only); [limitLine] is the caller's own
+/// limit copy, kept because it already acknowledges the win.
+String paywallHeadline(
+  PaywallSource source, {
+  String? burnLabel,
+  String? limitLine,
+}) => switch (source) {
+  PaywallSource.general => 'Burn without limits',
+  PaywallSource.limit => limitLine ?? 'Burn without limits',
+  PaywallSource.effect => 'Unlock every way to let go',
+  PaywallSource.goal => 'Chase more than one thing',
+  PaywallSource.moment =>
+    burnLabel == null
+        ? 'Keep this going'
+        : 'You just protected $burnLabel',
+};

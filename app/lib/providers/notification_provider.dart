@@ -27,10 +27,12 @@ Future<void> replanNotifications(WidgetRef ref) async {
   final protected = items.fold(0, (sum, i) => sum + i.priceCents);
   final isPro = ref.read(proProvider);
   DateTime? lastBackup;
+  ProRenewal? renewal;
   if (isPro) {
     lastBackup = await CloudBackup(
       BackupService(ref.read(databaseProvider), ref.read(imageStoreProvider)),
     ).lastBackup();
+    renewal = await ref.read(proRenewalProvider.future);
   }
   await service.sync(
     planNotifications(
@@ -39,6 +41,8 @@ Future<void> replanNotifications(WidgetRef ref) async {
       prefs: prefs,
       isPro: isPro,
       lastBackupAt: lastBackup,
+      renewsAt: renewal?.renewsAt,
+      renewalPrice: renewal?.priceString,
       now: DateTime.now(),
     ),
   );
