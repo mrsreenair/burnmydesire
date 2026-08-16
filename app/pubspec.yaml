@@ -52,11 +52,15 @@ flutter:
     - assets/data/market_returns.json
     - assets/audio/fire.wav
     - assets/audio/shred.wav
+    - assets/audio/water.wav
+    - assets/audio/static.wav
   shaders:
     - assets/shaders/burn.frag
     - assets/shaders/ash.frag
     - assets/shaders/cold.frag
     - assets/shaders/shred.frag
+    - assets/shaders/dissolve.frag
+    - assets/shaders/static.frag
 
 flutter_launcher_icons:
   ios: true

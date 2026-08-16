@@ -45,7 +45,7 @@ mid-flight; everything before them is pure Dart and ships independently.
 | M3 | Share card 2.0 — goal-anchored | ½ day | ✅ 2026-08-16 |
 | M4 | Weekly Ash Report | 1½ days | ✅ 2026-08-16 |
 | M5 | Follow-up cadence + re-burn loop | ½ day | ✅ 2026-08-16 |
-| M6 | Cosmetics as Pro — two new burn effects | 1 day | ⬜ |
+| M6 | Cosmetics as Pro — two new burn effects | 1 day | ✅ 2026-08-16 |
 | M7 | Analytics decision (no code unless the decision flips) | — | ⏳ founder |
 | M8 | Home-screen widget (native) | 2 days | ⬜ |
 | M9 | Share extension (native) | 2–3 days | ⬜ |
@@ -169,13 +169,13 @@ existing users get one row per item.
 skin never contradicts "we help you save"; a capture limit arguably does.
 
 **Scope**
-- [ ] Two new fragment shaders, same conventions as `burn.frag` (Impeller: no `discard`, premultiplied output, `uProgress` 0→1, front sweep `mix(-0.34, 1.08, uProgress)`): **Dissolve** (ink-in-water, `pro`) and **Static** (CRT glitch/pixel-out, `pro`)
-- [ ] Sounds: procedural WAV, 12 s seamless (audioplayers' iOS loop isn't gapless — see `burn_sound.dart`), water for Dissolve, hiss/tick for Static
-- [ ] `burn_effects.dart` entries with icon, verb, glow, `pro: true`; Fire + Shred stay free, Ash + Cold move to Pro (this is the value gap M2 relies on)
-- [ ] Picker preview: 1-s auto-loop thumbnail per effect (cheap: run the shader on a small quad)
-- [ ] Tests: effect table invariants (unique ids, sound asset exists, exactly 2 free)
+- [x] Two new fragment shaders: **Dissolve** (cloud field stretched to [0,1] so progress feels linear; wet bleeding edge; ghost-ink plume that lifts and swirls; bubbles) and **Static** (blocks die in random order → snow → drop-out, all gone by 0.98; band tearing, RGB split, scanlines, late white flashes). Verbs: "dissolve", "switch off"
+- [x] Sounds: `tool/make_sounds.py` (stdlib), 12 s seamless via overlap-add — `water.wav` (lowpassed rumble, two breathing LFOs, rising bubble chirps), `static.wav` (hiss, 50/100 Hz hum, dropouts with clicks)
+- [x] `burn_effects.dart`: six effects, **Fire + Shredder free**, Ash / Cold / Dissolve / Static Pro; picker order = free first
+- [x] ~~Picker preview thumbnails~~ — **dropped**: six live shaders in a bottom sheet is a battery/perf risk on low-end phones for a nicety; the icon + blurb already tell them apart. Sheet made scrollable instead (six rows overflowed)
+- [x] Tests: `burn_effects_test` — exactly two free (fire, shred), six total, free first, every asset on disk + in pubspec, every loop ≥ 10 s
 
-**Exit.** Six effects, two free; each new effect completes at hold-end with no dead time; sound loops seamlessly for a 3-s hold.
+**Exit.** ✅ Simulator 2026-08-16: Dissolve at ~50 % shows islands of paper with wet edges and ghost strands, completes to the victory screen; picker shows all six.
 
 ---
 

@@ -149,6 +149,7 @@ Every item record carries a `category` from day one:
 | Active temptation items | 3 | Unlimited |
 | New desires per month (photos + thoughts) | 5 | Unlimited |
 | Burns / re-burns per item | Unlimited | Unlimited |
+| Burn effects | Fire, Shredder | All six (+ Ash, Cold flame, Dissolve, Static) |
 | Return rate / horizon | Fixed 8% / 20y | Adjustable |
 | Dashboard & analytics | — | ✓ |
 | Price | — | **€29.99 lifetime (hero)** · €14.99/yr (7-day trial) · €2.99/mo — no weekly plan, ever |

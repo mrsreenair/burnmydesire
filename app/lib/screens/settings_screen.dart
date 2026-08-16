@@ -1047,8 +1047,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final unlocked = ref.read(proUnlockedProvider);
     showModalBottomSheet<void>(
       context: context,
+      // Six effects no longer fit a fixed sheet on small phones (M6);
+      // the list scrolls inside a sheet capped at most of the screen.
+      isScrollControlled: true,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.86,
+      ),
       builder: (sheetContext) => SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
           child: Column(
             mainAxisSize: MainAxisSize.min,

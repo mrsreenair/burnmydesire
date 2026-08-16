@@ -58,15 +58,19 @@ class BurnEffect {
   /// undo the whole point of offering a flameless option.
   final Color glow;
 
-  /// Free users get fire. The rest are part of Pro.
+  /// Free users get Fire and the Shredder — one flame, one machine, so
+  /// the free tier is a real choice. The rest are Pro (GROWTH.md M6):
+  /// cosmetics are the one thing that can be sold without ever putting a
+  /// price on the ritual itself.
   final bool pro;
 }
 
 const kDefaultBurnEffect = 'fire';
 
-/// Fire first: it is the free one and the app's whole identity. The others
-/// exist because the same ritual has to serve very different feelings —
-/// burning a €400 impulse is not the same act as letting go of a person.
+/// Fire first: it is the app's whole identity. The others exist because
+/// the same ritual has to serve very different feelings — burning a €400
+/// impulse is not the same act as letting go of a person. Order is the
+/// picker's order: the two free ones, then Pro.
 const burnEffects = <BurnEffect>[
   BurnEffect(
     id: 'fire',
@@ -76,6 +80,19 @@ const burnEffects = <BurnEffect>[
     sound: 'audio/fire.wav',
     icon: Icons.local_fire_department,
     glow: Color(0xFFA8102A), // AppColors.coal
+    pro: false,
+  ),
+  BurnEffect(
+    id: 'shred',
+    name: 'Shredder',
+    blurb: 'Steel teeth take the page and give back ribbons.',
+    asset: 'assets/shaders/shred.frag',
+    sound: 'audio/shred.wav',
+    icon: Icons.content_cut,
+    verb: 'shred',
+    // Machine light, not firelight — the room should look like an office
+    // at night, which is exactly the unsentimental register this is for.
+    glow: Color(0xFF2A3238),
     pro: false,
   ),
   BurnEffect(
@@ -98,16 +115,26 @@ const burnEffects = <BurnEffect>[
     glow: Color(0xFF0E2C86),
   ),
   BurnEffect(
-    id: 'shred',
-    name: 'Shredder',
-    blurb: 'Steel teeth take the page and give back ribbons.',
-    asset: 'assets/shaders/shred.frag',
-    sound: 'audio/shred.wav',
-    icon: Icons.content_cut,
-    verb: 'shred',
-    // Machine light, not firelight — the room should look like an office
-    // at night, which is exactly the unsentimental register this is for.
-    glow: Color(0xFF2A3238),
+    id: 'dissolve',
+    name: 'Dissolve',
+    blurb: 'Under water. The ink lifts off the page and drifts away.',
+    asset: 'assets/shaders/dissolve.frag',
+    sound: 'audio/water.wav',
+    icon: Icons.water_drop_outlined,
+    verb: 'dissolve',
+    // Deep pool light: the room goes green-blue, not orange.
+    glow: Color(0xFF0B3A44),
+  ),
+  BurnEffect(
+    id: 'static',
+    name: 'Static',
+    blurb: 'A screen dying. It tears, turns to snow, and switches off.',
+    asset: 'assets/shaders/static.frag',
+    sound: 'audio/static.wav',
+    icon: Icons.tv_off_outlined,
+    verb: 'switch off',
+    // CRT glow: cold grey-violet, the colour of a TV left on in a room.
+    glow: Color(0xFF2E2A3F),
   ),
 ];
 

@@ -8,7 +8,16 @@ void main() {
   test('fire is the free default and comes first', () {
     expect(burnEffects.first.id, kDefaultBurnEffect);
     expect(burnEffects.first.pro, isFalse);
-    expect(burnEffects.where((e) => !e.pro).length, 1);
+  });
+
+  test('exactly two effects are free — fire and the shredder (GROWTH.md M6)', () {
+    // The free tier is a real choice (one flame, one machine); the rest
+    // is the cosmetic value gap Pro rests on. Six effects in all.
+    expect(burnEffects.where((e) => !e.pro).map((e) => e.id), ['fire', 'shred']);
+    expect(burnEffects, hasLength(6));
+    // Free ones first in the picker.
+    expect(burnEffects.take(2).every((e) => !e.pro), isTrue);
+    expect(burnEffects.skip(2).every((e) => e.pro), isTrue);
   });
 
   test('every effect has a distinct id and shader', () {
