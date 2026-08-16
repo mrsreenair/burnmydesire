@@ -50,4 +50,54 @@ void main() {
     );
     expect(square, isNot(equals(story)));
   });
+
+  group('goal line (GROWTH.md M3)', () {
+    const trip = MilestoneGoal(name: 'A trip', emoji: '✈️', percent: 5);
+
+    test('a goal changes the card, in both formats', () async {
+      for (final f in CardFormat.values) {
+        final plain = await renderMilestoneCard(
+          protectedCents: 20000,
+          burns: 2,
+          format: f,
+        );
+        final withGoal = await renderMilestoneCard(
+          protectedCents: 20000,
+          burns: 2,
+          goal: trip,
+          format: f,
+        );
+        expect(withGoal.sublist(0, 4), [0x89, 0x50, 0x4E, 0x47]);
+        expect(withGoal, isNot(equals(plain)));
+      }
+    });
+
+    test('a thought-only card ignores the goal', () async {
+      // No money: the goal line would say a breakup burn brought a trip
+      // closer. It must render exactly as if no goal were given.
+      final a = await renderMilestoneCard(
+        protectedCents: 0,
+        burns: 0,
+        thoughts: 3,
+      );
+      final b = await renderMilestoneCard(
+        protectedCents: 0,
+        burns: 0,
+        thoughts: 3,
+        goal: trip,
+      );
+      expect(a, equals(b));
+    });
+
+    test('thoughts get their own card', () async {
+      final money = await renderMilestoneCard(protectedCents: 500, burns: 1);
+      final thoughts = await renderMilestoneCard(
+        protectedCents: 0,
+        burns: 0,
+        thoughts: 1,
+      );
+      expect(thoughts.sublist(0, 4), [0x89, 0x50, 0x4E, 0x47]);
+      expect(thoughts, isNot(equals(money)));
+    });
+  });
 }

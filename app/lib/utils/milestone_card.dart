@@ -26,14 +26,39 @@ enum CardFormat {
   final double footerInset;
 }
 
+/// The destination, for the goal line: what the money is for and how far
+/// along it is. A goal is aspirational, so it's safe to share where a
+/// temptation never would be.
+class MilestoneGoal {
+  const MilestoneGoal({
+    required this.name,
+    required this.emoji,
+    required this.percent,
+  });
+
+  final String name;
+  final String emoji;
+
+  /// Whole percent, 0–100.
+  final int percent;
+}
+
 /// Renders a shareable "€X protected" card.
 ///
 /// Deliberately says nothing about *what* was resisted — only the amount
 /// and the streak. Someone sharing a win must never accidentally share
 /// that they're fighting an addiction.
+///
+/// With a [goal] it adds the line people actually post — "✈️ A trip · 5%"
+/// with a progress bar (GROWTH.md M3): the number is the brag, the goal
+/// is theirs. With no money at all ([protectedCents] ≤ 0) and some
+/// [thoughts], it becomes the thought-burner's card: how many things were
+/// let go of, and still nothing about what they were.
 Future<Uint8List> renderMilestoneCard({
   required int protectedCents,
   required int burns,
+  int thoughts = 0,
+  MilestoneGoal? goal,
   CardFormat format = CardFormat.square,
 }) async {
   final w = format.width;
@@ -90,21 +115,27 @@ Future<Uint8List> renderMilestoneCard({
   // The stack is measured before it is painted, so the same copy can be
   // centred in a square or a story frame without hand-tuned offsets per
   // format — and so a long amount pushing to two lines still balances.
+  final thoughtsOnly = protectedCents <= 0 && thoughts > 0;
+
   final flame = measure('🔥', 96, const ui.Color(0xFF1A1A1A), letterSpacing: 0);
   final lead = measure(
-    'I protected',
+    thoughtsOnly ? 'I let go of' : 'I protected',
     52,
     const ui.Color(0xFF6B6257),
     weight: FontWeight.w600,
     letterSpacing: 0,
   );
   final amount = measure(
-    formatMoney(protectedCents),
+    thoughtsOnly ? '$thoughts' : formatMoney(protectedCents),
     148,
-    const ui.Color(0xFF1E9E6A),
+    thoughtsOnly ? const ui.Color(0xFFFF6B35) : const ui.Color(0xFF1E9E6A),
   );
   final tail = measure(
-    burns == 1
+    thoughtsOnly
+        ? (thoughts == 1
+              ? 'thought I was carrying,\nby burning it'
+              : 'thoughts I was carrying,\nby burning them')
+        : burns == 1
         ? 'by burning one desire\ninstead of buying it'
         : 'by burning $burns desires\ninstead of buying them',
     46,
@@ -112,6 +143,15 @@ Future<Uint8List> renderMilestoneCard({
     weight: FontWeight.w600,
     letterSpacing: 0,
   );
+
+  // The goal line: a soft card with emoji + name on the left, the
+  // percent on the right, and a bar underneath. Only for money cards
+  // with a goal — a thought burn bringing a MacBook closer is the wrong
+  // note, on the share as much as on the victory screen.
+  final showGoal = goal != null && !thoughtsOnly;
+  final goalCardW = w * 0.82;
+  const goalCardH = 150.0;
+  const gapAfterTail = 40.0;
 
   const gapAfterFlame = 44.0;
   const gapAfterLead = 13.0;
@@ -123,7 +163,8 @@ Future<Uint8List> renderMilestoneCard({
       gapAfterLead +
       amount.height +
       gapAfterAmount +
-      tail.height;
+      tail.height +
+      (showGoal ? gapAfterTail + goalCardH : 0);
 
   // Centred in the space above the wordmark, not the whole frame, so the
   // footer never crowds the number.
@@ -137,6 +178,74 @@ Future<Uint8List> renderMilestoneCard({
   paintAt(amount, y);
   y += amount.height + gapAfterAmount;
   paintAt(tail, y);
+  y += tail.height;
+
+  if (showGoal) {
+    y += gapAfterTail;
+    final left = (w - goalCardW) / 2;
+    final card = ui.RRect.fromRectXY(
+      ui.Rect.fromLTWH(left, y, goalCardW, goalCardH),
+      32,
+      32,
+    );
+    canvas.drawRRect(card, ui.Paint()..color = const ui.Color(0xFFFFFFFF));
+    canvas.drawRRect(
+      card,
+      ui.Paint()
+        ..color = const ui.Color(0x141A1A1A)
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+
+    const pad = 34.0;
+    final name = TextPainter(
+      text: TextSpan(
+        text: '${goal.emoji}  ${goal.name}',
+        style: const TextStyle(
+          color: ui.Color(0xFF1A1A1A),
+          fontSize: 40,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.5,
+        ),
+      ),
+      maxLines: 1,
+      ellipsis: '…',
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: goalCardW - pad * 2 - 160);
+    final pct = TextPainter(
+      text: TextSpan(
+        text: '${goal.percent}%',
+        style: const TextStyle(
+          color: ui.Color(0xFF1E9E6A),
+          fontSize: 40,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    name.paint(canvas, ui.Offset(left + pad, y + 26));
+    pct.paint(canvas, ui.Offset(left + goalCardW - pad - pct.width, y + 26));
+
+    // The bar. Its fill is a fraction of a real width, so 5 % is a
+    // visible nub rather than nothing — the same as the app's own bar.
+    final barTop = y + goalCardH - pad - 16;
+    final barW = goalCardW - pad * 2;
+    final track = ui.RRect.fromRectXY(
+      ui.Rect.fromLTWH(left + pad, barTop, barW, 16),
+      8,
+      8,
+    );
+    canvas.drawRRect(track, ui.Paint()..color = const ui.Color(0xFFEDEAE3));
+    final fillW = (barW * goal.percent / 100).clamp(16.0, barW);
+    canvas.drawRRect(
+      ui.RRect.fromRectXY(
+        ui.Rect.fromLTWH(left + pad, barTop, fillW, 16),
+        8,
+        8,
+      ),
+      ui.Paint()..color = const ui.Color(0xFF1E9E6A),
+    );
+  }
 
   paintAt(
     measure(

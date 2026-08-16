@@ -42,7 +42,7 @@ mid-flight; everything before them is pure Dart and ships independently.
 |---|---|---|---|
 | M1 | Pricing + the honest paywall | ½ day | ✅ 2026-08-16 |
 | M2 | Give Pro a reason to exist, and a moment to be offered | 1 day | ✅ 2026-08-16 |
-| M3 | Share card 2.0 — goal-anchored | ½ day | ⬜ |
+| M3 | Share card 2.0 — goal-anchored | ½ day | ✅ 2026-08-16 |
 | M4 | Weekly Ash Report | 1½ days | ⬜ |
 | M5 | Follow-up cadence + re-burn loop | ½ day | ⬜ |
 | M6 | Cosmetics as Pro — two new burn effects | 1 day | ⬜ |
@@ -115,13 +115,13 @@ actually post is *"12 % closer to 🗾 Japan"* — it's theirs. Still never
 says what was resisted (a goal is aspirational, a temptation is private).
 
 **Scope**
-- [ ] `milestone_card.dart`: optional goal line (emoji + name + "% closer" or "€X of €Y"), story + square
-- [ ] Victory screen passes the goal + slice; dashboard passes cumulative
-- [ ] Emotion/thought burns: card falls back to burns-only ("I let go of 3 things this week")
-- [ ] Wordmark + a subtle "burnmydesire.app" — the card is the ad
-- [ ] Golden-ish test: render both formats headless, assert non-empty PNG and dimensions
+- [x] `milestone_card.dart`: optional goal line — white card, emoji + name left, percent right, progress bar with a visible nub at 5 % — story + square
+- [x] Victory screen passes the goal (money burns only, same rule as GoalProgress); dashboard passes cumulative
+- [x] Thought burns: card becomes "I let go of 3 thoughts I was carrying, by burning them"; the share button now appears on thought victories too
+- [x] Wordmark + "burnmydesire.com" (already there — .com is the primary domain per PROJECT.md §3)
+- [x] Tests: goal changes pixels in both formats; a thought card ignores the goal byte-for-byte; thoughts render their own card (`milestone_card_test`, 8)
 
-**Exit.** Sharing from a purchase victory produces a card with the goal line; from a thought burn, without.
+**Exit.** ✅ Rendered headless 2026-08-16 (story + square + thoughts) — layout balanced, bar nub visible; share text mirrors the card.
 
 ---
 

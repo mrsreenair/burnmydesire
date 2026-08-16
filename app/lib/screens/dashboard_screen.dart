@@ -11,6 +11,7 @@ import '../providers/pro_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/motion.dart';
 import '../utils/format_utils.dart';
+import '../utils/milestone_card.dart';
 import '../widgets/ember_ui.dart';
 import '../widgets/share_milestone.dart';
 import '../widgets/goal_progress.dart';
@@ -172,7 +173,17 @@ class _Dashboard extends ConsumerWidget {
           ),
         if (protected > 0) ...[
           const SizedBox(height: 12),
-          ShareMilestone(protectedCents: protected, burns: items.length),
+          ShareMilestone(
+            protectedCents: protected,
+            burns: items.length,
+            goal: goal == null
+                ? null
+                : MilestoneGoal(
+                    name: goal.name,
+                    emoji: goal.emoji,
+                    percent: goal.percentOf(protected),
+                  ),
+          ),
         ],
         if (goal != null) ...[
           const SizedBox(height: 16),

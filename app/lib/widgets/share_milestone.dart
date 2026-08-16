@@ -18,12 +18,20 @@ class ShareMilestone extends StatefulWidget {
     super.key,
     required this.protectedCents,
     required this.burns,
+    this.thoughts = 0,
+    this.goal,
     this.format = CardFormat.square,
     this.label = 'Share this win',
   });
 
   final int protectedCents;
   final int burns;
+
+  /// Thoughts let go of — the headline when there's no money to show.
+  final int thoughts;
+
+  /// The destination, drawn as a goal line on money cards (M3).
+  final MilestoneGoal? goal;
 
   /// Story from the victory screen, where people go straight to Instagram
   /// or TikTok; square from the dashboard, which is a review surface and
@@ -44,6 +52,8 @@ class _ShareMilestoneState extends State<ShareMilestone> {
       final bytes = await renderMilestoneCard(
         protectedCents: widget.protectedCents,
         burns: widget.burns,
+        thoughts: widget.thoughts,
+        goal: widget.goal,
         format: widget.format,
       );
       final dir = await getTemporaryDirectory();
@@ -53,9 +63,17 @@ class _ShareMilestoneState extends State<ShareMilestone> {
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path)],
-          text:
-              'I protected ${formatMoney(widget.protectedCents)} by '
-              'burning what I wanted instead of buying it.',
+          text: widget.protectedCents <= 0
+              ? 'I let go of ${widget.thoughts} '
+                    '${widget.thoughts == 1 ? 'thought' : 'thoughts'} by '
+                    'burning ${widget.thoughts == 1 ? 'it' : 'them'}.'
+              : widget.goal == null
+              ? 'I protected ${formatMoney(widget.protectedCents)} by '
+                    'burning what I wanted instead of buying it.'
+              : 'I protected ${formatMoney(widget.protectedCents)} — '
+                    '${widget.goal!.percent}% of the way to '
+                    '${widget.goal!.emoji} ${widget.goal!.name} — by '
+                    'burning what I wanted instead of buying it.',
         ),
       );
     } on Object {

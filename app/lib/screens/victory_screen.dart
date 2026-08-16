@@ -341,7 +341,8 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
                           // the asks: this is the win, the rest is
                           // housekeeping. Free as well as Pro — the card
                           // is the advertisement.
-                          if (protected > 0) ...[
+                          if (protected > 0 ||
+                              ref.watch(thoughtsBurnedProvider) > 0) ...[
                             const SizedBox(height: 24),
                             Reveal(
                               delay: const Duration(milliseconds: 500),
@@ -349,6 +350,20 @@ class _VictoryScreenState extends ConsumerState<VictoryScreen> {
                                 protectedCents: protected,
                                 burns:
                                     ref.watch(itemsProvider).value?.length ?? 1,
+                                thoughts: ref.watch(thoughtsBurnedProvider),
+                                // The goal line rides along on money burns
+                                // only — same rule as the GoalProgress card
+                                // above it.
+                                goal:
+                                    !target.isEmotion &&
+                                        price > 0 &&
+                                        goal != null
+                                    ? MilestoneGoal(
+                                        name: goal.name,
+                                        emoji: goal.emoji,
+                                        percent: goal.percentOf(protected),
+                                      )
+                                    : null,
                                 format: CardFormat.story,
                                 label: 'Share this win',
                               ),
